@@ -3,3 +3,5 @@ node_modules/
 /dist/
 env/
 __pycache__
+services/*/.vscode/
+services/frontend/.prettierrc.json

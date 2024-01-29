@@ -17,7 +17,7 @@ import { defineComponent } from 'vue';
 import { mapGetters, mapActions } from 'vuex';
 
 export default defineComponent({
-  name: 'Note',
+  name: 'NoteComponent',
   props: ['id'],
   async created() {
     try {
