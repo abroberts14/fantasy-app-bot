@@ -7,10 +7,10 @@ from src.database.models import Notes
 
 
 NoteInSchema = pydantic_model_creator(
-    Notes, name="NoteIn", exclude=["author_id"], exclude_readonly=True)
+    Notes, name="NoteIn", exclude=["user_id"], exclude_readonly=True)
 NoteOutSchema = pydantic_model_creator(
     Notes, name="Note", exclude =[
-      "modified_at", "author.password", "author.created_at", "author.modified_at"
+      "modified_at", "user.password", "user.created_at", "user.modified_at", "user.bots"
     ]
 )
 

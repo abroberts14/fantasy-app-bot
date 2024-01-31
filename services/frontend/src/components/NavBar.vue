@@ -26,6 +26,9 @@
               <router-link class="nav-link" to="/profile">My Profile</router-link>
             </li>
             <li class="nav-item">
+              <router-link class="nav-link" to="/register-bot">Register New Bot</router-link>
+            </li>
+              <li class="nav-item">
               <a class="nav-link" @click="logout">Log Out</a>
             </li>
           </ul>

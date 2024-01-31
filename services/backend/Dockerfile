@@ -10,8 +10,13 @@ COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
+RUN apt-get update && apt-get install -y postgresql-client
+
 # for migrations
 COPY migrations .
 COPY pyproject.toml .
 
 COPY src/ .
+
+COPY wait_for_postgres.sh /
+RUN chmod +x /wait_for_postgres.sh

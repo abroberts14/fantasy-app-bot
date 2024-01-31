@@ -24,6 +24,27 @@
     <br/><br/>
 
     <section>
+      <h1>Bots</h1>
+      <hr/><br/>
+
+      <div v-if="bots.length">
+        <div v-for="bot in bots" :key="bot.id" class="bots">
+          <div class="card" style="width: 18rem;">
+            <div class="card-body">
+              <ul>
+                <li><strong>Bot Name:</strong> {{ bot.name }}</li>
+                <li><strong>League ID:</strong> {{ bot.league_id }}</li>
+                <li><strong>GroupMe Bot ID:</strong> {{ bot.groupme_bot_id }}</li>
+
+                <li><router-link :to="{name: 'Bot', params:{id: bot.id}}">View</router-link></li>
+              </ul>
+            </div>
+          </div>
+          <br/>
+        </div>
+      </div>
+      </section>
+    <section>
       <h1>Notes</h1>
       <hr/><br/>
 
@@ -33,7 +54,7 @@
             <div class="card-body">
               <ul>
                 <li><strong>Note Title:</strong> {{ note.title }}</li>
-                <li><strong>Author:</strong> {{ note.author.username }}</li>
+                <li><strong>Author:</strong> {{ note.user.username }}</li>
                 <li><router-link :to="{name: 'Note', params:{id: note.id}}">View</router-link></li>
               </ul>
             </div>
@@ -64,13 +85,14 @@ export default defineComponent({
     };
   },
   created: function() {
-    return this.$store.dispatch('getNotes');
+    this.$store.dispatch('getNotes');
+    this.$store.dispatch('getBots');  // Fetch the bots when the component is created
   },
   computed: {
-    ...mapGetters({ notes: 'stateNotes'}),
+    ...mapGetters({ notes: 'stateNotes', bots: 'stateBots' }),  // Add a new getter for bots
   },
   methods: {
-    ...mapActions(['createNote']),
+    ...mapActions(['createNote', 'getBots']),  // Add a new action for getting bots
     async submit() {
       await this.createNote(this.form);
     },

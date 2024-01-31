@@ -24,8 +24,8 @@ class Yahoo_Legends_Chatbot():
         #bot_id - string
         #league_id - string
         self.league_id = os.getenv('yahoo_league_id', '21217')
-        self.bot_id = os.getenv('groupme_bot_id', '6b5dfa374f148c64eb1e9948f5')
-        self.groupMeMessenger =  GroupMe(self.bot_id)
+        self.groupme_bot_id = os.getenv('groupme_bot_id', '6b5dfa374f148c64eb1e9948f5')
+        self.groupMeMessenger =  GroupMe(self.groupme_bot_id)
         self.env_setup()
         self.yahoo_query = YahooFantasySportsQuery(
             self.auth_dir,

@@ -7,11 +7,11 @@ from src.schemas.token import Status
 
 
 async def get_bots():
-    return await BotOutSchema.from_queryset(BotOutSchema.all())
+    return await BotOutSchema.from_queryset(Bots.all())
 
 
 async def get_bot(bot_id) -> BotOutSchema:
-    return await BotOutSchema.from_queryset_single(BotOutSchema.get(id=bot_id))
+    return await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
 
 
 async def create_bot(bot, current_user) -> BotOutSchema:
