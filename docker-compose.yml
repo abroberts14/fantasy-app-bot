@@ -34,5 +34,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
+  chatbot:
+    profiles: [chatbot]
+    build: ./services/baseball_bot   
+    image: chatbot:latest
+    volumes:
+      - ./services/baseball_bot:/app
 volumes:
   postgres_data:

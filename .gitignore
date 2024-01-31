@@ -5,3 +5,5 @@ env/
 __pycache__
 services/*/.vscode/
 services/frontend/.prettierrc.json
+services/baseball_bot/bot/auth/token.json
+services/baseball_bot/bot/auth/private.json
