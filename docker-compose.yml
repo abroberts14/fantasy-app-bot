@@ -7,11 +7,19 @@ services:
     ports:
       - 5000:5000
     environment:
-      - DATABASE_URL=postgres://hello_fastapi:hello_fastapi@db:5432/hello_fastapi_dev
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/web
       - SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      #used to ping the database to check if it is up before connecting
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=web
     volumes:
       - ./services/backend:/app
-    command: uvicorn src.main:app --reload --host 0.0.0.0 --port 5000
+    #command: bash -c "aerich upgrade && uvicorn src.main:app --reload --host 0.0.0.0 --port 5000"
+  
+    command: >
+      bash -c "./wait_for_postgres.sh db 'aerich upgrade && uvicorn src.main:app --reload --host 0.0.0.0 --port 5000'"
+
     depends_on:
       - db
 
@@ -19,26 +27,42 @@ services:
     build: ./services/frontend
     volumes:
       - './services/frontend:/app'
+      - './services/frontend/src:/app/src'
       - '/app/node_modules'
     ports:
       - 5173:5173
 
   db:
     image: postgres:15.1
+    container_name: postgresql-local
     expose:
       - 5432
     environment:
-      - POSTGRES_USER=hello_fastapi
-      - POSTGRES_PASSWORD=hello_fastapi
-      - POSTGRES_DB=hello_fastapi_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=web
+    ports:
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
-  chatbot:
-    profiles: [chatbot]
-    build: ./services/baseball_bot   
-    image: chatbot:latest
-    volumes:
-      - ./services/baseball_bot:/app
+
+  pg_admin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin4
+    ports:
+      - "54321:80"
+    environment:
+      - GUNICORN_THREADS=1
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    depends_on:
+      - db
+  # chatbot:
+  #   profiles: [chatbot]
+  #   build: ./services/baseball_bot   
+  #   image: chatbot:latest
+  #   volumes:
+  #     - ./services/baseball_bot:/app
 volumes:
   postgres_data:

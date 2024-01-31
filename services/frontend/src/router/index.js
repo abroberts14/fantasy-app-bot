@@ -1,11 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import RegisterView from '@/views/RegisterView.vue'
+import RegisterBotView from '@/views/RegisterBotView.vue'
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import NoteView from '@/views/NoteView.vue'
 import EditNoteView from '@/views/EditNoteView.vue'
+import BotView from '@/views/BotView.vue'
+import EditBotView from '@/views/EditBotView.vue'
 import store from '@/store' // NEW
 
 const routes = [
@@ -18,6 +21,11 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterView
+  },
+  {
+    path: '/register-bot',
+    name: 'RegisterBot',
+    component: RegisterBotView
   },
   {
     path: '/login',
@@ -43,6 +51,21 @@ const routes = [
     meta: { requiresAuth: true },
     props: true
   },
+  {
+    path: '/bot/:id',
+    name: 'Bot',
+    component: BotView,
+    meta: { requiresAuth: true },
+    props: true
+  },
+  {
+    path: '/bot/:id',
+    name: 'EditBot',
+    component: EditBotView,
+    meta: { requiresAuth: true },
+    props: true
+  },
+
   {
     path: '/editnote/:id',
     name: 'EditNote',
