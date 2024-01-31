@@ -1,6 +1,6 @@
 import os
 
-
+connection="postgresql://postgres:postgres@localhost:5432/postgres" 
 TORTOISE_ORM = {
     "connections": {"default": os.environ.get("DATABASE_URL")},
     "apps": {
