@@ -5,8 +5,6 @@ import RegisterBotView from '@/views/RegisterBotView.vue'
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ProfileView from '@/views/ProfileView.vue'
-import NoteView from '@/views/NoteView.vue'
-import EditNoteView from '@/views/EditNoteView.vue'
 import BotView from '@/views/BotView.vue'
 import EditBotView from '@/views/EditBotView.vue'
 import store from '@/store' // NEW
@@ -45,13 +43,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/note/:id',
-    name: 'Note',
-    component: NoteView,
-    meta: { requiresAuth: true },
-    props: true
-  },
-  {
     path: '/bot/:id',
     name: 'Bot',
     component: BotView,
@@ -62,14 +53,6 @@ const routes = [
     path: '/bot/:id',
     name: 'EditBot',
     component: EditBotView,
-    meta: { requiresAuth: true },
-    props: true
-  },
-
-  {
-    path: '/editnote/:id',
-    name: 'EditNote',
-    component: EditNoteView,
     meta: { requiresAuth: true },
     props: true
   }

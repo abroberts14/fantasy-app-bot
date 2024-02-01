@@ -1,9 +1,7 @@
 <template>
   <section>
-    <p>This site is built with FastAPI and Vue.</p>
-
     <div v-if="isLoggedIn" id="logout">
-      <p id="logout">Click <a href="/dashboard">here</a> to view all notes.</p>
+      <p> Welcome back to SRC Bot!</p>
     </div>
     <p v-else>
       <span><a href="/register">Register</a></span>

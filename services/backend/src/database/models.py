@@ -8,20 +8,7 @@ class Users(models.Model):
     password = fields.CharField(max_length=128, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
-    notes = fields.ReverseRelation["notes"]  # Reverse relation for notes
     bots = fields.ReverseRelation["bots"]  # Reverse relation for bots
-
-class Notes(models.Model):
-    id = fields.IntField(pk=True)
-    title = fields.CharField(max_length=225)
-    content = fields.TextField()
-    user = fields.ForeignKeyField("models.Users", related_name="notes")
-    created_at = fields.DatetimeField(auto_now_add=True)
-    modified_at = fields.DatetimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title}, {self.user_id} on {self.created_at}"
-
 
 class Bots(models.Model):
     name = fields.CharField(max_length=50, null=True)
