@@ -20,5 +20,5 @@ until PGPASSWORD=$POSTGRES_PASSWORD psql -h "$host" -U "postgres" -c '\q'; do
   fi
 done
 
->&2 echo "Postgres is up - executing command"
+>&2 echo "Postgres is up - executing command update "
 eval $cmd

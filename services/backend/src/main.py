@@ -10,11 +10,11 @@ from src.database.config import TORTOISE_ORM
 Tortoise.init_models(["src.database.models"], "models")
 
 """
-import 'from src.routes import users, notes' must be after 'Tortoise.init_models'
+import 'from src.routes import users, must be after 'Tortoise.init_models'
 why?
 https://stackoverflow.com/questions/65531387/tortoise-orm-for-python-no-returns-relations-of-entities-pyndantic-fastapi
 """
-from src.routes import users, notes, bots
+from src.routes import users, bots
 
 app = FastAPI()
 
@@ -26,7 +26,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(users.router)
-app.include_router(notes.router)
 app.include_router(bots.router)
 register_tortoise(app, config=TORTOISE_ORM, generate_schemas=False)
 
