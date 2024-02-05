@@ -2,7 +2,7 @@
   <header>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark">
       <div class="container">
-        <a class="navbar-brand" href="/">SRC BOT</a>
+        <a class="navbar-brand" href="/">SRC Bot</a>
         <button
           class="navbar-toggler"
           type="button"

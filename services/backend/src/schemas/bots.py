@@ -10,7 +10,7 @@ BotInSchema = pydantic_model_creator(
     Bots, name="BotIn", exclude=["user_id"], exclude_readonly=True)
 BotOutSchema = pydantic_model_creator(
     Bots, name="Bot", exclude =[
-      "modified_at", "user.password", "user.created_at", "user.modified_at", "user.notes"
+      "modified_at", "user.password", "user.created_at", "user.modified_at"
     ]
 )
 

@@ -1,29 +1,6 @@
 <template>
   <div>
     <section>
-      <h1>Add new note</h1>
-      <hr/><br/>
-
-      <form @submit.prevent="submit">
-        <div class="mb-3">
-          <label for="title" class="form-label">Title:</label>
-          <input type="text" name="title" v-model="form.title" class="form-control" />
-        </div>
-        <div class="mb-3">
-          <label for="content" class="form-label">Content:</label>
-          <textarea
-            name="content"
-            v-model="form.content"
-            class="form-control"
-          ></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-      </form>
-    </section>
-
-    <br/><br/>
-
-    <section>
       <h1>Bots</h1>
       <hr/><br/>
 
@@ -43,28 +20,10 @@
           <br/>
         </div>
       </div>
-      </section>
-    <section>
-      <h1>Notes</h1>
-      <hr/><br/>
 
-      <div v-if="notes.length">
-        <div v-for="note in notes" :key="note.id" class="notes">
-          <div class="card" style="width: 18rem;">
-            <div class="card-body">
-              <ul>
-                <li><strong>Note Title:</strong> {{ note.title }}</li>
-                <li><strong>Author:</strong> {{ note.user.username }}</li>
-                <li><router-link :to="{name: 'Note', params:{id: note.id}}">View</router-link></li>
-              </ul>
-            </div>
-          </div>
-          <br/>
-        </div>
-      </div>
-
+      <!-- Show a message and a link to register-bot if no bots exist -->
       <div v-else>
-        <p>Nothing to see. Check back later.</p>
+        <p>No fantasy chat bots exist. <router-link to="/register-bot">Register a new bot</router-link></p>
       </div>
     </section>
   </div>
@@ -85,17 +44,10 @@ export default defineComponent({
     };
   },
   created: function() {
-    this.$store.dispatch('getNotes');
     this.$store.dispatch('getBots');  // Fetch the bots when the component is created
   },
   computed: {
-    ...mapGetters({ notes: 'stateNotes', bots: 'stateBots' }),  // Add a new getter for bots
-  },
-  methods: {
-    ...mapActions(['createNote', 'getBots']),  // Add a new action for getting bots
-    async submit() {
-      await this.createNote(this.form);
-    },
+    ...mapGetters({ bots: 'stateBots' }),  // Add a new getter for bots
   },
 });
 </script>
