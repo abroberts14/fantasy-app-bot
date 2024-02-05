@@ -32,19 +32,19 @@ services:
     ports:
       - 5173:5173
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com  # Email used to log into pgAdmin
-      PGADMIN_DEFAULT_PASSWORD: admin           # Password used to log into pgAdmin
-    ports:
-      - "8080:80"  # Maps port 8080 on the host to port 80 in the container
-    restart: unless-stopped
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin  # Persists pgAdmin data across container restarts
+#   pgadmin:
+#     image: dpage/pgadmin4
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: admin@admin.com  # Email used to log into pgAdmin
+#       PGADMIN_DEFAULT_PASSWORD: admin           # Password used to log into pgAdmin
+#     ports:
+#       - "8080:80"  # Maps port 8080 on the host to port 80 in the container
+#     restart: unless-stopped
+#     volumes:
+#       - pgadmin_data:/var/lib/pgadmin  # Persists pgAdmin data across container restarts
 
-volumes:
-  pgadmin_data:  # Declares a volume for pgAdmin data
+# volumes:
+#   pgadmin_data:  # Declares a volume for pgAdmin data
 
 
   # db:
