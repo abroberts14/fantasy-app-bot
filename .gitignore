@@ -7,3 +7,9 @@ services/*/.vscode/
 services/frontend/.prettierrc.json
 services/baseball_bot/bot/auth/token.json
 services/baseball_bot/bot/auth/private.json
+.env
+venv/
+*.log
+*.tmp
+.tmp
+temp/
