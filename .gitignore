@@ -14,3 +14,9 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/tfplan
 terraform/.terraform.tfstate.lock.info
+.env
+venv/
+*.log
+*.tmp
+.tmp
+temp/
