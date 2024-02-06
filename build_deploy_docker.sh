@@ -1,13 +1,13 @@
 #!/bin/bash
 region="us-east-1"
 
-#aaron 
-account_id="296515499043" #update with new aws account id
-repository_name="srcbot"
+# #aaron 
+# account_id="296515499043" #update with new aws account id
+# repository_name="srcbot"
 
-#src-prod
-# account_id="975050074278" #update with new aws account id
-# repository_name="srcbot-ecr-docker-images"
+src-prod
+account_id="975050074278" #update with new aws account id
+repository_name="srcbot-ecr-docker-images"
 
 declare -A services=( ["backend"]="./services/backend" ["frontend"]="./services/frontend" ["chatbot"]="./services/baseball_bot" )
 

@@ -1,6 +1,6 @@
 from datetime import timedelta
-
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -28,9 +28,23 @@ async def create_user(user: UserInSchema) -> UserOutSchema:
 
 
 @router.post("/login")
-async def login(user: OAuth2PasswordRequestForm = Depends()):
+async def login(request: Request, user: OAuth2PasswordRequestForm = Depends()):  # Include Request in parameters
     user = await validate_user(user)
+    
+    #IN_DEV
+    print("request.client.host", request.client.host)
+    print(request.client)
+    is_dev_environment = request.client.host in ['127.0.0.1', 'localhost']
+    is_dev_environment = os.getenv('DEVELOPMENT_MODE', False)
 
+    print("is_dev_environment", is_dev_environment)
+    # Set samesite and secure attributes based on the environment
+    samesite_value = "None" if is_dev_environment else "Lax"
+    secure_value = False if is_dev_environment else True
+    print("samesite_value", samesite_value)
+    print("secure_value", secure_value)
+
+    #IN DEVELOPMENT 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -45,17 +59,20 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
     token = jsonable_encoder(access_token)
     content = {"message": "You've successfully logged in. Welcome back!"}
     response = JSONResponse(content=content)
+
+
     response.set_cookie(
         "Authorization",
         value=f"Bearer {token}",
         httponly=True,
         max_age=1800,
         expires=1800,
-        samesite="Lax",
-        secure=False,
+        samesite="None",
+        secure=False
     )
 
     return response
+
 
 
 @router.get(
@@ -75,3 +92,5 @@ async def delete_user(
     user_id: int, current_user: UserOutSchema = Depends(get_current_user)
 ) -> Status:
     return await crud.delete_user(user_id, current_user)
+
+

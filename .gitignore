@@ -7,3 +7,10 @@ services/*/.vscode/
 services/frontend/.prettierrc.json
 services/baseball_bot/bot/auth/token.json
 services/baseball_bot/bot/auth/private.json
+services/frontend/.env
+*.hcl
+terraform/.terraform/*
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/tfplan
+terraform/.terraform.tfstate.lock.info
