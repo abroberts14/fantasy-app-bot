@@ -16,11 +16,8 @@ RUN apt-get update && apt-get install -y postgresql-client
 COPY migrations .
 COPY pyproject.toml .
 
-COPY src/ .
+#COPY src/ .
 COPY src/ ./src
 
 
-
-COPY wait_for_postgres.sh /
-RUN chmod +x /wait_for_postgres.sh
-#CMD aerich init-db && aerich upgrade && uvicorn src.main:app --host 0.0.0.0 --port 5000
+CMD aerich init-db && aerich upgrade && uvicorn src.main:app --host 0.0.0.0 --port 5000
