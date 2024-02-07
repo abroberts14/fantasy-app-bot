@@ -5,7 +5,7 @@ region="us-east-1"
 # account_id="296515499043" #update with new aws account id
 # repository_name="srcbot"
 
-src-prod
+#src-prod
 account_id="975050074278" #update with new aws account id
 repository_name="srcbot-ecr-docker-images"
 

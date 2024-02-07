@@ -60,7 +60,7 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_security_group" "lb" {
-  name        = "example-alb-security-group"
+  name        = var.ecs_security_group_name
   vpc_id      = aws_vpc.default.id
 
   ingress {
