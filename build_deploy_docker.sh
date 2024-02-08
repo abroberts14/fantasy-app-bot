@@ -16,7 +16,7 @@ aws ecr get-login-password --region $region | docker login --username AWS --pass
 
 for service in "${!services[@]}"; do
   echo "building $service..."
-  docker build -t $service ${services[$service]}
+  docker build -t $service:latest ${services[$service]}
 
   echo "tagging image -  $service..."
   docker tag $service:latest $account_id.dkr.ecr.$region.amazonaws.com/$repository_name:$service

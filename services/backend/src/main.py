@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter  
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
@@ -17,19 +17,25 @@ https://stackoverflow.com/questions/65531387/tortoise-orm-for-python-no-returns-
 from src.routes import users, bots
 
 app = FastAPI()
+api_router_v1 = APIRouter(prefix="/api")
+api_router_v1.include_router(users.router)
+api_router_v1.include_router(bots.router)
+app.include_router(api_router_v1)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000"],    
+    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://default-alb-1236013653.us-east-1.elb.amazonaws.com"],    
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(users.router)
-app.include_router(bots.router)
 register_tortoise(app, config=TORTOISE_ORM, generate_schemas=False)
 
 
 @app.get("/")
 def home():
     return "Hello, World!"
+
+@app.get('/api/health-check/')
+async def health_check():
+    return {"status": "OK"}
