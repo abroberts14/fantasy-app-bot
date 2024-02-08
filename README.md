@@ -38,7 +38,7 @@ Deployments are setup from terraform now:
 -  The `app` and `base` modules leverage these to create the appropriate configurations in aws
 -  all services are named using `terraform.workspace` as a prefix, so switching workplaces (https://developer.hashicorp.com/terraform/language/state/workspaces) and deploying will configure all new services with the workspacename-aws-service name
 -
-
+![image](https://github.com/abroberts14/fantasy-app-bot/assets/36211649/ac8e4194-59fc-4a17-be90-9ba002084f3b)
 
 `terraform/modules/prod/app` sets up and configures the following aws services:
 
@@ -75,3 +75,4 @@ This needs to be placed in `prod/app/variables.tfvars` for the deployment to wor
 
 
 **Note**:  Setting up another environment by changing terraforms workspace, running the base module will output different variable values associated with this new environment. Deployment to separate environments would use different tfvar files
+![image](https://github.com/abroberts14/fantasy-app-bot/assets/36211649/ac8e4194-59fc-4a17-be90-9ba002084f3b)
