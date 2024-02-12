@@ -24,7 +24,7 @@ app.include_router(api_router_v1)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://default-alb-1236013653.us-east-1.elb.amazonaws.com"],    
+    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://default-alb-1236013653.us-east-1.elb.amazonaws.com", "https://dolphin-app-n3ezl.ondigitalocean.app"],    
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
