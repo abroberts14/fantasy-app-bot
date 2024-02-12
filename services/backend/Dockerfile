@@ -19,4 +19,4 @@ COPY pyproject.toml .
 COPY src/ ./src
 
 
-CMD aerich upgrade && uvicorn src.main:app --host 0.0.0.0 --port 5000
+#CMD aerich upgrade && uvicorn src.main:app --host 0.0.0.0 --port 5000
