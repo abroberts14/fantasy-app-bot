@@ -1,5 +1,5 @@
 aerich==0.7.1
-asyncpg==0.27.0
+asyncpg
 bcrypt==4.0.1
 passlib==1.7.4
 fastapi==0.88.0

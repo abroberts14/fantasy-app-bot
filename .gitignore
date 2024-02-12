@@ -28,3 +28,4 @@ venv/
 *.tmp
 .tmp
 temp/
+test.yaml
