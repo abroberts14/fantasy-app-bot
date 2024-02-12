@@ -23,7 +23,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    vary=["Origin"]  # Add this line to include the Vary header
 
 )
 api_router_v1 = APIRouter(prefix="/api")
