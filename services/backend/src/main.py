@@ -17,18 +17,21 @@ https://stackoverflow.com/questions/65531387/tortoise-orm-for-python-no-returns-
 from src.routes import users, bots
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://default-alb-1236013653.us-east-1.elb.amazonaws.com", "https://dolphin-app-n3ezl.ondigitalocean.app", "https://draftwarroom.com"],    
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    vary=["Origin"]  # Add this line to include the Vary header
+
+)
 api_router_v1 = APIRouter(prefix="/api")
 api_router_v1.include_router(users.router)
 api_router_v1.include_router(bots.router)
 app.include_router(api_router_v1)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://default-alb-1236013653.us-east-1.elb.amazonaws.com", "https://dolphin-app-n3ezl.ondigitalocean.app", "https://draftwarroom.com/"],    
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 register_tortoise(app, config=TORTOISE_ORM, generate_schemas=False)
 
 
