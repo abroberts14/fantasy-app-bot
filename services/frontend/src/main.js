@@ -28,6 +28,8 @@ axios.interceptors.response.use(undefined, function (error) {
   }
 })
 
-app.use(router)
-app.use(store)
-app.mount('#app')
+store.dispatch('viewMe').then(() => {
+  app.use(router)
+  app.use(store)
+  app.mount('#app')
+});
