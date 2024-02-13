@@ -53,6 +53,7 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
         expires=1800,
         samesite="None", #Lax  for local
         secure=True, #False  for local
+        domain=".draftwarroom.com"
     )
 
     return response
