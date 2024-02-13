@@ -13,9 +13,12 @@ axios.defaults.withCredentials = true
 // remove the env file to use local
 //TODO : make this automatic based on the env
 const backendURL = import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000'
-axios.defaults.baseURL = backendURL
-console.log('backendURL', backendURL)
+const frontendURL = import.meta.env.VITE_APP_FRONTEND_URL || 'http://localhost:5173'
 
+axios.defaults.baseURL = backendURL
+axios.defaults.headers.common['Access-Control-Allow-Origin'] = frontendURL
+console.log('backendURL', backendURL)
+console.log('frontendURL', frontendURL)
 axios.interceptors.response.use(undefined, function (error) {
   if (error) {
     const originalRequest = error.config
@@ -28,8 +31,7 @@ axios.interceptors.response.use(undefined, function (error) {
   }
 })
 
-store.dispatch('viewMe').then(() => {
-  app.use(router)
-  app.use(store)
-  app.mount('#app')
-});
+
+app.use(router)
+app.use(store)
+app.mount("#app");

@@ -22,16 +22,8 @@ const actions = {
     await dispatch('viewMe');
   },
   async viewMe({commit}) {
-    try {
-      let response = await axios.get('users/whoami');
-      if (response.data) {
-        await commit('setUser', response.data);
-      } else {
-        console.error('No data returned from /users/whoami');
-      }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-    }
+    let {data} = await axios.get('users/whoami');
+    await commit('setUser', data);
   },
   // eslint-disable-next-line no-empty-pattern
   async deleteUser({}, id) {

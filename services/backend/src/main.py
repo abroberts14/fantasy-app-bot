@@ -21,9 +21,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://default-alb-1236013653.us-east-1.elb.amazonaws.com", "https://dolphin-app-n3ezl.ondigitalocean.app", "https://draftwarroom.com"],    
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-
+    allow_methods=["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE"],
+    allow_headers=["Access-Control-Allow-Headers", 'Content-Type', 'Authorization', 'Access-Control-Allow-Origin', "Set-Cookie"],
 )
 api_router_v1 = APIRouter()
 api_router_v1.include_router(users.router)
