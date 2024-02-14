@@ -51,17 +51,19 @@
 
 <script>
 import { defineComponent } from 'vue'
-
+import useUsersStore from '@/store/users';
 export default defineComponent({
   name: 'NavBar',
   computed: {
     isLoggedIn: function () {
-      return this.$store.getters.isAuthenticated
+      const usersStore = useUsersStore();
+      return usersStore.isAuthenticated
     }
   },
   methods: {
     async logout() {
-      await this.$store.dispatch('logOut')
+      const usersStore = useUsersStore();
+      await usersStore.logout()
       this.$router.push('/login')
     }
   }

@@ -20,7 +20,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { mapActions } from 'vuex';
+import useUsersStore from '@/store/users'; 
 
 export default defineComponent({
   name: 'RegisterComponent',
@@ -34,10 +34,11 @@ export default defineComponent({
     };
   },
   methods: {
-    ...mapActions(['register']),
     async submit() {
       try {
-        await this.register(this.user);
+        const usersStore = useUsersStore(); 
+        await usersStore.register(this.user); // Call the action from your users store
+
         this.$router.push('/dashboard');
       } catch (error) {
         throw 'Username already exists. Please try again.';

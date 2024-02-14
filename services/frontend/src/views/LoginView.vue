@@ -16,7 +16,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { mapActions } from 'vuex';
+import useUsersStore from '@/store/users'; 
 
 export default defineComponent({
   name: 'LoginComponent',
@@ -24,19 +24,25 @@ export default defineComponent({
     return {
       form: {
         username: '',
-        password:'',
-      }
+        password: '',
+      },
     };
   },
   methods: {
-    ...mapActions(['logIn']),
     async submit() {
-      const User = new FormData();
-      User.append('username', this.form.username);
-      User.append('password', this.form.password);
-      await this.logIn(User);
-      this.$router.push('/dashboard');
-    }
-  }
+      try {
+        const User = new FormData();
+        User.append('username', this.form.username);
+        User.append('password', this.form.password);
+
+        const usersStore = useUsersStore(); 
+        await usersStore.logIn(User); // Call the action from your users store
+
+        this.$router.push('/dashboard');
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  },
 });
 </script>

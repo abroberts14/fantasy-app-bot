@@ -7,7 +7,7 @@ import DashboardView from '@/views/DashboardView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import BotView from '@/views/BotView.vue'
 import EditBotView from '@/views/EditBotView.vue'
-import store from '@/store' // NEW
+import useUsersStore from '@/store/users'; 
 
 const routes = [
   {
@@ -65,7 +65,8 @@ const router = createRouter({
 
 router.beforeEach((to, _, next) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
-    if (store.getters.isAuthenticated) {
+    const userStore = useUsersStore(); 
+    if (userStore.isAuthenticated) {
       next()
       return
     }

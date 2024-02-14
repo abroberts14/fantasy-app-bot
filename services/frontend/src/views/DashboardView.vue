@@ -4,7 +4,7 @@
       <h1>Bots</h1>
       <hr/><br/>
 
-      <div v-if="bots.length">
+      <div v-if="bots?.length">
         <div v-for="bot in bots" :key="bot.id" class="bots">
           <div class="card" style="width: 18rem;">
             <div class="card-body">
@@ -31,7 +31,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { mapGetters, mapActions } from 'vuex';
+import useBotsStore from '@/store/bots'; 
 
 export default defineComponent({
   name: 'DashboardComponent',
@@ -43,11 +43,15 @@ export default defineComponent({
       },
     };
   },
-  created: function() {
-    this.$store.dispatch('getBots');  // Fetch the bots when the component is created
+  async created() {
+    const botsStore = useBotsStore(); 
+    await botsStore.getBots(); 
   },
   computed: {
-    ...mapGetters({ bots: 'stateBots' }),  // Add a new getter for bots
+    bots() {
+      const botsStore = useBotsStore(); 
+      return botsStore.stateBots;
+    },
   },
 });
 </script>

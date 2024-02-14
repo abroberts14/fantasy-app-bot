@@ -12,27 +12,31 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { mapGetters, mapActions } from 'vuex';
+import useUsersStore from '@/store/users'; 
 
 export default defineComponent({
   name: 'ProfileComponent',
-  created: function() {
-    return this.$store.dispatch('viewMe');
+  async created() {
+    const usersStore = useUsersStore(); 
+    await usersStore.viewMe(); // Call the action from your users store
   },
   computed: {
-    ...mapGetters({user: 'stateUser' }),
+    user() {
+      const usersStore = useUsersStore(); 
+      return usersStore.stateUser; 
+    },
   },
   methods: {
-    ...mapActions(['deleteUser']),
     async deleteAccount() {
       try {
-        await this.deleteUser(this.user.id);
-        await this.$store.dispatch('logOut');
+        const usersStore = useUsersStore(); 
+        await usersStore.deleteUser(this.user.id); // Call the action from your users store
+        await usersStore.logOut(); // Call the action from your users store
         this.$router.push('/');
       } catch (error) {
         console.error(error);
       }
-    }
+    },
   },
 });
 </script>

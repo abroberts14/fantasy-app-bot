@@ -19,7 +19,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { mapGetters, mapActions } from 'vuex';
+import useBotsStore from '@/store/bots'; 
 
 export default defineComponent({
   name: 'EditBot',
@@ -32,36 +32,37 @@ export default defineComponent({
       },
     };
   },
-  created: function() {
-    this.GetBot();
+  created() {
+    this.getBot();
   },
   computed: {
-    ...mapGetters({ bot: 'stateBot' }),
+    bot() {
+      const botsStore = useBotsStore(); 
+      return botsStore.stateBot; 
+    },
   },
   methods: {
-    ...mapActions(['updateBot', 'viewBot']),
     async submit() {
-    try {
-      let bot = {
-        id: this.id,
-        form: this.form,
-      };
-      await this.updateBot(bot);
-      this.$router.push({name: 'Bot', params:{id: this.bot.id}});
-    } catch (error) {
-      console.log(error);
-    }
-    },
-    async GetBot() {
       try {
-        await this.viewBot(this.id);
-        this.form.name = this.bot.name;
-        this.form.groupme_bot_id = this.bot.groupme_bot_id;
+        let bot = {
+          id: this.id,
+          form: this.form,
+        };
+        const botsStore = useBotsStore(); 
+        await botsStore.updateBot(bot); 
+        this.$router.push({name: 'Bot', params:{id: this.bot.id}});
       } catch (error) {
-        console.error(error);
-        this.$router.push('/dashboard');
+        console.log(error);
       }
-    }
+    },
+    async getBot() {
+      try {
+        const botsStore = useBotsStore(); 
+        await botsStore.viewBot(this.id); 
+      } catch (error) {
+        console.log(error);
+      }
+    },
   },
 });
 </script>

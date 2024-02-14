@@ -20,7 +20,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { mapActions } from 'vuex';
+import useBotsStore from '@/store/bots'; 
 
 export default defineComponent({
   name: 'RegisterBotComponent',
@@ -34,16 +34,15 @@ export default defineComponent({
     };
   },
   methods: {
-    ...mapActions(['createBot']),
     async submit() {
-    try {
-      await this.createBot(this.bot);
-      this.$router.push('/dashboard');
-    } catch (error) {
-      console.error(new Error('Bot name already exists. Please try again.'));
-    }
-  },
+      try {
+        const botsStore = useBotsStore(); 
+        await botsStore.createBot(this.bot); 
+        this.$router.push('/dashboard');
+      } catch (error) {
+        console.error(new Error('Bot name already exists. Please try again.'));
+      }
+    },
   },
 });
 </script>
-

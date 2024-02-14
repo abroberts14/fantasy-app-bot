@@ -11,7 +11,7 @@ import src.crud.users as crud
 from src.auth.users import validate_user
 from src.schemas.token import Status
 from src.schemas.users import UserInSchema, UserOutSchema
-
+import os
 from src.auth.jwthandler import (
     create_access_token,
     get_current_user,
@@ -45,15 +45,17 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
     token = jsonable_encoder(access_token)
     content = {"message": "You've successfully logged in. Welcome back!"}
     response = JSONResponse(content=content)
+    is_local = os.getenv('IS_LOCAL', 'false').lower() == 'true'
+    print('is local: ', is_local)
     response.set_cookie(
         "Authorization",
         value=f"Bearer {token}",
         httponly=True,
         max_age=1800,
         expires=1800,
-        samesite="None", #Lax  for local
-        secure=True, #False  for local
-        domain=".draftwarroom.com"
+        samesite="Lax" if is_local else "None",
+        secure=not is_local,
+        domain=".draftwarroom.com" if not is_local else "localhost"
     )
 
     return response

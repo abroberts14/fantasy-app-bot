@@ -14,32 +14,41 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { mapGetters, mapActions } from 'vuex';
+import useBotsStore from '@/store/bots'; 
+import useUsersStore from '@/store/users'; 
 
 export default defineComponent({
   name: 'BotComponent',
   props: ['id'],
   async created() {
     try {
-      await this.viewBot(this.id);
+      const botsStore = useBotsStore(); 
+      await botsStore.viewBot(this.id); 
     } catch (error) {
       console.error(error);
       this.$router.push('/dashboard');
     }
   },
   computed: {
-    ...mapGetters({ bot: 'stateBot', user: 'stateUser'}),
+    bot() {
+      const botsStore = useBotsStore(); 
+      return botsStore.stateBot; 
+    },
+    user() {
+      const usersStore = useUsersStore(); 
+      return usersStore.stateUser; 
+    },
   },
   methods: {
-    ...mapActions(['viewBot', 'deleteBot']),
     async removeBot() {
       try {
-        await this.deleteBot(this.id);
+        const botsStore = useBotsStore(); 
+        await botsStore.deleteBot(this.id); 
         this.$router.push('/dashboard');
       } catch (error) {
         console.error(error);
       }
-    }
+    },
   },
 });
 </script>
