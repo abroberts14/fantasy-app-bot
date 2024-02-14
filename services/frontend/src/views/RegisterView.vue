@@ -21,6 +21,7 @@
 <script>
 import { defineComponent } from 'vue';
 import useUsersStore from '@/store/users'; 
+import { useToast } from 'vue-toastification';
 
 export default defineComponent({
   name: 'RegisterComponent',
@@ -35,6 +36,26 @@ export default defineComponent({
   },
   methods: {
     async submit() {
+
+      const toast = useToast();
+
+      const errorMessages = [];
+      if (!this.user.username) {
+        errorMessages.push('Username cannot be empty');
+      }
+
+      if (!this.user.full_name) {
+        errorMessages.push('Full name cannot be empty');
+      }
+
+      if (!this.user.password) {
+        errorMessages.push('Password cannot be empty');
+      }
+
+      if (errorMessages.length > 0) {
+        toast.error(errorMessages.join(', '));
+        return;
+      }
       try {
         const usersStore = useUsersStore(); 
         await usersStore.register(this.user); // Call the action from your users store
