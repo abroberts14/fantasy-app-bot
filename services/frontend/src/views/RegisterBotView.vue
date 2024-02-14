@@ -20,7 +20,8 @@
 
 <script>
 import { defineComponent } from 'vue';
-import useBotsStore from '@/store/bots'; 
+import useBotsStore from '@/store/bots'; // Import your bots store
+import { useToast } from 'vue-toastification';
 
 export default defineComponent({
   name: 'RegisterBotComponent',
@@ -35,12 +36,33 @@ export default defineComponent({
   },
   methods: {
     async submit() {
+      const toast = useToast();
+
+      const errorMessages = [];
+      if (!this.bot.name) {
+        errorMessages.push('Bot Name cannot be empty');
+      }
+
+      if (!this.bot.league_id) {
+        errorMessages.push('Yahoo League ID cannot be empty');
+      }
+
+      if (!this.bot.groupme_bot_id) {
+        errorMessages.push('GroupMe Bot ID cannot be empty');
+      }
+
+      if (errorMessages.length > 0) {
+        toast.error(errorMessages.join(', '));
+        return;
+      }
+
       try {
         const botsStore = useBotsStore(); 
-        await botsStore.createBot(this.bot); 
+        await botsStore.createBot(this.bot); // Call the action from your bots store
+
         this.$router.push('/dashboard');
       } catch (error) {
-        console.error(new Error('Bot name already exists. Please try again.'));
+        toast.error('Bot name already exists. Please try again.');
       }
     },
   },

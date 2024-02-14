@@ -29,6 +29,7 @@ async def create_user(user: UserInSchema) -> UserOutSchema:
 
 @router.post("/login")
 async def login(user: OAuth2PasswordRequestForm = Depends()):
+
     user = await validate_user(user)
 
     if not user:
@@ -60,6 +61,24 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
 
     return response
 
+@router.post("/logout")
+async def logout():
+    print('logging out')
+    is_local = os.getenv('IS_LOCAL', 'false').lower() == 'true'
+    content = {"message": "You've successfully logged out."}
+
+    response = JSONResponse(content=content)
+    response.set_cookie(
+        "Authorization",
+        value="",
+        httponly=True,
+        max_age=0,
+        expires=0,
+        samesite="Lax" if is_local else "None",
+        secure=not is_local,
+        domain=".draftwarroom.com" if not is_local else "localhost"
+    )
+    return response
 
 @router.get(
     "/users/whoami", response_model=UserOutSchema, dependencies=[Depends(get_current_user)]

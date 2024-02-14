@@ -7,19 +7,46 @@ import router from './router'
 import useUsersStore from '@/store/users'; 
 import { createPinia } from 'pinia'
 import createPersistedState from 'pinia-plugin-persistedstate'
-
+import Toast from "vue-toastification";
+import "vue-toastification/dist/index.css";
+import './styles.css'; // Move this line after the default styles
+import { useToast } from 'vue-toastification'
 const app = createApp(App)
+app.use(Toast, {
+  position: "top-right",
+  timeout: 3000,
+  closeOnClick: true,
+  pauseOnFocusLoss: true,
+  pauseOnHover: true,
+  draggable: true,
+  draggablePercent: 0.6,
+  showCloseButtonOnHover: false,
+  hideProgressBar: false,
+  closeButton: "button",
+  icon: true,
+  rtl: false,
+  maxToasts: 20,
+  transition: "Vue-Toastification__fade",
+  newestOnTop: false,
+  toastClassName: 'custom-toast', //styles.css but this is not working
 
+  filterBeforeCreate: (toast, toasts) => { // gpt ty, determines if the toast should be created. 
+    // If the toast is already displayed, don't create it otherwise create it
+    if (toasts.filter(
+      t => t.content === toast.content
+    ).length !== 0) {
+      return false;
+    }
+    return toast;
+  }
+})
 const pinia = createPinia();
-// Create persisted state plugin
 pinia.use(createPersistedState)
 
 app.use(pinia);
 
 axios.defaults.withCredentials = true
-//backend temp : http://example-lb-1192907999.us-east-1.elb.amazonaws.com/
-// remove the env file to use local
-//TODO : make this automatic based on the env
+
 const backendURL = import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000'
 const frontendURL = import.meta.env.VITE_APP_FRONTEND_URL || 'http://localhost:5173'
 
@@ -27,21 +54,35 @@ axios.defaults.baseURL = backendURL
 // axios.defaults.headers.common['Access-Control-Allow-Origin'] = frontendURL
 console.log('backendURL', backendURL)
 console.log('frontendURL', frontendURL)
-axios.interceptors.response.use(undefined, function (error) {
-  if (error) {
-    const originalRequest = error.config
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      console.log('error 401')
-      const usersStore = useUsersStore(); 
-      usersStore.logOut(); // Call the action from your users store
+const toast = useToast()
 
-      return router.push('/login')
+// error handling
+axios.interceptors.response.use(
+  response => response, // simply return the response if it's successful, no error handinling
+  error => {
+    // handle the error
+    console.error('Global error handler 2:', error);
+    let errorMessage = 'A system error has occurred. Please try again later.';
+    if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
     }
+    
+    toast.error(errorMessage);
+    // Special handling for 401 errors
+    if (error.response?.status === 401 && !error.config._retry) {
+      error.config._retry = true;
+      const usersStore = useUsersStore(); 
+      usersStore.logout(null); 
+      router.push('/login');
+    }
+
+    // reject the promise so the error is passed back to the caller (they can then handle if wanted/needed)
+    return Promise.reject(error);
   }
-})
+);
 
 app.use(router)
+
 //app.use(createPinia())
 app.mount("#app");
 

@@ -17,6 +17,7 @@
 <script>
 import { defineComponent } from 'vue';
 import useUsersStore from '@/store/users'; 
+import { useToast } from 'vue-toastification';
 
 export default defineComponent({
   name: 'LoginComponent',
@@ -31,6 +32,22 @@ export default defineComponent({
   methods: {
     async submit() {
       try {
+        const toast = useToast();
+
+        const errorMessages = [];
+        if (!this.form.username) {
+          errorMessages.push('Username cannot be empty');
+        }
+
+        if (!this.form.password) {
+          errorMessages.push('Password cannot be empty');
+        }
+
+        if (errorMessages.length > 0) {
+          toast.error(errorMessages.join(', '));
+          return;
+        }
+
         const User = new FormData();
         User.append('username', this.form.username);
         User.append('password', this.form.password);
@@ -40,7 +57,8 @@ export default defineComponent({
 
         this.$router.push('/dashboard');
       } catch (error) {
-        console.error(error);
+        console.log("Login Failed: ", error);
+
       }
     },
   },

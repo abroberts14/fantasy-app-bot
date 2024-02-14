@@ -30,6 +30,8 @@ const useUsersStore = defineStore('users', {
       await axios.delete(`user/${id}`);
     },
     async logOut() {
+      await axios.post('logout');
+
       this.logout(null);
     },
     setUser(username) {
@@ -37,6 +39,9 @@ const useUsersStore = defineStore('users', {
     },
     logout(user){
       this.user = user;
+
+      //this.$reset();
+
     },
   },
   persist: {
