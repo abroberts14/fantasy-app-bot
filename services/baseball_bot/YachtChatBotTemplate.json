@@ -3,6 +3,7 @@
         "type": 1,
         "title": "DraftWarRoom Chat Bot",
         "name": "draftwarroom-chatbot",
+        "image": "aarondawg14/draftwarroom:latest",
         "description": "Yahoo Chatbot for DraftWarRoom",
         "logo": "https://raw.githubusercontent.com/abroberts14/fantasy-app-bot/ed68d5b55827c9b6004ededb86da2790a1a3e115/services/frontend/src/assets/srclogo1.png",
         "categories": [
