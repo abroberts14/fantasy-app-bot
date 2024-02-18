@@ -27,7 +27,13 @@
             {
                 "name": "LEAGUE_ID",
                 "label": "Yahoo League Id"
+            },
+            {
+                "name": "TEAM_NAMES_MINUTES",
+                "label": "Minutes between team name updates",
+                "default": "30"
             }
+
         ]
     }
 ]
