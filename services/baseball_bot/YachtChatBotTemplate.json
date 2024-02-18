@@ -22,7 +22,7 @@
             {
             "name": "BOT_TYPE",
             "label": "Chat Bot Type",
-            "default": "GroupME"
+            "default": "GroupMe"
             }
         ]
     }
