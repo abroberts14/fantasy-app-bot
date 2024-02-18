@@ -33,6 +33,7 @@ services:
       #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
       BOT_ID: "6b5dfa374f148c64eb1e9948f5"
       BOT_TYPE: "GroupMe"
+      TEAM_NAMES_MINUTES: 30
       #ESPN league id (REQUIRED)
       LEAGUE_ID: 3932
     image: yahoo_bot:latest
