@@ -6,13 +6,24 @@ from src.schemas.bots import BotOutSchema
 from src.schemas.token import Status
 
 
-async def get_bots():
-    return await BotOutSchema.from_queryset(Bots.all())
 
-
+async def get_bots(user_id: int = None):
+    if user_id:
+        # Fetch bots for a specific user
+        return await BotOutSchema.from_queryset(Bots.filter(user_id=user_id))
+    else:
+        # Fetch all bots (for admins in the future)
+        return await BotOutSchema.from_queryset(Bots.all())
+    
 async def get_bot(bot_id) -> BotOutSchema:
     return await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
 
+async def get_bots_for_user(user_id: int):
+    return await BotModel.filter(user_id=user_id).all()
+
+# For admin users
+async def get_all_bots():
+    return await BotModel.all()
 
 async def create_bot(bot, current_user) -> BotOutSchema:
     bot_dict = bot.dict(exclude_unset=True)

@@ -18,6 +18,7 @@
     "js-cookie": "^3.0.5",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",
+    "primevue": "^3.48.1",
     "vue": "^3.4.19",
     "vue-router": "^4.2.5",
     "vue-toastification": "^2.0.0-rc.5",

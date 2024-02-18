@@ -1,7 +1,7 @@
 <template>
   <div>
     <section>
-      <h1>Bots</h1>
+      <h1>All Bots</h1>
       <hr/><br/>
 
       <div v-if="bots?.length">
@@ -35,7 +35,7 @@ import useBotsStore from '@/store/bots';
 import useUsersStore from '@/store/users'; 
 
 export default defineComponent({
-  name: 'DashboardComponent',
+  name: 'AdminComponent',
   data() {
     return {
       form: {
@@ -46,12 +46,9 @@ export default defineComponent({
   },
   async created() {
     const botsStore = useBotsStore(); 
+    await botsStore.getBots()
     const usersStore = useUsersStore(); 
-    await usersStore.viewMe();
-
-    // If the user is an admin and wants to see their own bots, pass their user ID
-    const userId = usersStore.stateUser.id;
-    await botsStore.getBots(userId); // Modify getBots to accept a user ID parameter
+    await usersStore.viewMe(); // Call the action from your users store
   },
   computed: {
     bots() {

@@ -1,6 +1,8 @@
-from fastapi import FastAPI, APIRouter  
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from tortoise import Tortoise
+from starlette.exceptions import HTTPException 
 
 from src.database.register import register_tortoise
 from src.database.config import TORTOISE_ORM
@@ -17,17 +19,41 @@ https://stackoverflow.com/questions/65531387/tortoise-orm-for-python-no-returns-
 from src.routes import users, bots
 
 app = FastAPI()
+
+#allowed_origins = ["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://dolphin-app-n3ezl.ondigitalocean.app", "https://draftwarroom.com"],    
+allowed_origins = [
+    "http://localhost:5173",  # Local frontend development
+    "https://dolphin-app-n3ezl.ondigitalocean.app",  # Production frontend
+    "https://draftwarroom.com",  # Another production frontend
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://default-alb-1236013653.us-east-1.elb.amazonaws.com", "https://dolphin-app-n3ezl.ondigitalocean.app", "https://draftwarroom.com"],    
+    allow_origins=allowed_origins,    
     allow_credentials=True,
-    allow_methods=["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["Access-Control-Allow-Headers", 'Content-Type', 'Authorization', 'Access-Control-Allow-Origin', "Set-Cookie"],
+    #allow_methods=["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE"],
+    allow_methods=["*"],
+    #allow_headers=["Access-Control-Allow-Headers", 'Content-Type', 'Authorization', 'Access-Control-Allow-Origin', "Set-Cookie"],
+    allow_headers=["*"],
 )
 api_router_v1 = APIRouter()
 api_router_v1.include_router(users.router)
 api_router_v1.include_router(bots.router)
 app.include_router(api_router_v1)
+
+@app.exception_handler(HTTPException)
+async def fastapi_http_exception_handler(request: Request, exc: HTTPException):
+    print('non def exception handler')
+    response = JSONResponse({"detail": str(exc.detail)}, status_code=exc.status_code)
+    response.headers['Access-Control-Allow-Origin'] = "*"
+    # Add other necessary CORS headers if needed
+    return response
+
+@app.exception_handler(Exception)
+async def default_exception_handler(request: Request, exc: Exception):
+    print('default exception handler')
+    response = JSONResponse({"detail": "Internal Server Error"}, status_code=500)
+    response.headers['Access-Control-Allow-Origin'] = "*"
+    return response
 
 
 register_tortoise(app, config=TORTOISE_ORM, generate_schemas=False)

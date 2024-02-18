@@ -9,7 +9,8 @@ class Users(models.Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
     bots = fields.ReverseRelation["bots"]  # Reverse relation for bots
-
+    role = fields.CharField(max_length=20, default="user")
+    
 class Bots(models.Model):
     name = fields.CharField(max_length=50, null=True)
     league_id = fields.CharField(max_length=6)

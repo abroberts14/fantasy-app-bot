@@ -9,6 +9,7 @@ const useUsersStore = defineStore('users', {
   getters: {
     isAuthenticated: state => !!state.user,
     stateUser: state => state.user,
+    isAdmin: state => state.user && state.user.role === 'admin',
   },
   actions: {
     async register(form) {

@@ -1,8 +1,8 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from tortoise.contrib.fastapi import HTTPNotFoundError
-from tortoise.exceptions import DoesNotExist
+from tortoise.exceptions import DoesNotExist, IntegrityError
 
 import src.crud.bots as crud
 from src.auth.jwthandler import get_current_user
@@ -19,10 +19,22 @@ router = APIRouter()
     response_model=List[BotOutSchema],
     dependencies=[Depends(get_current_user)],
 )
-async def get_bots():
-    return await crud.get_bots()
+async def get_bots(
+    current_user: UserOutSchema = Depends(get_current_user),
+    user_id: int = Query(None)  # Optional query parameter
+):
+    if user_id is not None:
+    # Admin requesting specific user's bots
+        return await crud.get_bots(user_id)
+    else:
+        if current_user.role == "admin":
+            return await crud.get_bots()
+        else:
+            raise HTTPException(
+                status_code=403,
+                    )
 
-
+    
 @router.get(
     "/bot/{id}",
     response_model=BotOutSchema,
@@ -44,8 +56,13 @@ async def get_bot(id: int) -> BotOutSchema:
 async def create_bot(
     bot: BotInSchema, current_user: UserOutSchema = Depends(get_current_user)
 ) -> BotOutSchema:
-    return await crud.create_bot(bot, current_user)
-
+    try:
+        return await crud.create_bot(bot, current_user)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400,
+            detail="A bot with the provided details already exists."
+        )
 
 @router.patch(
     "/bot/{id}",
