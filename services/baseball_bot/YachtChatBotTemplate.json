@@ -1,26 +1,28 @@
-    {
-      "type": 1,
-      "title": "DraftWarRoom Chat Bot",
-      "name": "draftwarroom-chatbot",
-      "description": "Yahoo Chatbot for DraftWarRoom",
-      "logo": "https://raw.githubusercontent.com/abroberts14/fantasy-app-bot/ed68d5b55827c9b6004ededb86da2790a1a3e115/services/frontend/src/assets/srclogo1.png",
-      "categories": [
-        "Other"
-      ],
-      "platform": "linux",
-      "restart_policy": "unless-stopped",
-      "network_mode": "host",
-      "note": "BOT_ID, BOT_TYPE, LEAGUE_ID and (optional) TEAM_NAMES_MINUTES are required enviornmental variables",
-      "env": [
+    [
         {
-          "name": "BOT_ID",
-          "label": "GroupMe Bot ID",
-          "default": "6b5dfa374f148c64eb1e9948f5"
-        },
-        {
-          "name": "BOT_TYPE",
-          "label": "Chat Bot Type",
-          "default": "GroupME"
-        }
-      ]
+        "type": 1,
+        "title": "DraftWarRoom Chat Bot",
+        "name": "draftwarroom-chatbot",
+        "description": "Yahoo Chatbot for DraftWarRoom",
+        "logo": "https://raw.githubusercontent.com/abroberts14/fantasy-app-bot/ed68d5b55827c9b6004ededb86da2790a1a3e115/services/frontend/src/assets/srclogo1.png",
+        "categories": [
+            "Other"
+        ],
+        "platform": "linux",
+        "restart_policy": "unless-stopped",
+        "network_mode": "host",
+        "note": "BOT_ID, BOT_TYPE, LEAGUE_ID and (optional) TEAM_NAMES_MINUTES are required enviornmental variables",
+        "env": [
+            {
+            "name": "BOT_ID",
+            "label": "GroupMe Bot ID",
+            "default": "6b5dfa374f148c64eb1e9948f5"
+            },
+            {
+            "name": "BOT_TYPE",
+            "label": "Chat Bot Type",
+            "default": "GroupME"
+            }
+        ]
     }
+]
