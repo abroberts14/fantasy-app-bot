@@ -1,6 +1,5 @@
 version: '3.8'
-
-services:
+services: 
 
   backend:
     build: ./services/backend
@@ -25,3 +24,21 @@ services:
     ports:
       - 5173:5173
     command: npm run dev
+
+  yahoo_bot:
+    build:
+      context: ./services/baseball_bot
+    restart: always
+    environment:
+      #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
+      BOT_ID: "6b5dfa374f148c64eb1e9948f5"
+      BOT_TYPE: "GroupMe"
+      #ESPN league id (REQUIRED)
+      LEAGUE_ID: 3932
+    image: yahoo_bot:latest
+
+
+
+# Build, tag and push docker image to docker hub:
+#docker build -t aarondawg14/draftwarroom:1.0 ./services/baseball_bot
+#docker push aarondawg14/draftwarroom:1.0
