@@ -29,3 +29,5 @@ venv/
 .tmp
 temp/
 test.yaml
+services/baseball_bot/auth/token.json
+services/baseball_bot/auth/private.json
