@@ -18,7 +18,8 @@ class Bots(models.Model):
     user = fields.ForeignKeyField("models.Users", related_name="bots")
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
-
+    running = fields.BooleanField(default=False)
+    active = fields.BooleanField(default=True)
     class Meta:
         unique_together = ("league_id", "groupme_bot_id")
 

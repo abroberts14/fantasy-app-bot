@@ -10,8 +10,12 @@ import createPersistedState from 'pinia-plugin-persistedstate'
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 import './styles.css'; // Move this line after the default styles
-// import PrimeVue from 'primevue/config';
-// import 'primevue/resources/themes/aura-light-green/theme.css'
+import PrimeVue from 'primevue/config';
+import 'primevue/resources/themes/saga-blue/theme.css';
+import 'primevue/resources/primevue.min.css';
+import 'primeflex/primeflex.scss';
+
+import 'primeicons/primeicons.css';
 
 import { useToast } from 'vue-toastification'
 
@@ -52,7 +56,7 @@ pinia.use(createPersistedState)
 
 app.use(pinia);
 
-// app.use(PrimeVue);
+app.use(PrimeVue);
 
 
 

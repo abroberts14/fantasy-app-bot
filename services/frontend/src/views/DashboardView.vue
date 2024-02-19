@@ -1,31 +1,8 @@
 <template>
   <div>
-    <section>
-      <h1>Bots</h1>
-      <hr/><br/>
-
-      <div v-if="bots?.length">
-        <div v-for="bot in bots" :key="bot.id" class="bots">
-          <div class="card" style="width: 18rem;">
-            <div class="card-body">
-              <ul>
-                <li><strong>Bot Name:</strong> {{ bot.name }}</li>
-                <li><strong>League ID:</strong> {{ bot.league_id }}</li>
-                <li><strong>GroupMe Bot ID:</strong> {{ bot.groupme_bot_id }}</li>
-
-                <li><router-link :to="{name: 'Bot', params:{id: bot.id}}">View</router-link></li>
-              </ul>
-            </div>
-          </div>
-          <br/>
-        </div>
-      </div>
-
-      <!-- Show a message and a link to register-bot if no bots exist -->
-      <div v-else>
-        <p>No fantasy chat bots exist. <router-link to="/register-bot">Register a new bot</router-link></p>
-      </div>
-    </section>
+    <h1>My Bots</h1>
+    <hr/><br/>
+    <BotTable  :bots="bots" />
   </div>
 </template>
 
@@ -33,9 +10,13 @@
 import { defineComponent } from 'vue';
 import useBotsStore from '@/store/bots'; 
 import useUsersStore from '@/store/users'; 
+import BotTable from '@/components/BotTable.vue'; 
 
 export default defineComponent({
   name: 'DashboardComponent',
+  components: {
+    BotTable,
+  },
   data() {
     return {
       form: {
@@ -45,19 +26,15 @@ export default defineComponent({
     };
   },
   async created() {
-    const botsStore = useBotsStore(); 
     const usersStore = useUsersStore(); 
     await usersStore.viewMe();
-
-    // If the user is an admin and wants to see their own bots, pass their user ID
     const userId = usersStore.stateUser.id;
-    await botsStore.getBots(userId); // Modify getBots to accept a user ID parameter
+    const botsStore = useBotsStore();
+    await botsStore.getBots(userId); // send user id to get current users bots
   },
   computed: {
     bots() {
-      const botsStore = useBotsStore(); 
-      const userId = this.user.id; // Replace this with your actual user ID retrieval logic
-
+      const botsStore = useBotsStore();
       return botsStore.stateBots;
     },
     user() {
