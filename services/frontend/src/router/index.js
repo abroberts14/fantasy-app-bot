@@ -7,6 +7,7 @@ import DashboardView from '@/views/DashboardView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import BotView from '@/views/BotView.vue'
 import EditBotView from '@/views/EditBotView.vue'
+import AdminView from '@/views/AdminView.vue'
 import useUsersStore from '@/store/users'; 
 
 const routes = [
@@ -35,6 +36,12 @@ const routes = [
     name: 'Dashboard',
     component: DashboardView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: AdminView,
+    meta: { requiresAuth: true, requiresAdmin: true}
   },
   {
     path: '/profile',
@@ -67,6 +74,14 @@ router.beforeEach((to, _, next) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     const userStore = useUsersStore(); 
     if (userStore.isAuthenticated) {
+      if (to.matched.some((record) => record.meta.requiresAdmin)) {
+        if (userStore.isAdmin) {
+          next()
+          return
+        }
+        next('/dashboard')
+        return
+      }
       next()
       return
     }

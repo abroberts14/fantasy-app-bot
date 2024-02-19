@@ -13,8 +13,10 @@ services:
       - ./services/backend:/app
       - ./services/backend/src:/app/src
 
-    #command: uvicorn src.main:app --reload --host 0.0.0.0 --port 5000
-    command: gunicorn -k uvicorn.workers.UvicornWorker -t 1000 -b 0.0.0.0:5000 --log-level info --reload src.main:app
+    #local development uvicorn - supports hot reloadng (on code changes the backend container will reflect the changes instant)
+    command: uvicorn src.main:app --reload --host 0.0.0.0 --port 5000
+    #prod
+    #command: gunicorn -k uvicorn.workers.UvicornWorker -t 1000 -b 0.0.0.0:5000 --log-level info --reload src.main:app
 
   frontend:
     build: ./services/frontend
@@ -25,18 +27,18 @@ services:
       - 5173:5173
     command: npm run dev
 
-  yahoo_bot:
-    build:
-      context: ./services/baseball_bot
-    restart: always
-    environment:
-      #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
-      BOT_ID: "6b5dfa374f148c64eb1e9948f5"
-      BOT_TYPE: "GroupMe"
-      TEAM_NAMES_MINUTES: 30
-      #ESPN league id (REQUIRED)
-      LEAGUE_ID: 3932
-    image: yahoo_bot:latest
+  # yahoo_bot:
+  #   build:
+  #     context: ./services/baseball_bot
+  #   restart: always
+  #   environment:
+  #     #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
+  #     BOT_ID: "6b5dfa374f148c64eb1e9948f5"
+  #     BOT_TYPE: "GroupMe"
+  #     TEAM_NAMES_MINUTES: 30
+  #     #ESPN league id (REQUIRED)
+  #     LEAGUE_ID: 3932
+  #   image: yahoo_bot:latest
 
 
 

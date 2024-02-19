@@ -9,7 +9,8 @@ class Users(models.Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
     bots = fields.ReverseRelation["bots"]  # Reverse relation for bots
-
+    role = fields.CharField(max_length=20, default="user")
+    
 class Bots(models.Model):
     name = fields.CharField(max_length=50, null=True)
     league_id = fields.CharField(max_length=6)
@@ -17,7 +18,8 @@ class Bots(models.Model):
     user = fields.ForeignKeyField("models.Users", related_name="bots")
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
-
+    running = fields.BooleanField(default=False)
+    active = fields.BooleanField(default=True)
     class Meta:
         unique_together = ("league_id", "groupme_bot_id")
 

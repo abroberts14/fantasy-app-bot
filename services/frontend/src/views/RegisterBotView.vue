@@ -37,7 +37,6 @@ export default defineComponent({
   methods: {
     async submit() {
       const toast = useToast();
-
       const errorMessages = [];
       if (!this.bot.name) {
         errorMessages.push('Bot Name cannot be empty');
@@ -52,7 +51,9 @@ export default defineComponent({
       }
 
       if (errorMessages.length > 0) {
-        toast.error(errorMessages.join(', '));
+        for (const errorMessage of errorMessages) {
+          toast.error(errorMessage);
+        }
         return;
       }
 
@@ -62,7 +63,7 @@ export default defineComponent({
 
         this.$router.push('/dashboard');
       } catch (error) {
-        toast.error('Bot name already exists. Please try again.');
+        console.log('Error creating bot');
       }
     },
   },

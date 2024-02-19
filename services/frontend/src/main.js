@@ -10,8 +10,18 @@ import createPersistedState from 'pinia-plugin-persistedstate'
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 import './styles.css'; // Move this line after the default styles
+import PrimeVue from 'primevue/config';
+import 'primevue/resources/themes/saga-blue/theme.css';
+import 'primevue/resources/primevue.min.css';
+import 'primeflex/primeflex.scss';
+
+import 'primeicons/primeicons.css';
+
 import { useToast } from 'vue-toastification'
+
+
 const app = createApp(App)
+
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
@@ -40,10 +50,16 @@ app.use(Toast, {
     return toast;
   }
 })
+
 const pinia = createPinia();
 pinia.use(createPersistedState)
 
 app.use(pinia);
+
+app.use(PrimeVue);
+
+
+
 
 axios.defaults.withCredentials = true
 
@@ -54,19 +70,36 @@ axios.defaults.baseURL = backendURL
 // axios.defaults.headers.common['Access-Control-Allow-Origin'] = frontendURL
 console.log('backendURL', backendURL)
 console.log('frontendURL', frontendURL)
+
+
+
 const toast = useToast()
+
 
 // error handling
 axios.interceptors.response.use(
   response => response, // simply return the response if it's successful, no error handinling
   error => {
     // handle the error
-    console.error('Global error handler 2:', error);
     let errorMessage = 'A system error has occurred. Please try again later.';
-    if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
+
+    // Check if the error format matches FastAPI's validation errors
+    if (error.response?.status === 422 && error.response?.data?.detail) {
+      // Extract error messages and concatenate them
+      const errors = error.response.data.detail.map(err => {
+        const field = err.loc[err.loc.length - 1]; // get the last item from the location array
+        return `${field.charAt(0).toUpperCase() + field.slice(1)}: ${err.msg}`;
+      });
+      errorMessage = errors.join('. '); // Concatenate all error messages with a period and space
     }
-    
+
+    if ((error.response?.status === 400 || error.response?.status == 500) && error.response?.data?.detail) {
+      errorMessage = error.response.data.detail;
+    }
+    if (error.response?.status === 403) {
+      errorMessage = "You are not authorized to perform this action."
+    }
+
     toast.error(errorMessage);
     // Special handling for 401 errors
     if (error.response?.status === 401 && !error.config._retry) {
@@ -77,7 +110,7 @@ axios.interceptors.response.use(
     }
 
     // reject the promise so the error is passed back to the caller (they can then handle if wanted/needed)
-    return Promise.reject(error);
+    return Promise.reject({ ...error, formattedMessage: errorMessage });
   }
 );
 
