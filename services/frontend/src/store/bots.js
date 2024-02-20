@@ -6,7 +6,7 @@ const useBotsStore = defineStore({
   state: () => ({
     bots: [],
     //bots: null,
-    bot: null,
+    bot: 1,
   }),
   getters: {
     stateBots: state => state.bots,

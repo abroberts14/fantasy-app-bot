@@ -1,5 +1,5 @@
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap';
+
+
 
 import { createApp } from 'vue'
 import axios from 'axios'
@@ -10,20 +10,22 @@ import useUsersStore from '@/store/users';
 import { createPinia } from 'pinia'
 import createPersistedState from 'pinia-plugin-persistedstate'
 import Toast from "vue-toastification";
-import "vue-toastification/dist/index.css";
-import './styles.css'; // Move this line after the default styles
 import PrimeVue from 'primevue/config';
-import 'primevue/resources/themes/saga-blue/theme.css';
-import 'primevue/resources/primevue.min.css';
-import 'primeflex/primeflex.scss';
 
-import 'primeicons/primeicons.css';
-
+import '@/assets/styles.css';
+import 'bootstrap';
 import { useToast } from 'vue-toastification'
 
+import Button from 'primevue/button';
+import Chip from 'primevue/chip';
+import Dialog from 'primevue/dialog';
 
 const app = createApp(App)
+app.use(PrimeVue, { ripple: true });
 
+app.component('Button', Button);
+app.component('Chip', Chip);
+app.component('Dialog', Dialog);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
@@ -58,7 +60,6 @@ pinia.use(createPersistedState)
 
 app.use(pinia);
 
-app.use(PrimeVue);
 
 
 
@@ -102,15 +103,17 @@ axios.interceptors.response.use(
       errorMessage = "You are not authorized to perform this action."
     }
 
-    toast.error(errorMessage);
     // Special handling for 401 errors
     if (error.response?.status === 401 && !error.config._retry) {
       error.config._retry = true;
       const usersStore = useUsersStore(); 
       usersStore.logout(null); 
       router.push('/login');
-    }
+      toast.info("Your login session has expired. Please log in again.");
 
+    } else {
+      toast.error(errorMessage);
+    }
     // reject the promise so the error is passed back to the caller (they can then handle if wanted/needed)
     return Promise.reject({ ...error, formattedMessage: errorMessage });
   }
