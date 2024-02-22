@@ -46,3 +46,23 @@ class Apps(models.Model):
         return f"{self.name} - {self.state_status}"
     
 
+# class Features(models.Model):
+#     id = fields.IntField(pk=True)
+#     name = fields.CharField(max_length=50, unique=True)
+#     hour = fields.IntField(min_value=0, max_value=23)
+#     minute = fields.IntField(min_value=0, max_value=59)
+
+#     def __str__(self):
+#         return self.name
+
+# class BotFeatures(models.Model):
+#     bot = fields.ForeignKeyField("models.Bots", related_name="bot_features")
+#     feature = fields.ForeignKeyField("models.Features", related_name="bot_features")
+#     enabled = fields.BooleanField(default=True)
+
+#     class Meta:
+#         unique_together = ("bot", "feature")
+
+#     def __str__(self):
+#         status = "enabled" if self.enabled else "disabled"
+#         return f"{self.bot.name} - {self.feature.name}: {status}"

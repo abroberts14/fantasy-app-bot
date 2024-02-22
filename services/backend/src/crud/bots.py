@@ -66,13 +66,14 @@ async def delete_bot(bot_id, current_user) -> Status:
         db_bot = await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
     except DoesNotExist:
         raise HTTPException(status_code=404, detail=f"Bot {bot_id} not found")
-
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred while deleting bot {bot_id}: {str(e)}")
     if db_bot.user.id != current_user.id and current_user.role != "admin":
         print(f"User {current_user.id} is not authorized to delete bot {bot_id}")
         raise HTTPException(status_code=403, detail=f"Not authorized to delete")
 
     # If the bot has an associated app, delete the app
-    if db_bot.app.name:
+    if db_bot.app and db_bot.app.name:        
         print(f"Deleting associated app for bot {bot_id}")
         await delete_entire_app(db_bot.app.name)
 
