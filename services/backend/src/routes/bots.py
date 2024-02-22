@@ -15,6 +15,21 @@ router = APIRouter()
 
 
 @router.get(
+    "/bot/{id}",
+    response_model=BotOutSchema,
+    dependencies=[Depends(get_current_user)],
+)
+async def get_bot(id: int) -> BotOutSchema:
+    try:
+        return await crud.get_bot(id)
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=404,
+            detail="Bot does not exist",
+        )
+
+
+@router.get(
     "/bots",
     response_model=List[BotOutSchema],
     dependencies=[Depends(get_current_user)],
@@ -33,22 +48,7 @@ async def get_bots(
             raise HTTPException(
                 status_code=403,
                     )
-
     
-@router.get(
-    "/bot/{id}",
-    response_model=BotOutSchema,
-    dependencies=[Depends(get_current_user)],
-)
-async def get_bot(id: int) -> BotOutSchema:
-    try:
-        return await crud.get_bot(id)
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404,
-            detail="Bot does not exist",
-        )
-
 
 @router.post(
     "/register-bot", response_model=BotOutSchema, dependencies=[Depends(get_current_user)]
@@ -87,4 +87,5 @@ async def update_bot(
 async def delete_bot(
     id: int, current_user: UserOutSchema = Depends(get_current_user)
 ):
+    print('ROUTE TO DELETE BOT: ' + str(id))
     return await crud.delete_bot(id, current_user)

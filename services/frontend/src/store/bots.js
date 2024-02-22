@@ -4,8 +4,8 @@ import { defineStore } from 'pinia';
 const useBotsStore = defineStore({
   id: 'bots',
   state: () => ({
-    bots: [],
-    //bots: null,
+    //bots: [],
+    bots: null,
     bot: 1,
   }),
   getters: {

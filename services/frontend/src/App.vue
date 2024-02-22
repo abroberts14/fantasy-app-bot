@@ -2,17 +2,19 @@
   <div id="app">
     <NavBar />
     <div class="main container">
+      
       <router-view />
     </div>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
 import NavBar from '@/components/NavBar.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 export default {
   components: {
-    NavBar
+    NavBar,
+    LoadingSpinner
   }
 }
 </script>

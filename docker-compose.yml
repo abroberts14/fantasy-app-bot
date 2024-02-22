@@ -9,6 +9,8 @@ services:
       - DATABASE_URL=postgres://postgres:postgres1!@srcbot1.c7okouiqu9jh.us-east-1.rds.amazonaws.com:5432/srcbot1
       - SECRET_KEY=09d25e094faa6caaaron8166b7a9563b93f79f6f0f4caa6cf63b88e8d3e7
       - IS_LOCAL=true
+      - yacht_username=admin@draftwarroom.com
+      - yacht_password=admin1
     volumes:
       - ./services/backend:/app
       - ./services/backend/src:/app/src
@@ -45,3 +47,6 @@ services:
 # Build, tag and push docker image to docker hub:
 #docker build -t aarondawg14/draftwarroom:1.1 ./services/baseball_bot
 #docker push aarondawg14/draftwarroom:1.1
+
+
+#docker compose up -d --build

@@ -2,12 +2,12 @@
   <div>
     <h1>All Bots</h1>
     <hr/><br/>
-    <BotTable :bots="bots" />
+    <BotTable :bots="bots" :loaded="loaded" />
   </div>
 </template>
 
 <script>
-import { defineComponent, onMounted, computed } from 'vue';
+import { defineComponent, onMounted, computed, ref} from 'vue';
 import useBotsStore from '@/store/bots'; 
 import useUsersStore from '@/store/users'; 
 import BotTable from '@/components/BotTable.vue'; 
@@ -29,16 +29,21 @@ export default defineComponent({
   setup() {
     const botsStore = useBotsStore();
     const usersStore = useUsersStore();
-
-    onMounted(async () => {
-      await botsStore.getBots();
+    const loaded = ref(false);
+    const fetchData = async () => {
+      loaded.value = false;
       await usersStore.viewMe();
-    });
+      await botsStore.getBots();
+      loaded.value = true;
+    };
 
+    onMounted(() => {
+      fetchData();
+    });
     const bots = computed(() => botsStore.stateBots);
     const user = computed(() => usersStore.stateUser);
 
-    return { bots, user };
+    return { bots, user, loaded };
   }
   // async created() {
   //   const botsStore = useBotsStore();

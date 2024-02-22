@@ -12,20 +12,28 @@ import createPersistedState from 'pinia-plugin-persistedstate'
 import Toast from "vue-toastification";
 import PrimeVue from 'primevue/config';
 
-import '@/assets/styles.css';
+import '@/assets/styles.scss';
 import 'bootstrap';
 import { useToast } from 'vue-toastification'
 
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
 import Dialog from 'primevue/dialog';
+import SplitButton from 'primevue/splitbutton';
+import ProgressSpinner from 'primevue/progressspinner';
+import ConfirmDialog from 'primevue/confirmdialog';
+import ConfirmationService from 'primevue/confirmationservice';
 
 const app = createApp(App)
 app.use(PrimeVue, { ripple: true });
-
+app.use(ConfirmationService);
 app.component('Button', Button);
 app.component('Chip', Chip);
 app.component('Dialog', Dialog);
+app.component('SplitButton', SplitButton);
+app.component('ProgressSpinner', ProgressSpinner);
+app.component('ConfirmDialog', ConfirmDialog);
+
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
@@ -41,7 +49,7 @@ app.use(Toast, {
   rtl: false,
   maxToasts: 20,
   transition: "Vue-Toastification__fade",
-  newestOnTop: false,
+  newestOnTop: true,
   toastClassName: 'custom-toast', //styles.css but this is not working
 
   filterBeforeCreate: (toast, toasts) => { // gpt ty, determines if the toast should be created. 
@@ -96,7 +104,7 @@ axios.interceptors.response.use(
       errorMessage = errors.join('. '); // Concatenate all error messages with a period and space
     }
 
-    if ((error.response?.status === 400 || error.response?.status == 500) && error.response?.data?.detail) {
+    if ((error.response?.status === 400 || error.response?.status == 500 || error.response?.status == 404 ) && error.response?.data?.detail) {
       errorMessage = error.response.data.detail;
     }
     if (error.response?.status === 403) {
@@ -107,13 +115,22 @@ axios.interceptors.response.use(
     if (error.response?.status === 401 && !error.config._retry) {
       error.config._retry = true;
       const usersStore = useUsersStore(); 
-      usersStore.logout(null); 
-      router.push('/login');
-      toast.info("Your login session has expired. Please log in again.");
+      console.log('error.config.url', error.config.url)
+      // Check if the error was caused by a request to the login endpoint
+      if (error.config.url === 'login') {
+        // The 401 error is likely due to invalid login credentials
+        errorMessage = error.response.data.detail;
+      }  else {
+        // The 401 error is likely due to an expired token
+        usersStore.logout(null); 
+        router.push('/login');
+        toast.info("Your login session has expired. Please log in again.");
+        return Promise.reject({ ...error, formattedMessage: errorMessage });
 
-    } else {
-      toast.error(errorMessage);
-    }
+      }
+    } 
+    toast.error(errorMessage);
+    
     // reject the promise so the error is passed back to the caller (they can then handle if wanted/needed)
     return Promise.reject({ ...error, formattedMessage: errorMessage });
   }

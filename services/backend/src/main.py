@@ -16,15 +16,18 @@ import 'from src.routes import users, must be after 'Tortoise.init_models'
 why?
 https://stackoverflow.com/questions/65531387/tortoise-orm-for-python-no-returns-relations-of-entities-pyndantic-fastapi
 """
-from src.routes import users, bots
+from src.routes import users, bots, apps
 
 app = FastAPI()
 
 #allowed_origins = ["http://localhost:5173", "http://0.0.0.0:5173", "http://0.0.0.0:5000", "http://localhost:5000", "https://dolphin-app-n3ezl.ondigitalocean.app", "https://draftwarroom.com"],    
 allowed_origins = [
     "http://localhost:5173",  # Local frontend development
+    "http://localhost:5000",  # backend requests
     "https://dolphin-app-n3ezl.ondigitalocean.app",  # Production frontend
     "https://draftwarroom.com",  # Another production frontend
+    "http://167.99.4.120:8000",
+    "http://167.99.4.120"
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -38,21 +41,24 @@ app.add_middleware(
 api_router_v1 = APIRouter()
 api_router_v1.include_router(users.router)
 api_router_v1.include_router(bots.router)
+api_router_v1.include_router(apps.router)
+
 app.include_router(api_router_v1)
 
 @app.exception_handler(HTTPException)
 async def fastapi_http_exception_handler(request: Request, exc: HTTPException):
     print('non def exception handler')
     response = JSONResponse({"detail": str(exc.detail)}, status_code=exc.status_code)
-    response.headers['Access-Control-Allow-Origin'] = "*"
-    # Add other necessary CORS headers if needed
+    response.headers['Access-Control-Allow-Origin'] = str(request.headers.get('origin'))    
+    response.headers['Access-Control-Allow-Credentials'] = 'true'  # Add this line    
     return response
 
 @app.exception_handler(Exception)
 async def default_exception_handler(request: Request, exc: Exception):
     print('default exception handler')
     response = JSONResponse({"detail": "Internal Server Error"}, status_code=500)
-    response.headers['Access-Control-Allow-Origin'] = "*"
+    response.headers['Access-Control-Allow-Origin'] = str(request.headers.get('origin'))    
+    response.headers['Access-Control-Allow-Credentials'] = 'true'  # Add this line
     return response
 
 

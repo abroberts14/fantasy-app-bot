@@ -2,12 +2,12 @@
   <div>
     <h1>My Bots</h1>
     <hr/><br/>
-    <BotTable  :bots="bots" />
+    <BotTable :bots="bots" :loaded="loaded" />
   </div>
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent, ref, computed, onMounted } from 'vue';
 import useBotsStore from '@/store/bots'; 
 import useUsersStore from '@/store/users'; 
 import BotTable from '@/components/BotTable.vue'; 
@@ -17,30 +17,26 @@ export default defineComponent({
   components: {
     BotTable,
   },
-  data() {
-    return {
-      form: {
-        title: '',
-        content: '',
-      },
-    };
-  },
-  async created() {
-    const usersStore = useUsersStore(); 
-    await usersStore.viewMe();
-    const userId = usersStore.stateUser.id;
+  setup() {
+    const loaded = ref(false);
     const botsStore = useBotsStore();
-    await botsStore.getBots(userId); // send user id to get current users bots
-  },
-  computed: {
-    bots() {
-      const botsStore = useBotsStore();
-      return botsStore.stateBots;
-    },
-    user() {
-      const usersStore = useUsersStore(); 
-      return usersStore.stateUser; 
-    },
+    const usersStore = useUsersStore(); 
+
+    const bots = computed(() => botsStore.stateBots);
+    const user = computed(() => usersStore.stateUser);
+
+    const fetchData = async () => {
+      loaded.value = false;
+      await usersStore.viewMe();
+      await botsStore.getBots(user.value.id);
+      loaded.value = true;
+    };
+
+    onMounted(() => {
+      fetchData();
+    });
+
+    return { bots, user, loaded };
   },
 });
 </script>
