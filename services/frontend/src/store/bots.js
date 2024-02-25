@@ -14,8 +14,11 @@ const useBotsStore = defineStore({
   },
   actions: {
     async createBot(bot) {
-      await axios.post('register-bot', bot);
+      const response = await axios.post('register-bot', bot);
       await this.getBots();
+      const newBot = response.data;
+
+      return response.data; // Return the new bot data
     },
     async getBots(userId = null) {
       let url = 'bots';

@@ -1,87 +1,219 @@
 <template>
-  <section>
+  <!-- <section>
     <LoadingSpinner v-if="isLoading" />
     <form @submit.prevent="submit">
       <div class="mb-3">
         <label for="bot_name" class="form-label">Bot Name:</label>
-        <input type="text" name="bot_name" v-model="bot.name" class="form-control" />
+        <input type="text" id="bot_name" v-model="bot.name" class="form-control" />
       </div>
       <div class="mb-3">
         <label for="league_id" class="form-label">Yahoo League ID:</label>
-        <input type="text" name="league_id" v-model="bot.league_id" class="form-control" />
+        <input type="text" id="league_id" v-model="bot.league_id" class="form-control" />
       </div>
       <div class="mb-3">
         <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
-        <input type="text" name="groupme_bot_id" v-model="bot.groupme_bot_id" class="form-control" />
+        <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id" class="form-control" />
       </div>
+      <DataTable :value="features" stripedRows>
+      <Column field="name" header="Feature Name" />
+      <Column field="description" header="Description" />
+      <Column header="Time (00:00 -> 23:59)">
+        <template #body="slotProps">
+          {{ slotProps.data.hour }}:{{ slotProps.data.minute.toString().padStart(2, '0') }} 
+        </template>
+      </Column>
+      <Column header="Enabled">
+        <template #body="slotProps">
+          <input type="checkbox" v-model="slotProps.data.enabled" />
+        </template>
+      </Column>
+    </DataTable>
+
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
- 
   </section>
+
+ -->
+ <LoadingSpinner v-if="isLoading" />
+
+ <Stepper v-model:activeStep="active" orientation="vertical">
+    <StepperPanel header="Bot Information">
+
+      <template #content="{ nextCallback }">
+
+            <div class="flex flex-column h-12rem">
+              <div class="mb-3">
+                <label for="bot_name" class="form-label">Bot Name:</label>
+                <input type="text" id="bot_name" v-model="bot.name" class="form-control" />
+              </div>
+              <div class="mb-3">
+                <label for="league_id" class="form-label">Yahoo League ID:</label>
+                <input type="text" id="league_id" v-model="bot.league_id" class="form-control" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
+              <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id" class="form-control" />
+            </div>
+            <div class="flex py-4">
+                <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || !bot.groupme_bot_id" @click="nextCallback" />
+            </div>
+
+        </template>
+    </StepperPanel>
+    <StepperPanel header="Bot Features">
+        <template #content="{ prevCallback, nextCallback }">
+            <div class="flex flex-column h-12rem">
+              <DataTable :value="features" stripedRows>
+                <Column field="name" header="Feature Name" />
+                <Column field="description" header="Description" />
+                <Column header="Time (00:00 -> 23:59)">
+                  <template #body="slotProps">
+                    {{ slotProps.data.hour }}:{{ slotProps.data.minute.toString().padStart(2, '0') }} 
+                  </template>
+                </Column>
+                <Column header="Enabled">
+                  <template #body="slotProps">
+                    <input type="checkbox" v-model="slotProps.data.enabled" />
+                  </template>
+                </Column>
+              </DataTable>
+
+            </div>
+            <div class="flex py-4 gap-2">
+                <Button label="Back" icon="pi pi-arrow-up" iconPos="right" severity="secondary" @click="prevCallback" />
+                <Button label="Next" icon="pi pi-arrow-down" iconPos="right" @click="nextCallback" />
+            </div>
+        </template>
+    </StepperPanel>
+    <StepperPanel header="Payment (not complete)">
+        <template #content="{ prevCallback }">
+            <div class="flex flex-column  h-12rem">
+              <div class="mb-3">
+                <label for="card_number" class="form-label">Card Number:</label>
+                <input type="text" id="card_number" class="form-control" />
+              </div>
+              <div class="mb-3">
+                <label for="expiry_date" class="form-label">Expiry Date:</label>
+                <input type="text" id="expiry_date" class="form-control" />
+              </div>
+              <div class="mb-3">
+                <label for="cvv" class="form-label">CVV:</label>
+                <input type="text" id="cvv" class="form-control" />
+              </div>
+            </div>
+            <div class="flex py-8 gap-2">
+                <Button label="Back" severity="secondary" icon="pi pi-arrow-up" iconPos="right" @click="prevCallback" />
+                <button type="submit" class="btn btn-primary" @click="submit">Submit</button>
+
+            </div>
+        </template>
+    </StepperPanel>
+</Stepper>
+
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
-import useBotsStore from '@/store/bots'; // Import your bots store
+import { defineComponent, ref, onMounted, nextTick } from 'vue';
+import useBotsStore from '@/store/bots';
 import { useToast } from 'vue-toastification';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
 export default defineComponent({
   name: 'RegisterBotComponent',
-  data() {
-    return {
-      bot: {
-        name: '',
-        league_id: '',
-        groupme_bot_id: '',
-      },
-      isLoading : false
+  components: { LoadingSpinner, },
+  setup() {
+    const bot = ref({
+      name: '',
+      league_id: '',
+      groupme_bot_id: '',
+    });
+    const isLoading = ref(false);
+    const features = ref([]);
+    const toast = useToast();
+    const active = ref(0);
+    const router = useRouter();
+    const fetchFeatures = async () => {
+      console.log('Fetching features');
+      try {
+        const response = await axios.get('/features');
+        features.value = response.data.map(feature => ({
+          ...feature,
+          enabled: false // Initialize an 'enabled' property for the checkbox
+        }));
+      } catch (error) {
+        console.error('Error fetching features:', error);
+        toast.error('Error fetching features');
+      }
     };
-  },
-  components: { LoadingSpinner },
 
-
-  methods: {
-    async submit() {
-      const toast = useToast();
+    const submit = async () => {
       const errorMessages = [];
       const namePattern = /^[A-Za-z0-9]+$/; // Regex for letters and digits
+      let redirect_page = 0
+          // Check if at least one feature is enabled
+      const isAnyFeatureEnabled = features.value.some(feature => feature.enabled);
+      if (!isAnyFeatureEnabled) {
+          errorMessages.push('At least one feature must be enabled');
+          redirect_page = 1
+      }
 
-      if (!this.bot.name) {
+      if (!bot.value.name) {
         errorMessages.push('Bot Name cannot be empty');
-      } else if (!namePattern.test(this.bot.name)) {
-        errorMessages.push('Bot Name should contain only letters and numbers,no spaces or special characters');
+      } else if (!namePattern.test(bot.value.name)) {
+        errorMessages.push('Bot Name should contain only letters and numbers, no spaces or special characters');
+        redirect_page = 0
       }
-      if (this.bot.name.length > 20) {
-        errorMessages.push('Bot Name must be 10 characters or less');
+      if (bot.value.name.length > 20) {
+        errorMessages.push('Bot Name must be 20 characters or less');
+        redirect_page = 0
       }
-      if (!this.bot.league_id) {
+      if (!bot.value.league_id) {
         errorMessages.push('Yahoo League ID cannot be empty');
+        redirect_page = 0
       }
 
-      if (!this.bot.groupme_bot_id) {
+      if (!bot.value.groupme_bot_id) {
         errorMessages.push('GroupMe Bot ID cannot be empty');
+        redirect_page = 0
       }
+
 
       if (errorMessages.length > 0) {
-        for (const errorMessage of errorMessages) {
-          toast.error(errorMessage);
-        }
+        errorMessages.forEach(message => toast.error(message));
+        active.value = redirect_page; // Set active panel to the first one if there are errors
+
         return;
       }
 
       try {
-        this.isLoading = true;
-        const botsStore = useBotsStore(); 
-        await botsStore.createBot(this.bot); // Call the action from your bots store
-        toast.success('Bot created successfully');
-        this.$router.push('/dashboard');
-        this.isLoading = false;
+        isLoading.value = true;
+        const botsStore = useBotsStore();
+        const response = await botsStore.createBot(bot.value);
+      
 
+        toast.success('Bot created successfully');
+        router.push(`/bot/${response.id}`); // Navigate to the specific bot's page
+        
       } catch (error) {
-        console.log('Error creating bot');
+        console.error('Error creating bot', error);
         toast.error('Error creating bot: ' + error);
+      } finally {
+        isLoading.value = false;
       }
-    },
+    };
+
+    onMounted(fetchFeatures);
+
+    return {
+      bot,
+      isLoading,
+      features,
+      submit,
+      active
+
+    };
   },
 });
 </script>

@@ -23,6 +23,10 @@ import SplitButton from 'primevue/splitbutton';
 import ProgressSpinner from 'primevue/progressspinner';
 import ConfirmDialog from 'primevue/confirmdialog';
 import ConfirmationService from 'primevue/confirmationservice';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Stepper from 'primevue/stepper';
+import StepperPanel from 'primevue/stepperpanel';
 
 const app = createApp(App)
 app.use(PrimeVue, { ripple: true });
@@ -33,6 +37,11 @@ app.component('Dialog', Dialog);
 app.component('SplitButton', SplitButton);
 app.component('ProgressSpinner', ProgressSpinner);
 app.component('ConfirmDialog', ConfirmDialog);
+app.component('DataTable', DataTable);
+app.component('Column', Column);
+
+app.component('Stepper', Stepper);
+app.component('StepperPanel', StepperPanel);
 
 app.use(Toast, {
   position: "top-right",
