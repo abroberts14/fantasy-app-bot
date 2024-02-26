@@ -182,13 +182,14 @@ async def create_and_deploy_app(
     )
     print(bot_name, bot_groupme_id, bot_type, league_id)
     url = yacht_endpoint + f"/templates/{template_id}"
-
+    print(url)
     tokens = await get_tokens()
     cookies = get_cookies(tokens)
     headers = get_headers(tokens)
     response = handle_request("GET", url, cookies=cookies, headers=headers)
-
-    app = response.json()["items"][0]
+    rsp  = response.json()
+    print(rsp)
+    app = rsp["items"][0]
     new_app_name = app["name"] + "-" + bot_name
 
     url = yacht_endpoint + "/apps"
