@@ -45,8 +45,10 @@ class Features(models.Model):
 class GlobalFeatures(models.Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=50, unique=True)
+    day = fields.CharField(max_length=3, default="mon")
     hour = fields.IntField(min_value=0, max_value=23)
     minute = fields.IntField(min_value=0, max_value=59)
+    live = fields.BooleanField(default=False)
     description = fields.TextField(null=True, blank=True)  # Allow NULL and empty strings
     def __str__(self):
         return self.name

@@ -47,8 +47,11 @@ services:
 
 
 # Build, tag and push docker image to docker hub:
-#docker build -t aarondawg14/draftwarroom:1.1 ./services/baseball_bot
-#docker push aarondawg14/draftwarroom:1.1
+#docker build -t aarondawg14/draftwarroom:1.2 ./services/baseball_bot
+#docker push aarondawg14/draftwarroom:1.2
 
 
 #docker compose up -d --build
+
+#29d18b385eb0307982d596c2da
+#53047

@@ -62,29 +62,39 @@
         </template>
     </StepperPanel>
     <StepperPanel header="Bot Features">
-        <template #content="{ prevCallback, nextCallback }">
-            <div class="flex flex-column h-12rem">
-              <DataTable :value="features" stripedRows>
-                <Column field="name" header="Feature Name" />
-                <Column field="description" header="Description" />
-                <Column header="Time (00:00 -> 23:59)">
+      <template #content="{ prevCallback, nextCallback }">
+      <div class="flex flex-column">
+          <DataTable :value="features" stripedRows>
+            <Column header="Name">
+              <template #body="slotProps">
+                <div>{{ formatFeatureName(slotProps.data.name) }}</div>
+              </template>
+            </Column>
+              <Column field="description" header="Description" />
+              <Column header="When">
                   <template #body="slotProps">
-                    {{ slotProps.data.hour }}:{{ slotProps.data.minute.toString().padStart(2, '0') }} 
+                      <div v-if="slotProps.data.live">
+                          Every 30 minutes
+                      </div>
+                      <div v-else>
+                          {{ slotProps.data.day === 'all' ? 'Daily' : slotProps.data.day.charAt(0).toUpperCase() + slotProps.data.day.slice(1) }} - 
+                          {{ slotProps.data.hour }}:{{ slotProps.data.minute.toString().padStart(2, '0') }}
+                      </div>
                   </template>
-                </Column>
-                <Column header="Enabled">
+              </Column>
+              <Column header="Enabled">
                   <template #body="slotProps">
-                    <input type="checkbox" v-model="slotProps.data.enabled" />
+                      <input type="checkbox" v-model="slotProps.data.enabled" />
                   </template>
-                </Column>
-              </DataTable>
+              </Column>
+          </DataTable>
 
-            </div>
-            <div class="flex py-4 gap-2">
-                <Button label="Back" icon="pi pi-arrow-up" iconPos="right" severity="secondary" @click="prevCallback" />
-                <Button label="Next" icon="pi pi-arrow-down" iconPos="right" @click="nextCallback" />
-            </div>
-        </template>
+          <div class="flex justify-content-start py-4 gap-2">
+              <Button label="Back" icon="pi pi-arrow-up" iconPos="right" severity="secondary" @click="prevCallback" />
+              <Button label="Next" icon="pi pi-arrow-down" iconPos="right" @click="nextCallback" />
+          </div>
+      </div>
+</template>
     </StepperPanel>
     <StepperPanel header="Payment (not complete)">
         <template #content="{ prevCallback }">
@@ -114,14 +124,17 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, nextTick } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import useBotsStore from '@/store/bots';
 import { useToast } from 'vue-toastification';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import useFormatting from '@/composables/useFormatting'; 
+
 export default defineComponent({
   name: 'RegisterBotComponent',
+
   components: { LoadingSpinner, },
   setup() {
     const bot = ref({
@@ -134,6 +147,8 @@ export default defineComponent({
     const toast = useToast();
     const active = ref(0);
     const router = useRouter();
+    const { formatFeatureName } = useFormatting(); // Use the composable
+
     const fetchFeatures = async () => {
       console.log('Fetching features');
       try {
@@ -148,16 +163,7 @@ export default defineComponent({
         toast.error('Error fetching features');
       }
     };
-    const prepareDataForSubmission = () => {
-      return features.value.map(feature => ({
-          feature_id: feature.id, // Assuming each feature has a unique 'id'
-          name: feature.name,
-          hour: feature.hour, 
-          minute: feature.minute,
-          description: feature.description,
-          enabled: feature.enabled
-      }));
-    };
+
 
     const submit = async () => {
       const errorMessages = [];
@@ -234,8 +240,8 @@ export default defineComponent({
       isLoading,
       features,
       submit,
-      active
-
+      active,
+      formatFeatureName 
     };
   },
 });

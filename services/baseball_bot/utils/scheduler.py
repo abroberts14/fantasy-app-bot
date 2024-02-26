@@ -2,6 +2,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from utils.setup import get_env_vars
 from bot import yahoo_bot
 from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 import requests
 from datetime import datetime, timedelta
 
@@ -34,14 +35,20 @@ def scheduler():
     print(schedule_dict)
     sched = BlockingScheduler(job_defaults={'misfire_grace_time': 15 * 60})
     for job_name, timing in schedule_dict.items():
-        sched.add_job(
-            yahoo_bot, 'cron', [job_name], id=job_name,
-            day_of_week='mon', hour=timing['hour'], minute=timing['minute'],
-            start_date=datetime.now(), end_date=datetime.now() + timedelta(days=730),
-            timezone='UTC',  # Replace with your timezone
-            replace_existing=True
-        )
-        print(f"Added job: {job_name} at {timing['hour']}:{timing['minute']}")
+        if timing.get('live', False):
+            # Use an interval trigger for live data
+            trigger = IntervalTrigger(minutes=30)
+        else:
+            # Use a cron trigger
+            day_of_week = 'mon,tue,wed,thu,fri,sat,sun' if timing['day'] == 'all' else timing['day']
+            trigger = CronTrigger(day_of_week=day_of_week, hour=timing['hour'], minute=timing['minute'], 
+                                  start_date=datetime.now(), end_date=datetime.now() + timedelta(days=730), 
+                                  timezone='UTC')  # Replace with your timezone
+
+        sched.add_job(yahoo_bot, trigger, [job_name], id=job_name, replace_existing=True)
+        print(f"Added job: {job_name} with trigger {trigger} ")
+
+    sched.start()
     # sched.add_job(yahoo_bot, 'cron', ['get_league_team_names'], id='team_names',
     #               day_of_week='mon', hour=18, minute=30, start_date=ff_start_date, end_date=ff_end_date,
     #               timezone=data['bot_timezone'], replace_existing=True)

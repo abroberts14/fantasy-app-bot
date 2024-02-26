@@ -71,6 +71,13 @@ def yahoo_bot(function):
         text = 'Team Matchups For League ID: ' +str(data['league_id'])
         text = text + "\n\n" +  yahoo_worker.get_league_matchups(yahoo_query)
         text = text + "\n\n" + ' Next run in '+str(data['matchups_minutes'])+' minutes!'
+    if function == "test_live":
+        text = '30 Minute Task For League ID: ' +str(data['league_id'])
+        text = text + "\n\n" + ' Next run in 30 minutes!'
+    if function == "test_daily":
+        text = 'Daily Task For League ID: ' +str(data['league_id'])
+        text = text + "\n\n" + ' Next run tomorrow!'
+
     elif function == "broadcast":
         try:
             text = broadcast_message
