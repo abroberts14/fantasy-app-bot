@@ -15,7 +15,6 @@ def get_env_vars():
     except KeyError:
         bot_id = 1
 
-    bot_id = '6b5dfa374f148c64eb1e9948f5'
     if (len(str(bot_id)) <= 1 ):
         raise Exception("No messaging platform info provided")
 
