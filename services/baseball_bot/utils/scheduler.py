@@ -33,14 +33,13 @@ def parse_feature_flags(feature_flags_str):
     return flags
 
 def scheduler():
-    print('starting scheduler')
+    print('starting scheduler 2')
     data = get_env_vars()
     print(data)
 
     feature_flags = parse_feature_flags(data['feature_flags'])
     print(feature_flags)
     schedule_dict = get_schedule(data['backend_url'])
-    print(schedule_dict)
     sched = BlockingScheduler(job_defaults={'misfire_grace_time': 15 * 60})
 
     for job_name, timing in schedule_dict.items():
