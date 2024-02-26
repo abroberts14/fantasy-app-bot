@@ -25,37 +25,38 @@ def get_schedule(backend_url):
         return None
 
 
+def parse_feature_flags(feature_flags_str):
+    flags = {}
+    for flag in feature_flags_str.split():
+        key, val = flag.split('=')
+        flags[key] = val.lower() == 'true'
+    return flags
+
 def scheduler():
     print('starting scheduler')
     data = get_env_vars()
     print(data)
-    features = data['feature_flags']
 
+    feature_flags = parse_feature_flags(data['feature_flags'])
     schedule_dict = get_schedule(data['backend_url'])
     print(schedule_dict)
     sched = BlockingScheduler(job_defaults={'misfire_grace_time': 15 * 60})
+
     for job_name, timing in schedule_dict.items():
+        if job_name.upper() not in feature_flags or not feature_flags[job_name.upper()]:
+            print(f"Skipping job: {job_name} as it is not enabled in feature_flags")
+            continue
+
         if timing.get('live', False):
-            # Use an interval trigger for live data
             trigger = IntervalTrigger(minutes=30)
         else:
-            # Use a cron trigger
-            day_of_week = 'mon,tue,wed,thu,fri,sat,sun' if timing['day'] == 'all' else timing['day']
+            day_of_week = 'mon,tue,wed,thu,fri,sat,sun' if timing['day'] == 'all' else timing['day'].capitalize()
             trigger = CronTrigger(day_of_week=day_of_week, hour=timing['hour'], minute=timing['minute'], 
                                   start_date=datetime.now(), end_date=datetime.now() + timedelta(days=730), 
-                                  timezone='UTC')  # Replace with your timezone
+                                  timezone='UTC')
 
         sched.add_job(yahoo_bot, trigger, [job_name], id=job_name, replace_existing=True)
         print(f"Added job: {job_name} with trigger {trigger} ")
-
-    sched.start()
-    # sched.add_job(yahoo_bot, 'cron', ['get_league_team_names'], id='team_names',
-    #               day_of_week='mon', hour=18, minute=30, start_date=ff_start_date, end_date=ff_end_date,
-    #               timezone=data['bot_timezone'], replace_existing=True)
-    # sched.add_job(yahoo_bot, 'interval', minutes=int(data['team_names_minutes']), args=['get_league_team_names'], id='team_names',
-    #           timezone=data['bot_timezone'], replace_existing=True)
-    sched.add_job(yahoo_bot, 'interval', minutes=int(data['matchups_minutes']), args=['get_league_matchups'], id='league_matchups',
-              timezone=data['bot_timezone'], replace_existing=True)
 
     print("Ready!")
     sched.start()
