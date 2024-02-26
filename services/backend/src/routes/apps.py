@@ -65,3 +65,73 @@ async def create_app(bot_id) -> AppOutSchema:
             status_code=400,
             detail=f"A bot with the provided details already exists. Error: {str(e)}"
         )
+    
+@router.post(
+    "/apps/restart-app/{bot_id}", response_model=List, dependencies=[Depends(get_current_user)]
+)
+async def restart_bot(bot_id) -> AppOutSchema:
+    try:
+        print(bot_id)
+        db_bot_instance = await Bots.get(id=bot_id)
+        db_bot = await BotOutSchema.from_tortoise_orm(db_bot_instance)
+        if db_bot.app and db_bot.app.name:        
+            print(f"restarting associated app for bot {bot_id}")
+            return await crud.perform_app_action(db_bot.app.name, 'restart')
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Bot does not have an associated app",
+            )
+
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A bot with the provided details already exists. Error: {str(e)}"
+        )
+    
+    
+@router.post(
+    "/apps/startup-app/{bot_id}", response_model=List, dependencies=[Depends(get_current_user)]
+)
+async def start_bot(bot_id) -> AppOutSchema:
+    try:
+        print(bot_id)
+        db_bot_instance = await Bots.get(id=bot_id)
+        db_bot = await BotOutSchema.from_tortoise_orm(db_bot_instance)
+        if db_bot.app and db_bot.app.name:        
+            print(f"starting associated app for bot {bot_id}")
+            return await crud.perform_app_action(db_bot.app.name, 'start')
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Bot does not have an associated app",
+            )
+
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A bot with the provided details already exists. Error: {str(e)}"
+        )
+    
+@router.post(
+    "/apps/stop-app/{bot_id}", response_model=List, dependencies=[Depends(get_current_user)]
+)
+async def stop_bot(bot_id) -> AppOutSchema:
+    try:
+        print(bot_id)
+        db_bot_instance = await Bots.get(id=bot_id)
+        db_bot = await BotOutSchema.from_tortoise_orm(db_bot_instance)
+        if db_bot.app and db_bot.app.name:        
+            print(f"stopping associated app for bot {bot_id}")
+            return await crud.perform_app_action(db_bot.app.name, 'stop')
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Bot does not have an associated app",
+            )
+
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A bot with the provided details already exists. Error: {str(e)}"
+        )

@@ -14,6 +14,7 @@
         <li v-if="bot.app" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
           <div class="text-500 w-6 md:w-2 font-medium">Status</div>
           <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
+            
             <Button v-if="bot.app.running" label="Running" severity="success" />
             <Button v-else :label="bot.app.status" severity="info" />
           </div>
@@ -22,8 +23,10 @@
         <li v-if="bot.app" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
           <div class="text-500 w-6 md:w-2 font-medium">Commands</div>
           <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
-            <Button v-if="bot.app.running" label="Stop Bot" severity="info" />
-            <Button v-else label="Start Bot" severity="info" />
+            <Button v-if="bot.app.running" @click="stopBot" label="Stop Bot" severity="info" style="margin-right: 10px;" />
+
+            <Button v-if="bot.app.running" @click="restartBot" label="Restart Bot" severity="info" style="margin-right: 10px;"/>
+            <Button v-else label="Start Bot"  @click="startBot" severity="info" />
           </div>
         </li>
 
@@ -46,20 +49,33 @@
           <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{bot.groupme_bot_id}}</div>
         </li>
         <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
-            <DataTable :value="bot.features" stripedRows>
-              <Column field="global_feature.name" header="Feature Name" />
+
+
+          
+          <DataTable :value="bot.features" stripedRows>
+            <Column header="Name">
+              <template #body="slotProps">
+                <div>{{ formatFeatureName( slotProps.data.global_feature.name) }}</div>
+              </template>
+            </Column>
               <Column field="global_feature.description" header="Description" />
-              <Column header="Time (00:00 -> 23:59)">
-                <template #body="slotProps">
-                  {{ slotProps.data.global_feature.hour }}:{{ slotProps.data.global_feature.minute.toString().padStart(2, '0') }} 
-                </template>
+              <Column header="When">
+                  <template #body="slotProps">
+                      <div v-if="slotProps.data.live">
+                          Every 30 minutes
+                      </div>
+                      <div v-else>
+                          {{ slotProps.data.global_feature.day === 'all' ? 'Daily' : slotProps.data.global_feature.day.charAt(0).toUpperCase() + slotProps.data.global_feature.day.slice(1) }} - 
+                          {{ slotProps.data.global_feature.hour }}:{{ slotProps.data.global_feature.minute.toString().padStart(2, '0') }}
+                      </div>
+                  </template>
               </Column>
               <Column header="Enabled">
-                <template #body="slotProps">
-                  <input type="checkbox" disabled v-model="slotProps.data.enabled" />
-                </template>
+                  <template #body="slotProps">
+                      <input type="checkbox" disabled v-model="slotProps.data.enabled" />
+                  </template>
               </Column>
-            </DataTable>
+          </DataTable>
         </li>
 
         <li v-if="isAdmin" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
@@ -86,6 +102,7 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { useConfirm } from "primevue/useconfirm";
+import useFormatting from '@/composables/useFormatting'; 
 
 export default defineComponent({
     name: 'BotComponent',
@@ -111,6 +128,7 @@ export default defineComponent({
         const router = useRouter();
         const toast = useToast();
         const confirm = useConfirm();
+        const { formatFeatureName } = useFormatting(); // Use the composable
 
         const confirmDelete = () => {
           confirm.require({
@@ -177,6 +195,53 @@ export default defineComponent({
 
             }
         }
+        const startBot = async () => {
+          try {
+                console.log('Starting bot...');
+                isLoading.value = true;
+                await axios.post(`/apps/startup-app/${props.id}`);
+                await fetchData();
+            } catch (error) {
+                console.error('Error starting bot:', error);
+                toast.error('Error starting bot: ' + error.message);            
+            } finally {
+                isLoading.value = false;
+                toast.success('Bot starting successfully');
+
+            }
+        };
+
+        const stopBot = async () => {
+          try {
+                console.log('Stopping bot...');
+                isLoading.value = true;
+                await axios.post(`/apps/stop-app/${props.id}`);
+                await fetchData();
+            } catch (error) {
+                console.error('Error stopping bot:', error);
+                toast.error('Error stopping bot: ' + error.message);            
+            } finally {
+                isLoading.value = false;
+                toast.success('Bot stopping successfully');
+
+            }
+        };
+
+        const restartBot = async () => {
+          try {
+                console.log('Restarting bot...');
+                isLoading.value = true;
+                await axios.post(`/apps/restart-app/${props.id}`);
+                await fetchData();
+            } catch (error) {
+                console.error('Error restarting bot:', error);
+                toast.error('Error restarting bot: ' + error.message);            
+            } finally {
+                isLoading.value = false;
+                toast.success('Bot restarted successfully');
+
+            }
+        };
 
         async function removeBot() {
             try {
@@ -205,7 +270,7 @@ export default defineComponent({
             window.open(`http://167.99.4.120:8000/#/apps/${bot.value.app.name}`, '_blank');
         };
 
-        return { bot, user, isAdmin, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, confirmDelete, confirm };
+        return { bot, user, isAdmin, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, stopBot, startBot, restartBot, confirmDelete, confirm, formatFeatureName };
     }
 });
 </script>

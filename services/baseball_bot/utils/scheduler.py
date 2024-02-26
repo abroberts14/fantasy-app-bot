@@ -27,9 +27,8 @@ def get_schedule(backend_url):
 
 def parse_feature_flags(feature_flags_str):
     flags = {}
-    for flag in feature_flags_str.split():
-        key, val = flag.split('=')
-        flags[key] = val.lower() == 'true'
+    for flag in feature_flags_str.split(','):
+        flags[flag] = True
     return flags
 
 def scheduler():
@@ -43,7 +42,10 @@ def scheduler():
     sched = BlockingScheduler(job_defaults={'misfire_grace_time': 15 * 60})
 
     for job_name, timing in schedule_dict.items():
-        if job_name.upper() not in feature_flags or not feature_flags[job_name.upper()]:
+        print(job_name)
+        s = data['feature_flags'].split(',') 
+        print(s)
+        if job_name.upper() not in data['feature_flags'].split(','):
             print(f"Skipping job: {job_name} as it is not enabled in feature_flags")
             continue
 

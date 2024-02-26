@@ -176,10 +176,15 @@ async def create_and_deploy_app(
     bot_groupme_id = bot.groupme_bot_id
     bot_type = "GroupMe"
     league_id = bot.league_id
-    feature_env_vars = " ".join(
-        f"{feature.global_feature.name.upper()}={'true' if feature.enabled else 'false'}"
-        for feature in bot.features
+    # Iterate over the features and print them (for debugging purposes)
+    for feature in bot.features:
+        print(f"Feature: {feature.global_feature.name}, Enabled: {feature.enabled}")
+
+    # Create a comma-separated list of enabled feature names
+    feature_env_vars = ",".join(
+        feature.global_feature.name.upper() for feature in bot.features if feature.enabled
     )
+
     print(bot_name, bot_groupme_id, bot_type, league_id)
     url = yacht_endpoint + f"/templates/{template_id}"
     print(url)
@@ -275,9 +280,10 @@ async def perform_app_action(app_name: str, action: str):
     print('Sending request to perform action' + action + ' on app ' + app_name)
     response = handle_request("GET", url, cookies=cookies)
     print('Seent request to perform action complete')
+    print(response.json())
     if response.status_code != 200:
-        raise Exception(f"Request to {url} failed with status code {response.status_code}.")
-
+        raise Exception(f"Request to {url} failed with status code {response.status_code}. Response: {response.text}")
+    print('Request to perform action complete')
     return response.json()
 
 async def _delete_stop_and_kill_app(app_name: str):
