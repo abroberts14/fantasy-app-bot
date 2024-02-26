@@ -32,7 +32,7 @@ services:
   yahoo_bot:
     build:
       context: ./services/baseball_bot
-    restart: always
+    #restart: always
     environment:
       #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
       BOT_ID: "6b5dfa374f148c64eb1e9948f5"
@@ -40,8 +40,8 @@ services:
       TEAM_NAMES_MINUTES: 30
       #ESPN league id (REQUIRED)
       LEAGUE_ID: 3932
-      FEATURE_ENV_VARS: TEAM_NAMES=true LEAGUE_MATCHUPS=true
-      BACKEND_URL: https://api.draftwarroom.com
+      FEATURE_ENV_VARS: TEST_LIVE,GET_LEAGUE_MATCHUPS
+     #BACKEND_URL: https://api.draftwarroom.com
     image: yahoo_bot:latest
 
 

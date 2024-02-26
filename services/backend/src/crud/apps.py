@@ -11,7 +11,8 @@ import os
 
 yacht_endpoint = "http://167.99.4.120:8000/api"
 default_app_name = 'draftwarroom-chatbot-'
-backend_url = os.getenv('BACKEND_URL', 'http://localhost:5000')
+
+backend_url = os.getenv('BACKEND_URL', 'https://api.draftwarroom.com')
 
 def handle_request(method: str, url: str, headers: Dict = None, cookies: Dict = None, json: Dict = None):
     response = requests.request(method, url, headers=headers, cookies=cookies, json=json)
@@ -211,7 +212,7 @@ async def create_and_deploy_app(
     new_payload =  {
         "name": new_app_name,
         "image": app["image"],
-        "restart_policy": "unless-stopped",
+        "restart_policy": "none",
         "command": app["command"] if app["command"] is not None else [],
         "network": "",
         "network_mode": "host",
