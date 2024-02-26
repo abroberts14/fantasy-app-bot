@@ -35,6 +35,6 @@ def get_env_vars():
     data['team_names_minutes'] = os.environ.get("TEAM_NAMES_MINUTES",  30)
     data['matchups_minutes'] = os.environ.get("MATCHUPS_MINUTES",  10)
     data['feature_flags'] = os.environ.get("FEATURE_ENV_VARS",  "")
-    data['backend_url'] = os.environ.get("BACKEND_URL",  "http://localhost:5000")
+    data['backend_url'] = os.environ.get("BACKEND_URL")
     data['init_msg'] = 'Bot_id: ' + str(bot_id) + ' | League_id: ' + str(data['league_id']) + ' | Bot_type: ' + data['bot_type'] + ' | Bot_timezone: ' + my_timezone +  ' |  Features: ' + str(data['feature_flags'])
     return data
