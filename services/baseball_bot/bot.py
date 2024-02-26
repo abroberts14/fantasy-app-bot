@@ -4,13 +4,17 @@ from chat.groupme import GroupMe
 from yahoo import yahoo_worker
 from yfpy.query import YahooFantasySportsQuery
 from utils.setup import get_env_vars
+import threading
 
 def get_auth_dir():
     script_directory = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(script_directory, "auth")
 
+
+
 def yahoo_bot(function):
     data = get_env_vars()
+    print(data)
     bot_type = data['bot_type']
     bot_id = data['bot_id']
     yahoo_league_id = data['league_id']
@@ -91,7 +95,15 @@ def yahoo_bot(function):
         bot.send_message(text)
 
 if __name__ == "__main__":
+    print("Starting bot")
     from utils.scheduler import scheduler
 
+    def start_scheduler():
+        scheduler()
+    # Start the scheduler in a new thread
+    scheduler_thread = threading.Thread(target=start_scheduler)
+    scheduler_thread.start()
+
+    # Continue with the main script
     yahoo_bot("init")
-    scheduler()
+    print('done')
