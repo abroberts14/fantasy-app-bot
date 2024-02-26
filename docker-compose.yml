@@ -35,13 +35,12 @@ services:
     #restart: always
     environment:
       #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
-      BOT_ID: "6b5dfa374f148c64eb1e9948f5"
+      BOT_ID: "29d18b385eb0307982d596c2da"
       BOT_TYPE: "GroupMe"
-      TEAM_NAMES_MINUTES: 30
       #ESPN league id (REQUIRED)
-      LEAGUE_ID: 3932
+      LEAGUE_ID: 53047
       FEATURE_ENV_VARS: TEST_LIVE,GET_LEAGUE_MATCHUPS
-     #BACKEND_URL: https://api.draftwarroom.com
+      BACKEND_URL: https://api.draftwarroom.com
     image: yahoo_bot:latest
 
 
