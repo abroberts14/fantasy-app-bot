@@ -61,7 +61,7 @@
               <Column field="global_feature.description" header="Description" />
               <Column header="When">
                   <template #body="slotProps">
-                      <div v-if="slotProps.data.live">
+                      <div v-if="slotProps.data.global_feature.live">
                           Every 30 minutes
                       </div>
                       <div v-else>
