@@ -1,10 +1,11 @@
 from fastapi import HTTPException
 from tortoise.exceptions import DoesNotExist
 
-from src.database.models import Bots, Apps
+from src.database.models import Bots, Features
 from src.schemas.bots import BotOutSchema
 from src.schemas.token import Status
 from src.crud.apps import update_all_apps, delete_entire_app
+
 
 async def get_bots(user_id: int = None):
     try:
@@ -27,6 +28,7 @@ async def get_bot(bot_id) -> BotOutSchema:
     finally:
     # try:
     #     bot = await Bots.get(id=bot_id)
+        
     #     await bot.fetch_related('apps')  # Fetch the 'apps' field
 
     #     if bot and bot.apps:
@@ -39,12 +41,24 @@ async def get_bot(bot_id) -> BotOutSchema:
     # finally:
         return await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
 
+
 async def create_bot(bot, current_user) -> BotOutSchema:
     bot_dict = bot.dict(exclude_unset=True)
+    print(bot_dict)
+
+    bot_features_data = bot_dict.pop('features', [])
     bot_dict["user_id"] = current_user.id
     bot_obj = await Bots.create(**bot_dict)
-    return await BotOutSchema.from_tortoise_orm(bot_obj)
 
+    for feature_data in bot_features_data:
+        print(feature_data)
+        # Check if the feature already exists and update, or create a new one
+        feature_id = feature_data.get('global_feature_id')
+        if feature_id:
+            await Features.create(bot=bot_obj, global_feature_id=feature_id, defaults={'enabled': feature_data['enabled']})
+        
+    created_bot = await Bots.get(id=bot_obj.id)
+    return await BotOutSchema.from_tortoise_orm(created_bot)
 
 async def update_bot(bot_id, bot, current_user) -> BotOutSchema:
     try:

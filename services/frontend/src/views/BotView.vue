@@ -45,6 +45,22 @@
           <div class="text-500 w-6 md:w-2 font-medium">GroupMe Bot ID</div>
           <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{bot.groupme_bot_id}}</div>
         </li>
+        <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
+            <DataTable :value="bot.features" stripedRows>
+              <Column field="global_feature.name" header="Feature Name" />
+              <Column field="global_feature.description" header="Description" />
+              <Column header="Time (00:00 -> 23:59)">
+                <template #body="slotProps">
+                  {{ slotProps.data.global_feature.hour }}:{{ slotProps.data.global_feature.minute.toString().padStart(2, '0') }} 
+                </template>
+              </Column>
+              <Column header="Enabled">
+                <template #body="slotProps">
+                  <input type="checkbox" disabled v-model="slotProps.data.enabled" />
+                </template>
+              </Column>
+            </DataTable>
+        </li>
 
         <li v-if="isAdmin" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
           <div class="text-500 w-6 md:w-2 font-medium">Admin Actions</div>

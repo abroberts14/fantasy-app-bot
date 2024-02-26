@@ -11,6 +11,7 @@ import os
 
 yacht_endpoint = "http://167.99.4.120:8000/api"
 default_app_name = 'draftwarroom-chatbot-'
+backend_url = os.getenv('BACKEND_URL', 'http://localhost:5000')
 
 def handle_request(method: str, url: str, headers: Dict = None, cookies: Dict = None, json: Dict = None):
     response = requests.request(method, url, headers=headers, cookies=cookies, json=json)
@@ -175,7 +176,10 @@ async def create_and_deploy_app(
     bot_groupme_id = bot.groupme_bot_id
     bot_type = "GroupMe"
     league_id = bot.league_id
-    
+    feature_env_vars = " ".join(
+        f"{feature.global_feature.name.upper()}={'true' if feature.enabled else 'false'}"
+        for feature in bot.features
+    )
     print(bot_name, bot_groupme_id, bot_type, league_id)
     url = yacht_endpoint + f"/templates/{template_id}"
 
@@ -198,7 +202,6 @@ async def create_and_deploy_app(
                 status_code=400,
                 detail="An app with the same name already exists!"
             )
-
     new_payload =  {
         "name": new_app_name,
         "image": app["image"],
@@ -223,7 +226,17 @@ async def create_and_deploy_app(
                 "name": "LEAGUE_ID",
                 "label": "Yahoo League Id",
                 "default": league_id
-            }
+            },
+            {
+                "name": "FEATURE_ENV_VARS",
+                "label": "Feature Environment Variables",
+                "default": feature_env_vars
+            }, 
+            {
+                "name": "BACKEND_URL",
+                "label": "Backend API",
+                "default": backend_url
+            },
         ],
         "devices": [],
         "labels": [],
@@ -232,7 +245,7 @@ async def create_and_deploy_app(
         "cpus": None,
         "mem_limit": None
     }
-    
+    print(new_payload)
     url = yacht_endpoint + "/apps/deploy"
 
     response = handle_request("POST", url, headers=headers, cookies=cookies, json=new_payload)

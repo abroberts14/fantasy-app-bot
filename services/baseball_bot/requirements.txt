@@ -2,3 +2,4 @@ yfpy
 schedule
 apscheduler
 datetime
+requests

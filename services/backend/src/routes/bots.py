@@ -29,6 +29,7 @@ async def get_bot(id: int) -> BotOutSchema:
         )
 
 
+
 @router.get(
     "/bots",
     response_model=List[BotOutSchema],
@@ -58,10 +59,10 @@ async def create_bot(
 ) -> BotOutSchema:
     try:
         return await crud.create_bot(bot, current_user)
-    except IntegrityError:
+    except IntegrityError as e:
         raise HTTPException(
             status_code=400,
-            detail="A bot with the provided details already exists."
+            detail=f"A bot with the provided details already exists. Error details: {str(e)}"
         )
 
 @router.patch(

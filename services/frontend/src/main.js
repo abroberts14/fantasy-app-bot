@@ -27,7 +27,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Stepper from 'primevue/stepper';
 import StepperPanel from 'primevue/stepperpanel';
-
+import TreeTable from 'primevue/treetable';
 const app = createApp(App)
 app.use(PrimeVue, { ripple: true });
 app.use(ConfirmationService);
@@ -42,7 +42,7 @@ app.component('Column', Column);
 
 app.component('Stepper', Stepper);
 app.component('StepperPanel', StepperPanel);
-
+app.component('TreeTable', TreeTable);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

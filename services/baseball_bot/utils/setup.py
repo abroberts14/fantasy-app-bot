@@ -15,7 +15,7 @@ def get_env_vars():
     except KeyError:
         bot_id = 1
 
-
+    bot_id = '6b5dfa374f148c64eb1e9948f5'
     if (len(str(bot_id)) <= 1 ):
         raise Exception("No messaging platform info provided")
 
@@ -34,5 +34,8 @@ def get_env_vars():
     data['yahoo_private_key'] = yahoo_private_key
     data['yahoo_private_secret'] = yahoo_private_secret 
     data['team_names_minutes'] = os.environ.get("TEAM_NAMES_MINUTES",  30)
+    data['matchups_minutes'] = os.environ.get("MATCHUPS_MINUTES",  10)
+    data['feature_flags'] = os.environ.get("FEATURE_ENV_VARS",  "")
+    data['backend_url'] = os.environ.get("BACKEND_URL",  "http://localhost:5000")
     data['init_msg'] = 'Bot_id: ' + str(bot_id) + ' | League_id: ' + str(data['league_id']) + ' | Bot_type: ' + data['bot_type'] + ' | Bot_timezone: ' + my_timezone +  ' |  Team_names_minutes interval: ' + str(data['team_names_minutes'])
     return data

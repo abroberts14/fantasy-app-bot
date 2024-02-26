@@ -137,15 +137,26 @@ export default defineComponent({
     const fetchFeatures = async () => {
       console.log('Fetching features');
       try {
-        const response = await axios.get('/features');
+        const response = await axios.get('/global-features');
         features.value = response.data.map(feature => ({
           ...feature,
+        
           enabled: false // Initialize an 'enabled' property for the checkbox
         }));
       } catch (error) {
         console.error('Error fetching features:', error);
         toast.error('Error fetching features');
       }
+    };
+    const prepareDataForSubmission = () => {
+      return features.value.map(feature => ({
+          feature_id: feature.id, // Assuming each feature has a unique 'id'
+          name: feature.name,
+          hour: feature.hour, 
+          minute: feature.minute,
+          description: feature.description,
+          enabled: feature.enabled
+      }));
     };
 
     const submit = async () => {
@@ -189,9 +200,21 @@ export default defineComponent({
 
       try {
         isLoading.value = true;
-        const botsStore = useBotsStore();
-        const response = await botsStore.createBot(bot.value);
+
       
+        
+        // Prepare data to be sent, including enabled features
+        const botData = {
+            ...bot.value,
+            features: features.value
+                .filter(feature => feature.enabled)
+                .map(feature => ({
+                    global_feature_id: feature.id,
+                    enabled: feature.enabled
+                }))
+        };
+        const botsStore = useBotsStore();
+        const response = await botsStore.createBot(botData);
 
         toast.success('Bot created successfully');
         router.push(`/bot/${response.id}`); // Navigate to the specific bot's page

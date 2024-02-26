@@ -63,6 +63,10 @@ def yahoo_bot(function):
         text = 'Team Names For League ID: ' +str(data['league_id'])
         text = text + "\n\n" +  yahoo_worker.get_league_team_names(yahoo_query)
         text = text + "\n\n" + ' Next run in '+str(data['team_names_minutes'])+' minutes!'
+    if function == "get_league_matchups":
+        text = 'Team Matchups For League ID: ' +str(data['league_id'])
+        text = text + "\n\n" +  yahoo_worker.get_league_matchups(yahoo_query)
+        text = text + "\n\n" + ' Next run in '+str(data['matchups_minutes'])+' minutes!'
     elif function == "broadcast":
         try:
             text = broadcast_message
@@ -72,6 +76,9 @@ def yahoo_bot(function):
     elif function == "init":
         try:
             text = data["init_msg"]
+            text = 'Team Matchups For League ID: ' +str(data['league_id'])
+            text = text + "\n\n" +  yahoo_worker.get_league_matchups(yahoo_query)
+            text = text + "\n\n" + ' Next run in '+str(data['matchups_minutes'])+' minutes!'
         except KeyError:
             # do nothing here, empty init message
             pass

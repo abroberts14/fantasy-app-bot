@@ -29,18 +29,20 @@ services:
       - 5173:5173
     command: npm run dev
 
-  # yahoo_bot:
-  #   build:
-  #     context: ./services/baseball_bot
-  #   restart: always
-  #   environment:
-  #     #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
-  #     BOT_ID: "6b5dfa374f148c64eb1e9948f5"
-  #     BOT_TYPE: "GroupMe"
-  #     TEAM_NAMES_MINUTES: 30
-  #     #ESPN league id (REQUIRED)
-  #     LEAGUE_ID: 3932
-  #   image: yahoo_bot:latest
+  yahoo_bot:
+    build:
+      context: ./services/baseball_bot
+    restart: always
+    environment:
+      #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
+      BOT_ID: "6b5dfa374f148c64eb1e9948f5"
+      BOT_TYPE: "GroupMe"
+      TEAM_NAMES_MINUTES: 30
+      #ESPN league id (REQUIRED)
+      LEAGUE_ID: 3932
+      FEATURE_ENV_VARS: TEAM_NAMES=true LEAGUE_MATCHUPS=true
+      BACKEND_URL: https://api.draftwarroom.com
+    image: yahoo_bot:latest
 
 
 

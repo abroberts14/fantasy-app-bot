@@ -21,13 +21,37 @@ class Bots(models.Model):
     running = fields.BooleanField(default=False)
     active = fields.BooleanField(default=True)
     app = fields.ForeignKeyField("models.Apps", related_name="bots", null=True)
-
+    features =  fields.ReverseRelation["features"]  # Reverse relation for bots
     class Meta:
         unique_together = ("league_id", "groupme_bot_id")
 
     def __str__(self):
         return f"{self.name}, {self.groupme_bot_id} for league {self.league_id} - created on {self.created_at}"
+
     
+
+class Features(models.Model):
+    id = fields.IntField(pk=True)
+    bot = fields.ForeignKeyField("models.Bots", related_name="features")
+    global_feature = fields.ForeignKeyField("models.GlobalFeatures", related_name="global_features")
+    # name = fields.CharField(max_length=50, unique=True)
+    # hour = fields.IntField(min_value=0, max_value=23)
+    # minute = fields.IntField(min_value=0, max_value=59)
+    # description = fields.TextField(null=True, blank=True)  # Allow NULL and empty string
+    enabled = fields.BooleanField(default=True)
+    def __str__(self):
+        return self.name
+    
+class GlobalFeatures(models.Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=50, unique=True)
+    hour = fields.IntField(min_value=0, max_value=23)
+    minute = fields.IntField(min_value=0, max_value=59)
+    description = fields.TextField(null=True, blank=True)  # Allow NULL and empty strings
+    def __str__(self):
+        return self.name
+    
+
 class Apps(models.Model):
     name = fields.CharField(max_length=255, unique=True)
     status = fields.CharField(max_length=50, default="stopped")
@@ -44,26 +68,4 @@ class Apps(models.Model):
     bot = fields.ReverseRelation["Bots"]
     def __str__(self):
         return f"{self.name} - {self.state_status}"
-    
 
-class Features(models.Model):
-    id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=50, unique=True)
-    hour = fields.IntField(min_value=0, max_value=23)
-    minute = fields.IntField(min_value=0, max_value=59)
-    description = fields.TextField(null=True, blank=True)  # Allow NULL and empty strings
-
-    def __str__(self):
-        return self.name
-
-class BotFeatures(models.Model):
-    bot = fields.ForeignKeyField("models.Bots", related_name="bot_features")
-    feature = fields.ForeignKeyField("models.Features", related_name="bot_features")
-    enabled = fields.BooleanField(default=True)
-
-    class Meta:
-        unique_together = ("bot", "feature")
-
-    def __str__(self):
-        status = "enabled" if self.enabled else "disabled"
-        return f"{self.bot.name} - {self.feature.name}: {status}"
