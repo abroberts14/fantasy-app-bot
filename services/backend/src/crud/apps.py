@@ -172,7 +172,7 @@ async def create_and_deploy_app(
     bot: BotInSchema = Body(...), 
 ):
     bot_name = bot.name
-    template_id = "2"
+    template_id = "3"
     bot_groupme_id = bot.groupme_bot_id
     bot_type = "GroupMe"
     league_id = bot.league_id
