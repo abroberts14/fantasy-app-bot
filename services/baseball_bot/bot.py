@@ -87,9 +87,6 @@ def yahoo_bot(function):
     elif function == "init":
         try:
             text = data["init_msg"]
-            text = 'Team Matchups For League ID: ' +str(data['league_id'])
-            text = text + "\n\n" +  yahoo_worker.get_league_matchups(yahoo_query)
-            text = text + "\n\n" + ' Next run in '+str(data['matchups_minutes'])+' minutes!'
         except KeyError:
             # do nothing here, empty init message
             pass
