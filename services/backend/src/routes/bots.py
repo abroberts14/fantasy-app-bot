@@ -5,8 +5,9 @@ from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.exceptions import DoesNotExist, IntegrityError
 
 import src.crud.bots as crud
+import src.crud.apps as app_crud
 from src.auth.jwthandler import get_current_user
-from src.schemas.bots import BotOutSchema, BotInSchema, UpdateBot
+from src.schemas.bots import BotOutSchema, BotInSchema, UpdateBot, FeaturesInSchema
 from src.schemas.token import Status
 from src.schemas.users import UserOutSchema
 
@@ -73,11 +74,12 @@ async def create_bot(
 )
 async def update_bot(
     id: int,
-    bot: UpdateBot,
+    features: List[FeaturesInSchema],
     current_user: UserOutSchema = Depends(get_current_user),
 ) -> BotOutSchema:
-    return await crud.update_bot(id, bot, current_user)
-
+    
+    updated_bot = await crud.update_bot_features(id, features)
+    return updated_bot
 
 @router.delete(
     "/bot/{id}",

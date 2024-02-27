@@ -35,7 +35,7 @@
           <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
             <ConfirmDialog></ConfirmDialog>
 
-            <Button label="Initiate Bot" @click="initiateBot" severity="info" />
+            <Button :disabled="featuresChanged" label="Initiate Bot" @click="initiateBot" severity="info" />
           </div>
         </li>
 
@@ -72,18 +72,26 @@
               </Column>
               <Column header="Enabled">
                   <template #body="slotProps">
-                      <input type="checkbox" disabled v-model="slotProps.data.enabled" />
+                    <input type="checkbox" :disabled="bot.app && bot.app.running" :checked="slotProps.data.enabled" @change="() => handleCheckboxChange(slotProps.data)" />
                   </template>
+                  <!-- @change="handleCheckboxChange(slotProps.data) -->
               </Column>
           </DataTable>
+          
         </li>
 
-        <li v-if="isAdmin" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
-          <div class="text-500 w-6 md:w-2 font-medium">Admin Actions</div>
-          <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
-            <SplitButton label="Visit" icon="pi pi-cog" :model="adminItems" raised rounded @click="visit" severity="secondary"></SplitButton>
+        <li v-if="isAdmin || userOwnsBot" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+          <div class="text-500 w-6 md:w-2 font-medium">Actions</div>
+          <div class="text-900 flex justify-content-start py-4 gap-2">
+            <Button :disabled="!featuresChanged" @click="updateBot" label="Update Bot" severity="info" />
+
+            <SplitButton v-if="isAdmin" label="Visit" icon="pi pi-cog" :model="adminItems" raised rounded @click="visit" severity="secondary"></SplitButton>
+
           </div>
+
         </li>
+
+
       </ul>
     </div>
 
@@ -129,6 +137,8 @@ export default defineComponent({
         const toast = useToast();
         const confirm = useConfirm();
         const { formatFeatureName } = useFormatting(); // Use the composable
+        
+
 
         const confirmDelete = () => {
           confirm.require({
@@ -143,6 +153,20 @@ export default defineComponent({
             }
           });
         };
+        const checkedFeatures = ref([]); // This should be bound to your checkbox component
+
+        const featuresChanged = computed(() => {
+            return bot.value.features.some((feature, index) => {
+                return feature.enabled !== checkedFeatures.value[index].enabled;
+            });
+        });
+
+
+        const handleCheckboxChange = (feature) => {
+            feature.enabled = !feature.enabled;
+        };
+
+        
         const adminItems = ref([
             {
                 label: 'Refresh',
@@ -164,6 +188,9 @@ export default defineComponent({
             try {
                 await botsStore.viewBot(props.id);
                 await usersStore.viewMe();
+              
+                checkedFeatures.value = bot.value.features.map(f => ({ ...f }));
+
             } catch (error) {
                 console.error('Error fetching data:', error);
                 if (error.response && error.response.status === 404) {
@@ -174,13 +201,15 @@ export default defineComponent({
             }
         }
 
-        onMounted(fetchData);
+        onMounted(() => {
+          fetchData();
+        });
 
         const bot = computed(() => botsStore.stateBot);
         const user = computed(() => usersStore.stateUser);
         const isAdmin = computed(() => usersStore.isAdmin);
         const userOwnsBot = computed(() => user.value.id === bot.user.id);
-
+       
         async function initiateBot() {
             try {
                 isLoading.value = true;
@@ -265,12 +294,36 @@ export default defineComponent({
                 isLoading.value = false;
             }
         }
+        async function updateBot() {
+        try {
+          console.log('updating bot...');
+          isLoading.value = true;
+          const updatedFeatures = bot.value.features.map(feature => ({
+              global_feature_id: feature.global_feature.id,
+              enabled: feature.enabled
+          }));
+          console.log("Updated features:", updatedFeatures);
 
+          const botData = {
+              ...bot.value,
+              features: updatedFeatures
+          };
+
+          await axios.patch(`/bot/${props.id}`, updatedFeatures);
+          await fetchData();
+        } catch (error) {
+          console.error('Error updating bot:', error);
+          toast.error('Error updating bot: ' + error.message);
+        } finally {
+          isLoading.value = false;
+          toast.success('Bot updated successfully');
+        }
+      }
         const visit = () => {
             window.open(`http://167.99.4.120:8000/#/apps/${bot.value.app.name}`, '_blank');
         };
 
-        return { bot, user, isAdmin, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, stopBot, startBot, restartBot, confirmDelete, confirm, formatFeatureName };
+        return { bot, user, isAdmin, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, stopBot, startBot, restartBot, updateBot, confirmDelete, confirm, formatFeatureName, featuresChanged, checkedFeatures, handleCheckboxChange };
     }
 });
 </script>

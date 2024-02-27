@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from tortoise.exceptions import DoesNotExist
 
 from src.database.models import Bots, Features
-from src.schemas.bots import BotOutSchema
+from src.schemas.bots import BotOutSchema, BotInSchema
 from src.schemas.token import Status
 from src.crud.apps import update_all_apps, delete_entire_app
 
@@ -41,36 +41,83 @@ async def get_bot(bot_id) -> BotOutSchema:
     # finally:
         return await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
 
-
-async def create_bot(bot, current_user) -> BotOutSchema:
-    bot_dict = bot.dict(exclude_unset=True)
-    print(bot_dict)
-
-    bot_features_data = bot_dict.pop('features', [])
-    bot_dict["user_id"] = current_user.id
-    bot_obj = await Bots.create(**bot_dict)
-
-    for feature_data in bot_features_data:
-        print(feature_data)
-        # Check if the feature already exists and update, or create a new one
-        feature_id = feature_data.get('global_feature_id')
-        if feature_id:
-            await Features.create(bot=bot_obj, global_feature_id=feature_id, defaults={'enabled': feature_data['enabled']})
-        
-    created_bot = await Bots.get(id=bot_obj.id)
-    return await BotOutSchema.from_tortoise_orm(created_bot)
-
-async def update_bot(bot_id, bot, current_user) -> BotOutSchema:
+async def update_bot_features(bot_id, bot_features) -> BotOutSchema:
     try:
+        print(f"Fetching bot with ID {bot_id}")
         db_bot = await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
+        print(f"Bot found: {db_bot}")
     except DoesNotExist:
+        print(f"Bot {bot_id} not found")
         raise HTTPException(status_code=404, detail=f"Bot {bot_id} not found")
 
-    if db_bot.user.id == current_user.id:
-        await Bots.filter(id=bot_id).update(**bot.dict(exclude_unset=True))
-        return await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
+    bot_dict = db_bot.dict(exclude_unset=False)
+    print(f"Bot data: {bot_dict}")
 
-    raise HTTPException(status_code=403, detail=f"Not authorized to update")
+    bot_features_data = bot_dict.pop('features', [])
+    print(f"Existing bot features: {bot_features_data}")
+
+    for feature_in in bot_features:
+        feature_data = feature_in.dict()
+        print(f"Processing feature: {feature_data}")
+        feature_id = feature_data.get('global_feature_id')
+        enabled_status = feature_data.get('enabled')
+
+        if feature_id is not None:
+            print(f"Processing feature with ID {feature_id}")
+            print(f"Feature data: {feature_data}")
+
+            feature_obj, created = await Features.get_or_create(
+                bot=bot_dict['id'],
+                global_feature_id=feature_id,
+                defaults={'enabled': enabled_status}
+            )
+            print("created feature")
+            
+            if not created:
+                feature_obj.enabled = enabled_status
+                await feature_obj.save()
+                print(f"Feature updated with new enabled status: {feature_obj.enabled}")
+        else:
+            print(f"Feature ID not found in feature data: {feature_data}")
+    return db_bot
+
+
+async def create_bot(bot: BotInSchema, current_user) -> BotOutSchema:
+    print("Starting bot creation process")
+
+    bot_dict = bot.dict(exclude_unset=True)
+    print(f"Bot data before processing: {bot_dict}")
+
+    bot_features_data = bot_dict.pop('features', [])
+    print(f"Bot features data: {bot_features_data}")
+
+    bot_dict["user_id"] = current_user.id
+    print(f"Adding current user ID {current_user.id} to bot data")
+
+    bot_obj = await Bots.create(**bot_dict)
+    print(f"Bot created: {bot_obj}")
+
+    for feature_data in bot_features_data:
+        feature_id = feature_data.get('global_feature_id')
+        if feature_id:
+            print(f"Processing feature with ID {feature_id}")
+            feature_obj, created = await Features.get_or_create(
+                bot=bot_obj,
+                global_feature_id=feature_id,
+                defaults={'enabled': feature_data['enabled']}
+            )
+
+            print('created feature')
+            if not created:
+                feature_obj.enabled = feature_data['enabled']
+                await feature_obj.save()
+                print(f"Feature updated with new enabled status: {feature_obj.enabled}")
+    
+    created_bot = await Bots.get(id=bot_obj.id)
+    print(f"Final bot object fetched: {created_bot}")
+
+    return await BotOutSchema.from_tortoise_orm(created_bot)
+
 
 async def delete_bot(bot_id, current_user) -> Status:
     print(f"Starting deletion of bot {bot_id} for user {current_user.id}")

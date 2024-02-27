@@ -207,18 +207,17 @@ export default defineComponent({
       try {
         isLoading.value = true;
 
-      
-        
-        // Prepare data to be sent, including enabled features
+        console.log("Original features:", features.value);
+
         const botData = {
             ...bot.value,
-            features: features.value
-                .filter(feature => feature.enabled)
-                .map(feature => ({
-                    global_feature_id: feature.id,
-                    enabled: feature.enabled
-                }))
+            features: features.value.map(feature => ({
+                global_feature_id: feature.id,
+                enabled: feature.enabled
+            }))
         };
+
+        console.log("Mapped features for botData:", botData.features);
         const botsStore = useBotsStore();
         const response = await botsStore.createBot(botData);
 
@@ -235,6 +234,9 @@ export default defineComponent({
 
     onMounted(fetchFeatures);
 
+    onMounted(() => {
+        fetchFeatures();
+        });
     return {
       bot,
       isLoading,

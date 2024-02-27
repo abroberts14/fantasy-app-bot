@@ -170,18 +170,18 @@ async def update_all_apps():
 
 async def create_and_deploy_app(
     bot_id: str,
-    bot: BotInSchema = Body(...), 
+    bot: BotInSchema = Body(...),
+    edit: bool = False  # New optional parameter
 ):
     bot_name = bot.name
     template_id = "2"
     bot_groupme_id = bot.groupme_bot_id
     bot_type = "GroupMe"
     league_id = bot.league_id
-    # Iterate over the features and print them (for debugging purposes)
+
     for feature in bot.features:
         print(f"Feature: {feature.global_feature.name}, Enabled: {feature.enabled}")
 
-    # Create a comma-separated list of enabled feature names
     feature_env_vars = ",".join(
         feature.global_feature.name.upper() for feature in bot.features if feature.enabled
     )
@@ -193,7 +193,7 @@ async def create_and_deploy_app(
     cookies = get_cookies(tokens)
     headers = get_headers(tokens)
     response = handle_request("GET", url, cookies=cookies, headers=headers)
-    rsp  = response.json()
+    rsp = response.json()
     print(rsp)
     app = rsp["items"][0]
     new_app_name = app["name"] + "-" + bot_name
@@ -202,14 +202,18 @@ async def create_and_deploy_app(
     response = handle_request("GET", url, cookies=cookies)
 
     existing_apps = response.json()
-
+    app_id = None
     for existing_app in existing_apps:
         if existing_app["name"] == new_app_name:
+            if edit:
+                app_id = existing_app["Id"]
+                break
             raise HTTPException(
                 status_code=400,
                 detail="An app with the same name already exists!"
             )
-    new_payload =  {
+
+    new_payload = {
         "name": new_app_name,
         "image": app["image"],
         "restart_policy": "none",
@@ -219,56 +223,43 @@ async def create_and_deploy_app(
         "ports": [],
         "volumes": [],
         "env": [
-            {
-                "name": "BOT_ID",
-                "label": "GroupMe Bot ID",
-                "default": bot_groupme_id
-            },
-            {
-                "name": "BOT_TYPE",
-                "label": "Chat Bot Type",
-                "default": bot_type
-            },
-            {
-                "name": "LEAGUE_ID",
-                "label": "Yahoo League Id",
-                "default": league_id
-            },
-            {
-                "name": "FEATURE_ENV_VARS",
-                "label": "Feature Environment Variables",
-                "default": feature_env_vars
-            }, 
-            {
-                "name": "BACKEND_URL",
-                "label": "Backend API",
-                "default": backend_url
-            },
+            {"name": "BOT_ID", "label": "GroupMe Bot ID", "default": bot_groupme_id},
+            {"name": "BOT_TYPE", "label": "Chat Bot Type", "default": bot_type},
+            {"name": "LEAGUE_ID", "label": "Yahoo League Id", "default": league_id},
+            {"name": "FEATURE_ENV_VARS", "label": "Feature Environment Variables", "default": feature_env_vars},
+            {"name": "BACKEND_URL", "label": "Backend API", "default": backend_url},
         ],
         "devices": [],
         "labels": [],
         "sysctls": [],
         "cap_add": [],
         "cpus": None,
-        "mem_limit": None
+        "mem_limit": None,
     }
+    if edit:
+        new_payload["edit"] = True
+        new_payload["id"] = app_id
     print(new_payload)
-    url = yacht_endpoint + "/apps/deploy"
 
+    # Only create a new app if not in edit mode
+    url = yacht_endpoint + "/apps/deploy"
     response = handle_request("POST", url, headers=headers, cookies=cookies, json=new_payload)
 
     url = yacht_endpoint + f"/apps/{new_app_name}"
     response = handle_request("GET", url, cookies=cookies)
     app_filtered = filter_app_to_schema(response.json())
-   # print(app_filtered)
 
-    # Create the Apps instance without the 'bot' field
-    app_obj = await Apps.create(**app_filtered)
 
-    # Fetch the Bot instance from the database
+    if edit:
+        # Update the existing Apps record
+        app_obj = await Apps.get(name=new_app_name)
+        for key, value in app_filtered.items():
+            setattr(app_obj, key, value)
+        await app_obj.save()
+    else:
+        # Create a new Apps record
+        app_obj = await Apps.create(**app_filtered)    
     bot_obj = await Bots.get(id=bot_id)
-
-    # Set the 'app' field of the 'bot_obj' to the 'app_obj'
     bot_obj.app = app_obj
     await bot_obj.save()
 
@@ -281,7 +272,6 @@ async def perform_app_action(app_name: str, action: str):
     print('Sending request to perform action' + action + ' on app ' + app_name)
     response = handle_request("GET", url, cookies=cookies)
     print('Seent request to perform action complete')
-    print(response.json())
     if response.status_code != 200:
         raise Exception(f"Request to {url} failed with status code {response.status_code}. Response: {response.text}")
     print('Request to perform action complete')

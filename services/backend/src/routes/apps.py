@@ -47,8 +47,6 @@ async def get_apps(
             status_code=403,
                 )
 
-# {"name": "backend",  "groupme_bot_id": "6b5dfa374f148c64eb1e9948f5", "league_id": "3932"}
-
 @router.post(
     "/apps/start-app/{bot_id}", response_model=AppOutSchema, dependencies=[Depends(get_current_user)]
 )
@@ -75,6 +73,8 @@ async def restart_bot(bot_id) -> AppOutSchema:
         db_bot_instance = await Bots.get(id=bot_id)
         db_bot = await BotOutSchema.from_tortoise_orm(db_bot_instance)
         if db_bot.app and db_bot.app.name:        
+            print('redeploying app')  
+            await crud.create_and_deploy_app(bot_id, db_bot)
             print(f"restarting associated app for bot {bot_id}")
             return await crud.perform_app_action(db_bot.app.name, 'restart')
         else:
@@ -98,8 +98,12 @@ async def start_bot(bot_id) -> AppOutSchema:
         print(bot_id)
         db_bot_instance = await Bots.get(id=bot_id)
         db_bot = await BotOutSchema.from_tortoise_orm(db_bot_instance)
-        if db_bot.app and db_bot.app.name:        
+
+        if db_bot.app and db_bot.app.name:      
+            print('redeploying app')  
+            await crud.create_and_deploy_app(bot_id, db_bot, True)
             print(f"starting associated app for bot {bot_id}")
+
             return await crud.perform_app_action(db_bot.app.name, 'start')
         else:
             raise HTTPException(
