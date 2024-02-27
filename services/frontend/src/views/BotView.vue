@@ -251,7 +251,8 @@ export default defineComponent({
                 toast.error('Error stopping bot: ' + error.message);            
             } finally {
                 isLoading.value = false;
-                toast.success('Bot stopping successfully');
+                toast.success('Bot stopped successfully');
+                router.push(`/bot/${props.id}`);
 
             }
         };
@@ -304,10 +305,6 @@ export default defineComponent({
           }));
           console.log("Updated features:", updatedFeatures);
 
-          const botData = {
-              ...bot.value,
-              features: updatedFeatures
-          };
 
           await axios.patch(`/bot/${props.id}`, updatedFeatures);
           await fetchData();
@@ -317,6 +314,7 @@ export default defineComponent({
         } finally {
           isLoading.value = false;
           toast.success('Bot updated successfully');
+          router.push(`/bot/${props.id}`); 
         }
       }
         const visit = () => {
