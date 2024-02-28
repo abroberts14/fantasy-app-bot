@@ -64,12 +64,12 @@ def scheduler(local_data = None):
         print(f"Added job: {job_name} with trigger {trigger} ")
 
     print("Ready! Scheduled a total of " + str(len(sched.get_jobs())) + " jobs")
-    if local_data:
+    #if local_data:
         #lets kick off the jobs to see it run immediately when local
-        for job in sched.get_jobs():
-            print(f"Running job: {job.id} immediately")
-            if job.id !=  'init':
-                job.modify(next_run_time=datetime.now() + timedelta(seconds=5))
+    for job in sched.get_jobs():
+        print(f"Running job: {job.id} immediately")
+        if job.id !=  'init':
+            job.modify(next_run_time=datetime.now() + timedelta(seconds=5))
     sched.start()
 
 
