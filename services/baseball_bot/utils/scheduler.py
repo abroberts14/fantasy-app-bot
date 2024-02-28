@@ -31,9 +31,12 @@ def parse_feature_flags(feature_flags_str):
         flags[flag] = True
     return flags
 
-def scheduler():
+def scheduler(local_data = None):
     print('starting scheduler 2')
-    data = get_env_vars()
+    if local_data:
+        data = local_data
+    else:
+        data = get_env_vars()
     print(data)
 
     feature_flags = parse_feature_flags(data['feature_flags'])
@@ -50,16 +53,24 @@ def scheduler():
             continue
 
         if timing.get('live', False):
-            trigger = None #in development
+            trigger = IntervalTrigger(minutes=30)
         else:
             day_of_week = 'mon,tue,wed,thu,fri,sat,sun' if timing['day'] == 'all' else timing['day'].capitalize()
             trigger = CronTrigger(day_of_week=day_of_week, hour=timing['hour'], minute=timing['minute'], 
                                   start_date=datetime.now(), end_date=datetime.now() + timedelta(days=730), 
                                   timezone='UTC')
         if trigger != None:
-            sched.add_job(yahoo_bot, trigger, [job_name], id=job_name, replace_existing=True)
-            print(f"Added job: {job_name} with trigger {trigger} ")
+            sched.add_job(yahoo_bot, trigger, [job_name, local_data], id=job_name, replace_existing=True)
+        print(f"Added job: {job_name} with trigger {trigger} ")
 
-    print("Ready!")
+    print("Ready! Scheduled a total of " + str(len(sched.get_jobs())) + " jobs")
+    if local_data:
+        #lets kick off the jobs to see it run immediately when local
+        for job in sched.get_jobs():
+            print(f"Running job: {job.id} immediately")
+            if job.id !=  'init':
+                job.modify(next_run_time=datetime.now() + timedelta(seconds=5))
     sched.start()
+
+
     print('done')

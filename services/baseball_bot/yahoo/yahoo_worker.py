@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import os
-
+import re 
 def get_league_teams(qry):
         return qry.get_league_teams()
 
@@ -77,71 +77,80 @@ def get_daily_waiver_activity(qry):
     teams = qry.get_league_teams()
     teams_info, team_names = get_teams_info(teams)
     formatted_activity = ''
-    
-    # Get yesterday's date for the report
-    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
-    yesterday_date = yesterday.date()
-    formatted_activity += f"Transaction Report For {yesterday_date}:\n\n"
+    twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(days=1)
+
 
     # Initialize a defaultdict for storing transactions
-    team_transactions = defaultdict(lambda: defaultdict(list))
-    
+    #team_transactions = defaultdict(lambda: defaultdict(list))
+    team_transactions = defaultdict(lambda: {'Added': [], 'Dropped': []})
+
     # Process each transaction
     for transaction in waiver_activity:
         transaction_time = datetime.fromtimestamp(transaction.timestamp, timezone.utc)
-        if transaction_time.date() == yesterday_date and transaction.type == "add/drop":
+        if transaction_time >= twenty_four_hours_ago and transaction.type == "add/drop":
             for player in transaction.players:
                 player_data = player.transaction_data
                 team_key = player_data.destination_team_key if player_data.type == "add" else player_data.source_team_key
                 action = "Added" if player_data.type == "add" else "Dropped"
-                player_info = f"{player.name.full} - ({player.editorial_team_abbr} - {player.display_position})"
-                if player_data.type == "add":
-                    if player_data.source_type == "waivers":
-                        player_info += " [Off Waivers]"
-                    if transaction.faab_bid is not None:
-                        player_info += f" ($ {transaction.faab_bid})"
+                player_info = f"{player.name.full} | ({player.editorial_team_abbr} - {player.display_position})"
+                if player_data.type == "add" and player_data.source_type == "waivers":
+                    player_info += " [W]"
+                if transaction.faab_bid is not None:
+                    player_info += f" | (${transaction.faab_bid})"
                 team_transactions[team_key][action].append(player_info)
 
-    if len(team_transactions) == 0:
-        return ""
     # Format the transactions for each team
     for team_key, actions in team_transactions.items():
         if team_key in teams_info:
             moves_made = teams_info[team_key]
             team_info = f"{team_names.get(team_key, 'Unknown Team')} (#{moves_made})"
-        else:
-            continue  # Skip if team_key not found in teams_info
-
-        formatted_activity += f"{team_info}\n"
-        for action, players in actions.items():
-            formatted_activity += f"{action} "
-            formatted_activity += ", ".join(players)
-            formatted_activity += "\n"
+            formatted_activity += f"{team_info}\n"
+            for action, players in actions.items():
+                formatted_activity += "\n".join([f"{action} {player}" for player in players]) + "\n"
         formatted_activity += "\n"
 
-    return formatted_activity
+    if team_transactions:
+        aligned = formatted_activity.split('\n')
+        msg = align_messages(aligned) 
+        msg = "Transaction Report For Last 24 Hours:\n\n" + msg
+    return msg if team_transactions else ""
 
 def get_auth_dir():
     script_directory = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(script_directory, "auth")
 
-consumer_key= "dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz"
-consumer_secret= "e656aa67c44c49a1c201c4f984ef6b83fb09fe73"
-
-
 def get_current_week(qry):
     return qry.get_league_info().current_week
-if __name__ == '__main__':
-    yahoo_query = YahooFantasySportsQuery(
-        r'C:\Users\aaron\Documents\dev\fastapi-vue\services\baseball_bot\auth',
-        '3932',
-        "mlb",
-        offline=False,
-        all_output_as_json_str=False,
-        # consumer_key=consumer_key,
-        # consumer_secret=consumer_secret
-    )
-    yahoo_query.game_id = yahoo_query.get_game_key_by_season(2024)
 
-    #print(get_daily_waiver_activity(yahoo_query))
-    print(get_league_matchups(yahoo_query))
+
+def align_messages(messages):
+    split_lines = [line.split(" | ") for line in messages if line.strip()]
+
+    # Calculate maximum length of each section and the overall max length
+    max_sections = max(len(line) for line in split_lines)
+    max_lengths = [0] * max_sections
+    overall_max_length = 0
+    for line in split_lines:
+        for i, section in enumerate(line):
+            max_lengths[i] = max(max_lengths[i], len(section.strip()))
+        overall_max_length = max(overall_max_length, sum(max_lengths) + (len(line) - 1) * 3)  # 3 = len(" | ")
+
+    # Construct aligned lines
+    aligned_lines = []
+    for line in split_lines:
+        if len(line) == 1 and "|" not in line[0]:  # Center align if no |
+            aligned_lines.append("")  # Add an additional newline
+            aligned_lines.append(line[0].center(overall_max_length))
+            aligned_lines.append("")  # Add an additional newline
+        else:
+            aligned_line = []
+            for i, section in enumerate(line):
+                # Left align for all sections except the last section in the longest lines
+                if i < len(line) - 1 or len(line) < max_sections:
+                    aligned_line.append(section.ljust(max_lengths[i]))
+                else:
+                    aligned_line.append(section.rjust(max_lengths[i]))
+
+            aligned_lines.append(" | ".join(aligned_line))
+
+    return '\n'.join(aligned_lines)
