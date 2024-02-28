@@ -3,7 +3,9 @@ from datetime import datetime, timedelta, timezone
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import os
-import re 
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def get_league_teams(qry):
         return qry.get_league_teams()
 

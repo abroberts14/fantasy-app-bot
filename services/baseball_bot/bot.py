@@ -8,6 +8,7 @@ import threading
 import logging 
 
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_auth_dir():
     script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +21,7 @@ def yahoo_bot(function, local_data = None):
         data = local_data
     else:
         data = get_env_vars()
-    print(data)
+    logging.info(data)
     bot_type = data['bot_type']
     bot_id = data['bot_id']
     yahoo_league_id = data['league_id']
@@ -30,11 +31,11 @@ def yahoo_bot(function, local_data = None):
     if bot_type == 'GroupMe':
         bot = GroupMe(bot_id)
     elif bot_type in ['Slack', 'Discord']:
-        print(f'{bot_type} not supported yet')
+        logging.error(f'{bot_type} not supported yet')
         sys.exit(1)
 
     if bot is None:
-        print('No bot type specified')
+        logging.error('No bot type specified')
         sys.exit(1)
 
     text = ''
@@ -93,7 +94,7 @@ def yahoo_bot(function, local_data = None):
                 # do nothing here, empty broadcast message
                 pass
     except Exception as e:
-        print(f"Error: {e}")
+        logging.error(f"Error: {e}")
         text = ""
     if function == "init":
         try:
@@ -101,7 +102,7 @@ def yahoo_bot(function, local_data = None):
         except KeyError:
             # do nothing here, empty init message
             pass
-    print(data)
+    logging.info(data)
 
     if text != '':
         print(text)
@@ -123,11 +124,11 @@ data = {
 
 
 if __name__ == "__main__":
-    print("Starting bot")
+    logging.info("Starting bot")
     from utils.scheduler import scheduler
 
     def start_scheduler():
-        scheduler(data)
+        scheduler()
     # Start the scheduler in a new thread
     scheduler_thread = threading.Thread(target=start_scheduler)
     scheduler_thread.daemon = True  # This ensures that the thread will not prevent the program from exiting
@@ -135,9 +136,9 @@ if __name__ == "__main__":
 
     try:
         # Continue with the main script
-        yahoo_bot("init", data)
+        yahoo_bot("init")
     except Exception as e:
         logging.error("Main script error: %s", e)
 
     scheduler_thread.join()  # Wait for the scheduler thread to finish if needed
-    print('done')
+    logging.info('done')
