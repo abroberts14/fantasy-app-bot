@@ -77,7 +77,8 @@ def yahoo_bot(function):
     if function == "test_daily":
         text = 'Daily Task For League ID: ' +str(data['league_id'])
         text = text + "\n\n" + ' Next run tomorrow!'
-
+    if function == "daily_waivers":
+        text = text + "\n\n" +  yahoo_worker.get_daily_waiver_activity(yahoo_query)
     elif function == "broadcast":
         try:
             text = broadcast_message

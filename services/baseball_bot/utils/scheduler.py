@@ -50,15 +50,15 @@ def scheduler():
             continue
 
         if timing.get('live', False):
-            trigger = IntervalTrigger(minutes=30)
+            trigger = None #in development
         else:
             day_of_week = 'mon,tue,wed,thu,fri,sat,sun' if timing['day'] == 'all' else timing['day'].capitalize()
             trigger = CronTrigger(day_of_week=day_of_week, hour=timing['hour'], minute=timing['minute'], 
                                   start_date=datetime.now(), end_date=datetime.now() + timedelta(days=730), 
                                   timezone='UTC')
-
-        sched.add_job(yahoo_bot, trigger, [job_name], id=job_name, replace_existing=True)
-        print(f"Added job: {job_name} with trigger {trigger} ")
+        if trigger != None:
+            sched.add_job(yahoo_bot, trigger, [job_name], id=job_name, replace_existing=True)
+            print(f"Added job: {job_name} with trigger {trigger} ")
 
     print("Ready!")
     sched.start()
