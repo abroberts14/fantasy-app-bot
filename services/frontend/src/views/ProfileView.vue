@@ -46,8 +46,21 @@ export default defineComponent({
 
     // Open a blank new window with specified features
       let authWindow = window.open('', '_blank', windowFeatures);
+      const pollTimer = window.setInterval(() => {
+      try {
+        if (authWindow.location.href.includes("oauth-success")) {
+          window.clearInterval(pollTimer);
+          authWindow.close(); // Close the OAuth window
 
+          // Additional logic after successful OAuth completion
+          // e.g., update the user's state, fetch new data, etc.
+        }
+      } catch (e) {
+        // Error handling, e.g., cross-origin issues
+      }
+    }, 100); // Poll every 100 milliseconds
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
+  
       const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
       console.log("client id", consumer_key);
       // Access the environment variable directly

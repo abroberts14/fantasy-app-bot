@@ -43,12 +43,13 @@ async def exchange_code_for_token(code):
 
 @router.get("/oauth/yahoo/callback")
 async def handle_oauth_callback(code: str = None, error: str = None):
+    frontend_route = os.getenv("FRONTEND_URL")
+
     if error:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization failed")
+        return RedirectResponse(url=frontend_error_route +'/oauth-error')
 
     if not code:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing authorization code")
-
+        return RedirectResponse(url=frontend_error_route +'/oauth-error')
     try:
         # Exchange the authorization code for an access token
         access_token = await exchange_code_for_token(code)
@@ -60,7 +61,7 @@ async def handle_oauth_callback(code: str = None, error: str = None):
 
         # Return the JWT token and user details
         print(access_token)
-        frontend_route = os.getenv("FRONTEND_URL")+'/oauth-success'
-        return RedirectResponse(url=frontend_route)
+        return RedirectResponse(url=frontend_route+'/oauth-success')
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        frontend_error_route = "https://yourfrontend.com/oauth-error"
+        return RedirectResponse(url=frontend_error_route +'/oauth-error')
