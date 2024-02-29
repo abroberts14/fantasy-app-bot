@@ -49,23 +49,24 @@ export default defineComponent({
     // Open a blank new window with specified features
       let authWindow = window.open('', '_blank', windowFeatures);
 
+      const channel = new BroadcastChannel('oauth_channel');
+
       const oauthListener = (event) => {
-        if (event.data) {
-          console.log(event.data);
-        }  
         if (event.data === 'oauth_success') {
-            authWindow.close(); // Close the OAuth window
-            toast.success('Yahoo integration successful');
-            window.removeEventListener('message', oauthListener); // Remove event listener
+          authWindow.close(); // Close the OAuth window
+          toast.success('Yahoo integration successful');
+          channel.removeEventListener('message', oauthListener); // Remove event listener
         }
         if (event.data === 'oauth_error') {
-            authWindow.close(); // Close the OAuth window
-            toast.error('Yahoo integration failed, please try again.');
-            window.removeEventListener('message', oauthListener); // Remove event listener
+          authWindow.close(); // Close the OAuth window
+          toast.error('Yahoo integration failed, please try again.');
+          channel.removeEventListener('message', oauthListener); // Remove event listener
         }
-    };
+      };
 
-      window.addEventListener('message', oauthListener, false);
+      // Add an event listener for the 'message' event
+      channel.addEventListener('message', oauthListener);
+
 
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
   
