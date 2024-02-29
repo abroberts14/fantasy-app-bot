@@ -10,6 +10,7 @@ export default {
 
     const sendMessage = () => {
       if (messageSent) return; // Message already sent, exit
+      console.log('This window origin:', window.location.origin); // Log the origin of this window
 
       // Create a new Broadcast Channel
       const channel = new BroadcastChannel('oauth_channel');
@@ -19,8 +20,9 @@ export default {
       messageSent = true; // Mark message as sent
 
       // Close this window
-      window.close();
-    };
+      setTimeout(() => {
+        window.close();
+      }, 5000);    };
 
     // Try to send the message immediately
     sendMessage();

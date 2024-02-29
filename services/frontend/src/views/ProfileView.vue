@@ -45,10 +45,13 @@ export default defineComponent({
     connectToYahoo() {
       const windowFeatures = "width=800,height=600,resizable,scrollbars=yes,status=1";
       const toast = useToast();
+      console.log('This window origin:', window.location.origin); // Log the origin of this window
 
     // Open a blank new window with specified features
       let authWindow = window.open('', '_blank', windowFeatures);
-
+      authWindow.onload = () => {
+        console.log('New window origin:', authWindow.location.origin);
+      };
       const channel = new BroadcastChannel('oauth_channel');
 
       const oauthListener = (event) => {

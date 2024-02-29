@@ -19,8 +19,9 @@ export default {
       messageSent = true; // Mark message as sent
 
       // Close this window
-      window.close();
-    };
+      setTimeout(() => {
+        window.close();
+      }, 10000);    };
 
     // Try to send the message immediately
     sendMessage();
