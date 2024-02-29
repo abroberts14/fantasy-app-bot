@@ -43,15 +43,12 @@ export default defineComponent({
       }
     },
     connectToYahoo() {
-      const windowFeatures = "width=800,height=600,resizable,scrollbars=yes,status=1";
       const toast = useToast();
       console.log('This window origin:', window.location.origin); // Log the origin of this window
 
     // Open a blank new window with specified features
-      let authWindow = window.open('', '_blank', windowFeatures);
-      authWindow.onload = () => {
-        console.log('New window origin:', authWindow.location.origin);
-      };
+     // let authWindow = window.open('', '_blank', windowFeatures);
+
       const channel = new BroadcastChannel('oauth_channel');
 
       const oauthListener = (event) => {
@@ -72,6 +69,7 @@ export default defineComponent({
       channel.addEventListener('message', oauthListener, false);
 
 
+      window.addEventListener('message', oauthListener, false);
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
   
       const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
@@ -90,11 +88,15 @@ export default defineComponent({
       // Open the OAuth link in a new window
       //const oauthWindow = window.open(link, 'yahooOauthWindow', 'width=800,height=600');
       // Check if the window is successfully opened
+      const windowFeatures = "width=800,height=600,resizable,scrollbars=yes,status=1";
+
+      let authWindow = window.open(link, '_blank', windowFeatures);
+
       if (authWindow) {
-        // Set the URL of the new window
-        authWindow.location.href = link;
-      } else {
-        alert("Pop-up blocked! Please allow pop-ups and try again.");
+        authWindow.location.href = link
+        authWindow.onload = () => {
+          console.log('New window origin:', authWindow.location.origin);
+        };
       }
     },
     yahooAuth() {

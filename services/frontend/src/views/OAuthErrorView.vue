@@ -1,7 +1,3 @@
-<template>
-  <p>Please wait..</p>
-</template>
-
 <script>
 export default {
   mounted() {
@@ -11,25 +7,28 @@ export default {
     const sendMessage = () => {
       if (messageSent) return; // Message already sent, exit
 
-      // Create a new Broadcast Channel
-      const channel = new BroadcastChannel('oauth_channel');
-
-      // Send a message to the channel
-      channel.postMessage('oauth_error');
-      messageSent = true; // Mark message as sent
-
-      // Close this window
-      setTimeout(() => {
+      if (window.opener) {
+        // Send a message to the opener window
+        window.opener.postMessage('oauth_error', '*');
+        messageSent = true; // Mark message as sent
+        // Close this window
         window.close();
-      }, 10000);    };
+      } else {
+        console.warn('Warning: window.opener is null, retrying in 500ms');
+        // Retry after 500ms
+        setTimeout(sendMessage, 500);
+      }
+    };
 
-    // Try to send the message immediately
-    sendMessage();
+    sendMessage(); // Initial attempt to send message
 
-    // If the message wasn't sent, try again after 300ms
-    if (!messageSent) {
-      setTimeout(sendMessage, 500);
-    }
-  },
-};
+    // Set timeout to close the window after 5 seconds if message not sent
+    setTimeout(() => {
+      if (!messageSent) {
+        console.warn('Warning: Message not sent within 5 seconds, closing window');
+       // window.close();
+      }
+    }, 5000);
+  }
+}
 </script>
