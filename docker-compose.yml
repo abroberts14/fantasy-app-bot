@@ -11,6 +11,7 @@ services:
       - IS_LOCAL=true
       - yacht_username=admin@draftwarroom.com
       - yacht_password=admin1
+      - FRONTEND_URL=https://draftwarroom.com
     volumes:
       - ./services/backend:/app
       - ./services/backend/src:/app/src

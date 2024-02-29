@@ -2,7 +2,7 @@ import os
 import base64
 import requests
 import time
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, RedirectResponse
 
 
 
@@ -60,7 +60,7 @@ async def handle_oauth_callback(code: str = None, error: str = None):
 
         # Return the JWT token and user details
         print(access_token)
-        return access_token
-    
+        frontend_route = os.getenv("FRONTEND_URL")+'/oauth-success'
+        return RedirectResponse(url=frontend_route)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

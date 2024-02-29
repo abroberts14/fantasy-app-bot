@@ -42,19 +42,34 @@ export default defineComponent({
       }
     },
     connectToYahoo() {
+      const windowFeatures = "width=800,height=600,resizable,scrollbars=yes,status=1";
+
+    // Open a blank new window with specified features
+      let authWindow = window.open('', '_blank', windowFeatures);
+
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
       const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
       console.log("client id", consumer_key);
       // Access the environment variable directly
       const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback';
       console.log("redirect uri", backendURL);
-      const YAHOO_AUTH_URI = `request_auth?redirect_uri=${encodeURIComponent(backendURL)}&response_type=code&client_id=`;
-      const link = `${YAHOO_API_URL}${YAHOO_AUTH_URI}${consumer_key}`;
+      const converted_url = encodeURIComponent(backendURL);
+      console.log("converted url", converted_url);
+     // const YAHOO_AUTH_URI = `request_auth?redirect_uri=${encodeURIComponent(backendURL)}&response_type=code&client_id=`;
+      const YAHOO_AUTH_URI = `request_auth?redirect_uri=${converted_url}&response_type=code&client_id=`;
 
+      const link = `${YAHOO_API_URL}${YAHOO_AUTH_URI}${consumer_key}`;
+      console.log("link", link);
      // window.location.href = link;
       // Open the OAuth link in a new window
-      const oauthWindow = window.open(link, 'yahooOauthWindow', 'width=800,height=600');
-
+      //const oauthWindow = window.open(link, 'yahooOauthWindow', 'width=800,height=600');
+      // Check if the window is successfully opened
+      if (authWindow) {
+        // Set the URL of the new window
+        authWindow.location.href = link;
+      } else {
+        alert("Pop-up blocked! Please allow pop-ups and try again.");
+      }
     },
     yahooAuth() {
       // Call your yahoo_auth function with this.yahooToken
@@ -63,3 +78,4 @@ export default defineComponent({
   },
 });
 </script>
+
