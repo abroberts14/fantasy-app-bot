@@ -14,21 +14,17 @@ export default {
         // Close this window
         window.close();
       } else {
-        console.warn('Warning: window.opener is null, retrying in 500ms');
-        // Retry after 500ms
-        setTimeout(sendMessage, 500);
+        const channel = new BroadcastChannel('oauth_channel');
+        channel.postMessage('oauth_success');
+
+        console.warn('Warning: window.opener is null, using broadcast channel');
+        //window close
       }
     };
 
     sendMessage(); // Initial attempt to send message
 
-    // Set timeout to close the window after 5 seconds if message not sent
-    setTimeout(() => {
-      if (!messageSent) {
-        console.warn('Warning: Message not sent within 5 seconds, closing window');
-        window.close();
-      }
-    }, 5000);
+   
   }
 }
 </script>
