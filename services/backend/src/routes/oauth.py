@@ -2,8 +2,9 @@ import os
 import base64
 import requests
 import time
-from fastapi import APIRouter, Depends, HTTPException, status, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from fastapi.responses import RedirectResponse
 
 
 router = APIRouter()

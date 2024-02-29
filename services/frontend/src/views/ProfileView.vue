@@ -12,6 +12,7 @@
 <script>
 import { defineComponent } from 'vue';
 import useUsersStore from '@/store/users'; 
+import { useToast } from 'vue-toastification';
 
 export default defineComponent({
   name: 'ProfileComponent',
@@ -43,6 +44,7 @@ export default defineComponent({
     },
     connectToYahoo() {
       const windowFeatures = "width=800,height=600,resizable,scrollbars=yes,status=1";
+      const toast = useToast();
 
     // Open a blank new window with specified features
       let authWindow = window.open('', '_blank', windowFeatures);
@@ -51,10 +53,16 @@ export default defineComponent({
         if (authWindow.location.href.includes("oauth-success")) {
           window.clearInterval(pollTimer);
           authWindow.close(); // Close the OAuth window
-
+          toast.success('Yahoo integration successful');
           // Additional logic after successful OAuth completion
           // e.g., update the user's state, fetch new data, etc.
         }
+        if (authWindow.location.href.includes("oauth-error")) {
+            window.clearInterval(pollTimer);
+            authWindow.close(); // Close the OAuth window
+            toast.error('Yahoo integration failed, please try again.');
+          }
+        
       } catch (e) {
         // Error handling, e.g., cross-origin issues
       }
