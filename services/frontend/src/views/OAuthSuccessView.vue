@@ -3,6 +3,7 @@ export default {
   mounted() {
     console.log('mounted');
     let messageSent = false;
+    document.cookie = 'oauth_success=true; path=/';
 
     const sendMessage = () => {
       if (messageSent) return; // Message already sent, exit

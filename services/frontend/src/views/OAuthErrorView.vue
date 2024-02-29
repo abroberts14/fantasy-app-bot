@@ -2,6 +2,8 @@
 export default {
   mounted() {
     console.log('mounted');
+    document.cookie = 'oauth_error=true; path=/';
+
     let messageSent = false;
 
     const sendMessage = () => {
