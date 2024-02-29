@@ -1,11 +1,10 @@
 <template>
   <section>
-    <h1>Your Profile</h1>
-    <hr/><br/>
     <div>
-      <p><strong>Full Name:</strong> <span>{{ user.full_name }}</span></p>
       <p><strong>Username:</strong> <span>{{ user.username }}</span></p>
       <p><button @click="deleteAccount()" class="btn btn-primary">Delete Account</button></p>
+      <p><button @click="connectToYahoo()" class="btn btn-primary">Connect to Yahoo</button></p>
+      <p><input v-model="yahooToken" placeholder="Enter Yahoo OAuth token"> </input></p>
     </div>
   </section>
 </template>
@@ -16,6 +15,11 @@ import useUsersStore from '@/store/users';
 
 export default defineComponent({
   name: 'ProfileComponent',
+  data() {
+    return {
+      yahooToken: '',
+    };
+  },
   async created() {
     const usersStore = useUsersStore(); 
     await usersStore.viewMe(); // Call the action from your users store
@@ -36,6 +40,24 @@ export default defineComponent({
       } catch (error) {
         console.error(error);
       }
+    },
+    connectToYahoo() {
+      const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
+      const consumer_key =  import.meta.env.YAHOO_CLIENT_ID;
+
+      // Access the environment variable directly
+      const backendURL = import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000';
+
+      const YAHOO_AUTH_URI = `request_auth?redirect_uri=${encodeURIComponent(backendURL)}&response_type=code&client_id=`;
+      const link = `${YAHOO_API_URL}${YAHOO_AUTH_URI}${consumer_key}`;
+      console.log(link);
+
+      //window.location.href = link;
+      console.log(link);
+    },
+    yahooAuth() {
+      // Call your yahoo_auth function with this.yahooToken
+      console.log('test')
     },
   },
 });
