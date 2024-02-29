@@ -52,6 +52,7 @@ export default defineComponent({
       const channel = new BroadcastChannel('oauth_channel');
 
       const oauthListener = (event) => {
+        console.log('event', event);
         if (event.data === 'oauth_success') {
           authWindow.close(); // Close the OAuth window
           toast.success('Yahoo integration successful');
@@ -65,7 +66,7 @@ export default defineComponent({
       };
 
       // Add an event listener for the 'message' event
-      channel.addEventListener('message', oauthListener);
+      channel.addEventListener('message', oauthListener, false);
 
 
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";

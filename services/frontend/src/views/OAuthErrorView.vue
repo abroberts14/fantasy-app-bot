@@ -1,5 +1,4 @@
 <template>
-  <h1>Closing window..</h1>
   <p>Please wait..</p>
 </template>
 
