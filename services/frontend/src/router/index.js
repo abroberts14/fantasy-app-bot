@@ -9,6 +9,8 @@ import BotView from '@/views/BotView.vue'
 import EditBotView from '@/views/EditBotView.vue'
 import AdminView from '@/views/AdminView.vue'
 import useUsersStore from '@/store/users'; 
+import OAuthSuccessView from '@/views/OAuthSuccessView.vue'
+import OAuthErrorView from '@/views/OAuthErrorView.vue'
 
 const routes = [
   {
@@ -62,6 +64,16 @@ const routes = [
     component: EditBotView,
     meta: { requiresAuth: true },
     props: true
+  },
+  {
+    path: '/oauth-success',
+    name: 'OAuthSuccess',
+    component: OAuthSuccessView
+  },
+  {
+    path: '/oauth-error',
+    name: 'OAuthError',
+    component: OAuthErrorView
   }
 ]
 

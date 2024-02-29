@@ -48,25 +48,25 @@ export default defineComponent({
 
     // Open a blank new window with specified features
       let authWindow = window.open('', '_blank', windowFeatures);
-      const pollTimer = window.setInterval(() => {
-      try {
-        if (authWindow.location.href.includes("oauth-success")) {
-          window.clearInterval(pollTimer);
-          authWindow.close(); // Close the OAuth window
-          toast.success('Yahoo integration successful');
-          // Additional logic after successful OAuth completion
-          // e.g., update the user's state, fetch new data, etc.
+
+      const oauthListener = (event) => {
+        if (event.data) {
+          console.log(event.data);
+        }  
+        if (event.data === 'oauth_success') {
+            authWindow.close(); // Close the OAuth window
+            toast.success('Yahoo integration successful');
+            window.removeEventListener('message', oauthListener); // Remove event listener
         }
-        if (authWindow.location.href.includes("oauth-error")) {
-            window.clearInterval(pollTimer);
+        if (event.data === 'oauth_error') {
             authWindow.close(); // Close the OAuth window
             toast.error('Yahoo integration failed, please try again.');
-          }
-        
-      } catch (e) {
-        // Error handling, e.g., cross-origin issues
-      }
-    }, 100); // Poll every 100 milliseconds
+            window.removeEventListener('message', oauthListener); // Remove event listener
+        }
+    };
+
+      window.addEventListener('message', oauthListener, false);
+
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
   
       const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
