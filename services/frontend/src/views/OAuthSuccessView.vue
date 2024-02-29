@@ -17,10 +17,17 @@ export default {
         messageSent = true; // Mark message as sent
         // Close this window
         window.close();
+      } else if (window.parent) {
+        // Send a message to the parent window
+        window.parent.postMessage('oauth_success', '*');
+        messageSent = true; // Mark message as sent
+        // Close this window
+        window.close();
+
       } else {
-        console.warn('Warning: window.opener is null, retrying in 100ms');
+        console.warn('Warning: window.opener and parent is null, retrying in 100ms');
         // Retry after 500ms
-        setTimeout(sendMessage, 100);
+        setTimeout(sendMessage, 300);
       }
     };
 
@@ -30,7 +37,7 @@ export default {
     setTimeout(() => {
       if (!messageSent) {
         console.warn('Warning: Message not sent within 5 seconds, closing window');
-        window.close();
+        //window.close();
       }
     }, 5000);
   }
