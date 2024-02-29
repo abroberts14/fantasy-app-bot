@@ -43,16 +43,16 @@ export default defineComponent({
     },
     connectToYahoo() {
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
-      const consumer_key =  import.meta.env.YAHOO_CLIENT_ID;
-
+      const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
+      console.log("client id", consumer_key);
       // Access the environment variable directly
-      const backendURL = import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000';
-
+      const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback';
+      console.log("redirect uri", backendURL);
       const YAHOO_AUTH_URI = `request_auth?redirect_uri=${encodeURIComponent(backendURL)}&response_type=code&client_id=`;
       const link = `${YAHOO_API_URL}${YAHOO_AUTH_URI}${consumer_key}`;
       console.log(link);
 
-      //window.location.href = link;
+      window.location.href = link;
       console.log(link);
     },
     yahooAuth() {

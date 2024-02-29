@@ -11,6 +11,17 @@ class Users(models.Model):
     bots = fields.ReverseRelation["bots"]  # Reverse relation for bots
     role = fields.CharField(max_length=20, default="user")
     
+class OAuthTokens(models.Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.Users', related_name='oauth_tokens')
+    provider = fields.CharField(max_length=50)  # e.g., 'yahoo', 'google', etc.
+    access_token = fields.CharField(max_length=255)
+    refresh_token = fields.CharField(max_length=255, null=True)
+    token_type = fields.CharField(max_length=50)
+    expires_in = fields.IntField()
+    created_at = fields.DatetimeField(auto_now_add=True)
+    modified_at = fields.DatetimeField(auto_now=True)
+    
 class Bots(models.Model):
     name = fields.CharField(max_length=20, null=True)
     league_id = fields.CharField(max_length=6)

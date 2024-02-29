@@ -22,6 +22,9 @@ services:
 
   frontend:
     build: ./services/frontend
+    environment:
+      - VITE_APP_BACKEND_URL=https://api.draftwarroom.com
+      - VITE_APP_YAHOO_CLIENT_ID=dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz
     volumes:
       - './services/frontend:/app'
       - '/app/node_modules'
