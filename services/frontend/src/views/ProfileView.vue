@@ -50,10 +50,11 @@ export default defineComponent({
       console.log("redirect uri", backendURL);
       const YAHOO_AUTH_URI = `request_auth?redirect_uri=${encodeURIComponent(backendURL)}&response_type=code&client_id=`;
       const link = `${YAHOO_API_URL}${YAHOO_AUTH_URI}${consumer_key}`;
-      console.log(link);
 
-      window.location.href = link;
-      console.log(link);
+     // window.location.href = link;
+      // Open the OAuth link in a new window
+      const oauthWindow = window.open(link, 'yahooOauthWindow', 'width=800,height=600');
+
     },
     yahooAuth() {
       // Call your yahoo_auth function with this.yahooToken
