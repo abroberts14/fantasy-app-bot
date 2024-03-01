@@ -10,6 +10,7 @@ from src.auth.jwthandler import get_current_user
 
 from fastapi.responses import RedirectResponse
 
+from tortoise.exceptions import DoesNotExist
 
 router = APIRouter()
 
@@ -45,6 +46,38 @@ async def exchange_code_for_token(code):
 
     details["token_time"] = time.time()
     return details
+
+@router.get("/oauth/yahoo/tokens")
+async def get_oauth_tokens(current_user: UserOutSchema = Depends(get_current_user)):
+    try:
+        oauth_token = await OAuthTokens.get(user=current_user.id)
+        # Serialize the OAuthTokens object
+        token_data = {
+            "id": oauth_token.id,
+            "user_id": oauth_token.user_id,
+            "provider": oauth_token.provider,
+            "access_token": oauth_token.access_token,
+            "refresh_token": oauth_token.refresh_token,
+            "token_type": oauth_token.token_type,
+            "expires_in": oauth_token.expires_in,
+            "created_at": oauth_token.created_at,
+            "modified_at": oauth_token.modified_at
+        }
+        return token_data
+    except DoesNotExist:
+        raise HTTPException(status_code=404, detail="OAuth token not found for the current user")
+
+@router.delete("/oauth/yahoo/tokens/{token_id}")
+async def delete_oauth_token(token_id: int, current_user: UserOutSchema = Depends(get_current_user)):
+    try:
+        # Retrieve the token to ensure it exists and belongs to the current user
+        oauth_token = await OAuthTokens.get(id=token_id, user_id=current_user.id)
+    except OAuthTokens.DoesNotExist:
+        raise HTTPException(status_code=404, detail="OAuth token not found or does not belong to the current user")
+
+    # Delete the token
+    await oauth_token.delete()
+    return {"detail": "OAuth token deleted successfully"}
 
 @router.get("/oauth/yahoo/callback")
 async def handle_oauth_callback(code: str = None, error: str = None, current_user: UserOutSchema = Depends(get_current_user)):
