@@ -59,8 +59,8 @@ async def handle_oauth_callback(code: str = None, error: str = None, current_use
 
     try:
         # Exchange the authorization code for an access token
-        access_token, refresh_token, token_type, expires_in = await exchange_code_for_token(code)
-
+        access_token, refresh_token, token_type, expires_in, token_time = await exchange_code_for_token(code)
+        print(token_time)
         # Encrypt the token
         f = fernet.Fernet(token_secret_key)
         encrypted_access_token = f.encrypt(access_token.encode()).decode()
