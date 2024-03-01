@@ -4,7 +4,8 @@
       <p><strong>Username:</strong> <span>{{ user.username }}</span></p>
       <p><button @click="deleteAccount()" class="btn btn-primary">Delete Account</button></p>
       <p><button @click="connectToYahoo()" class="btn btn-primary">Connect to Yahoo</button></p>
-      <p><input v-model="yahooToken" placeholder="Enter Yahoo OAuth token"> </input></p>
+      <p><button @click="testAuth()" class="btn btn-primary">Test OAuth Callback</button></p>
+
     </div>
   </section>
 </template>
@@ -13,6 +14,7 @@
 import { defineComponent } from 'vue';
 import useUsersStore from '@/store/users'; 
 import { useToast } from 'vue-toastification';
+import axios from 'axios';
 
 export default defineComponent({
   name: 'ProfileComponent',
@@ -50,33 +52,33 @@ export default defineComponent({
     // Open a blank new window with specified features
      // let authWindow = window.open('', '_blank', windowFeatures);
 
-    //  const channel = new BroadcastChannel('oauth_channel');
+     const channel = new BroadcastChannel('oauth_channel');
 
-    //   const oauthListener = (event) => {
-    //     console.log('event', event);
-    //     if (event.data === 'oauth_success') {
-    //       authWindow.close(); // Close the OAuth window
-    //       toast.success('Yahoo integration successful');
-    //       channel.removeEventListener('message', oauthListener); // Remove event listener
-    //       window.removeEventListener('message', oauthListener); // Remove event listener
-    //     }
-    //     if (event.data === 'oauth_error') {
-    //       authWindow.close(); // Close the OAuth window
-    //       toast.error('Yahoo integration failed, please try again.');
-    //       channel.removeEventListener('message', oauthListener); // Remove event listener
-    //       window.removeEventListener('message', oauthListener); // Remove event listener
-    //     }
-    //   };
+      const oauthListener = (event) => {
+        console.log('event', event);
+        if (event.data === 'oauth_success') {
+          authWindow.close(); // Close the OAuth window
+          toast.success('Yahoo integration successful');
+          channel.removeEventListener('message', oauthListener); // Remove event listener
+          window.removeEventListener('message', oauthListener); // Remove event listener
+        }
+        if (event.data === 'oauth_error') {
+          authWindow.close(); // Close the OAuth window
+          toast.error('Yahoo integration failed, please try again.');
+          channel.removeEventListener('message', oauthListener); // Remove event listener
+          window.removeEventListener('message', oauthListener); // Remove event listener
+        }
+      };
 
-    //   // Add an event listener for the 'message' event
-    //   channel.addEventListener('message', oauthListener, false);
-    //   window.addEventListener('message', oauthListener, false);
+      // Add an event listener for the 'message' event
+      channel.addEventListener('message', oauthListener, false);
+      window.addEventListener('message', oauthListener, false);
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
   
       const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
       console.log("client id", consumer_key);
       // Access the environment variable directly
-      const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback';
+      const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback/test';
       console.log("redirect uri", backendURL);
       const converted_url = encodeURIComponent(backendURL);
       console.log("converted url", converted_url);
@@ -99,27 +101,19 @@ export default defineComponent({
           console.log('New window origin:', authWindow.location.origin);
         };
       }
-          // Start polling
-      const pollInterval = setInterval(() => {
-        if (document.cookie.includes('oauth_success=true')) {
-          // The OAuth process was successful, show a success toast
-          toast.success('Yahoo integration successful');
-          // Clear the cookie
-          document.cookie = 'oauth_success=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-          clearInterval(pollInterval); // Stop polling
-        } else if (document.cookie.includes('oauth_error=true')) {
-          // The OAuth process failed, show an error toast
-          toast.error('Yahoo integration failed, please try again.');
-          // Clear the cookie
-          document.cookie = 'oauth_error=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-          clearInterval(pollInterval); // Stop polling
-        }
-      }, 1000); // Poll every 1 second
+
     },
-    yahooAuth() {
+    async testAuth() {
       // Call your yahoo_auth function with this.yahooToken
-      console.log('test')
-    },
+      document.cookie = 'oauth_started=true; path=/';
+   
+      const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback/test';
+      console.log("redirect uri", backendURL);
+      const response = await axios.get(backendURL);
+      console.log("response", response);
+     
+    }   
+
   },
 });
 </script>

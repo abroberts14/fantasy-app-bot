@@ -3,6 +3,10 @@ import base64
 import requests
 import time
 from fastapi import APIRouter, Depends, HTTPException, status
+import cryptography.fernet as fernet
+from src.database.models import OAuthTokens, Users
+from src.schemas.users import UserOutSchema
+from src.auth.jwthandler import get_current_user
 
 from fastapi.responses import RedirectResponse
 
@@ -43,26 +47,77 @@ async def exchange_code_for_token(code):
     return details
 
 @router.get("/oauth/yahoo/callback")
-async def handle_oauth_callback(code: str = None, error: str = None):
-    frontend_route = os.getenv("FRONTEND_URL")
-
+async def handle_oauth_callback(code: str = None, error: str = None, current_user: UserOutSchema = Depends(get_current_user)):
+    frontend_route = os.getenv("FRONTEND_URL")    
+    token_secret_key = os.getenv("TOKEN_SECRET_KEY")
+    print('code:', code)
     if error:
-        return RedirectResponse(url=frontend_error_route +'/oauth-error')
+        return RedirectResponse(url=frontend_route +'/oauth-error')
 
     if not code:
-        return RedirectResponse(url=frontend_error_route +'/oauth-error')
+        return RedirectResponse(url=frontend_route +'/oauth-error')
+
     try:
         # Exchange the authorization code for an access token
-        access_token = await exchange_code_for_token(code)
+        access_token, refresh_token, token_type, expires_in = await exchange_code_for_token(code)
 
-        # Here, use the user details to either create a new user or update an existing user
-        # and then create a JWT token for the user
-        # user = crud.your_user_handling_logic(user_details)
-        # token = create_access_token(data={"sub": user.username})
+        # Encrypt the token
+        f = fernet.Fernet(token_secret_key)
+        encrypted_access_token = f.encrypt(access_token.encode()).decode()
+        user_instance = await Users.get(id=current_user.id)
 
-        # Return the JWT token and user details
-        print(access_token)
-        return RedirectResponse(url=frontend_route+'/oauth-success')
+        oauth_token = OAuthTokens(
+            user=user_instance,  # Use the current user's ID
+            provider="yahoo",
+            access_token=encrypted_access_token,
+            refresh_token=refresh_token,  # Assuming refresh_token is available
+            token_type=token_type,
+            expires_in=expires_in
+        )
+
+        await oauth_token.save()
+        # Redirection after successful token handling
+        return RedirectResponse(url=frontend_route + '/oauth-success')
     except Exception as e:
-        frontend_error_route = "https://yourfrontend.com/oauth-error"
-        return RedirectResponse(url=frontend_error_route +'/oauth-error')
+        # Log the error
+        print(f"Error in handle_oauth_callback: {e}")
+        return RedirectResponse(url=frontend_route + '/oauth-error')
+    
+@router.get("/oauth/yahoo/callback/test")
+async def handle_oauth_callback(current_user: UserOutSchema = Depends(get_current_user)):
+    frontend_route = os.getenv("FRONTEND_URL")    
+    token_secret_key = os.getenv("TOKEN_SECRET_KEY")
+    print('code:', token_secret_key)
+  
+    try:
+        # Exchange the authorization code for an access token
+        #access_token, refresh_token, token_type, expires_in = await exchange_code_for_token(code)
+
+        test_token = {'access_token': 'test', 'refresh_token': 'test', 'expires_in': 3600, 'token_type': 'bearer', 'token_time': 1709321886.3136978}
+        access_token = test_token['access_token']
+        refresh_token = test_token['refresh_token']
+        token_type = test_token['token_type']
+        expires_in = test_token['expires_in']
+
+        # Encrypt the token
+        f = fernet.Fernet(token_secret_key)
+        encrypted_access_token = f.encrypt(access_token.encode()).decode()
+        user_instance = await Users.get(id=current_user.id)
+
+        oauth_token = OAuthTokens(
+            user=user_instance,  # Use the current user's ID
+            provider="yahoo",
+            access_token=encrypted_access_token,
+            refresh_token=refresh_token,  # Assuming refresh_token is available
+            token_type=token_type,
+            expires_in=expires_in
+        )
+
+        await oauth_token.save()
+
+        # Redirection after successful token handling
+        return {"test": "success"}
+    except Exception as e:
+        # Log the error
+        print(f"Error in handle_oauth_callback: {e}")
+        return {"test": "error in handle_oauth_callback function " + str(e)}

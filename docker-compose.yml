@@ -12,6 +12,7 @@ services:
       - yacht_username=admin@draftwarroom.com
       - yacht_password=admin1
       - FRONTEND_URL=https://draftwarroom.com
+      - TOKEN_SECRET_KEY=rlXGof--njwxngwHx6XveE0PEuxW0tmtgHZxnYXBMTE=
     volumes:
       - ./services/backend:/app
       - ./services/backend/src:/app/src
@@ -24,7 +25,7 @@ services:
   frontend:
     build: ./services/frontend
     environment:
-      - VITE_APP_BACKEND_URL=https://api.draftwarroom.com
+      # - VITE_APP_BACKEND_URL=https://api.draftwarroom.com
       - VITE_APP_YAHOO_CLIENT_ID=dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz
     volumes:
       - './services/frontend:/app'
@@ -33,19 +34,19 @@ services:
       - 5173:5173
     command: npm run dev
 
-  yahoo_bot:
-    build:
-      context: ./services/baseball_bot
-    #restart: always
-    environment:
-      #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
-      BOT_ID: "29d18b385eb0307982d596c2da"
-      BOT_TYPE: "GroupMe"
-      #ESPN league id (REQUIRED)
-      LEAGUE_ID: 53047
-      FEATURE_ENV_VARS: TEST_LIVE,GET_LEAGUE_MATCHUPS
-      BACKEND_URL: https://api.draftwarroom.com
-    image: yahoo_bot:latest
+  # yahoo_bot:
+  #   build:
+  #     context: ./services/baseball_bot
+  #   #restart: always
+  #   environment:
+  #     #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
+  #     BOT_ID: "29d18b385eb0307982d596c2da"
+  #     BOT_TYPE: "GroupMe"
+  #     #ESPN league id (REQUIRED)
+  #     LEAGUE_ID: 53047
+  #     FEATURE_ENV_VARS: TEST_LIVE,GET_LEAGUE_MATCHUPS
+  #     BACKEND_URL: https://api.draftwarroom.com
+  #   image: yahoo_bot:latest
 
 
 

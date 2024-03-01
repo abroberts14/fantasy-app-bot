@@ -9,7 +9,7 @@ BaseBotInSchema = pydantic_model_creator(
 
 BotOutSchema = pydantic_model_creator(
     Bots, name="Bot", exclude =[
-      "modified_at", "user.password", "user.created_at", "user.modified_at"
+      "modified_at", "user.password", "user.created_at", "user.modified_at", "user.oauth_tokens"
     ]
 )
 
