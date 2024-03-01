@@ -59,8 +59,16 @@ async def handle_oauth_callback(code: str = None, error: str = None, current_use
 
     try:
         # Exchange the authorization code for an access token
-        access_token, refresh_token, token_type, expires_in, token_time = await exchange_code_for_token(code)
-        print(token_time)
+        token_data = await exchange_code_for_token(code)
+        if not token_data or 'access_token' not in token_data:
+            print("No access token returned from exchange_code_for_token")
+            return RedirectResponse(url=frontend_route + '/oauth-error')
+
+        access_token = token_data['access_token']
+        refresh_token = token_data.get('refresh_token')
+        token_type = token_data.get('token_type')
+        expires_in = token_data.get('expires_in')
+        print('token type:', token_type)    
         # Encrypt the token
         f = fernet.Fernet(token_secret_key)
         encrypted_access_token = f.encrypt(access_token.encode()).decode()
