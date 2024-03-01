@@ -78,7 +78,7 @@ export default defineComponent({
       const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
       console.log("client id", consumer_key);
       // Access the environment variable directly
-      const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback/test';
+      const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback';
       console.log("redirect uri", backendURL);
       const converted_url = encodeURIComponent(backendURL);
       console.log("converted url", converted_url);
