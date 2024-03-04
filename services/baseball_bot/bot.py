@@ -122,15 +122,14 @@ data = {
     "init_msg": "Bot starting.."
 }
 
-def write_tokens_to_file():
+def write_tokens_to_file(data):
 
     try:
         access_token = os.getenv('access_token')
         refresh_token = os.getenv('refresh_token')
         token_time = os.getenv('token_time')
-        consumer_key = os.getenv('yahoo_private_key')
-        consumer_secret = os.getenv('yahoo_private_secret')
-
+        consumer_key = data['yahoo_private_key']
+        consumer_secret = data['yahoo_private_secret'] 
         # Check if the environment variables were found
         if not all([access_token, refresh_token, token_time, consumer_key, consumer_secret]):
             return
