@@ -139,7 +139,7 @@ def write_tokens_to_file(data):
             json.dump({
                 'access_token': access_token,
                 'refresh_token': refresh_token,
-                'token_time': token_time,
+                'token_time': float(token_time),                
                 'token_type': 'bearer',
                 'guid': None,
                 'consumer_key': consumer_key,
