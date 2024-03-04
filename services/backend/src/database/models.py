@@ -36,6 +36,8 @@ class Bots(models.Model):
     active = fields.BooleanField(default=True)
     app = fields.ForeignKeyField("models.Apps", related_name="bots", null=True)
     features =  fields.ReverseRelation["features"]  # Reverse relation for bots
+    private = fields.BooleanField(default=False)
+
     class Meta:
         unique_together = ("league_id", "groupme_bot_id")
 

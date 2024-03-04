@@ -41,6 +41,20 @@ async def get_bot(bot_id) -> BotOutSchema:
     # finally:
         return await BotOutSchema.from_queryset_single(Bots.get(id=bot_id))
 
+async def get_bot_user_id(bot_id: int):
+    try:
+        print(f"Fetching bot with ID {bot_id}")
+        bot = await Bots.get(id=bot_id)
+        print(f"Bot found: {bot}")
+        # print(f"Bot user id . ID: {bot.user_id.id}")
+        # print(f"Bot user ID :{ bot.user_id }")
+        # print(f"Bot user . ID :{ bot.user.id }")
+
+        await bot.fetch_related('user')
+        return int(bot.user.id)
+    except Bots.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Bot not found")
+
 async def update_bot_features(bot_id, bot_features) -> BotOutSchema:
     try:
         print(f"Fetching bot with ID {bot_id}")

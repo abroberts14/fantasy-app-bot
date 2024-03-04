@@ -5,7 +5,8 @@ from src.schemas.apps import AppOutSchema
 from typing import List, Dict, Optional
 from datetime import datetime
 from dateutil.parser import isoparse
-
+from src.routes import oauth
+from src.crud import bots
 import requests
 import os 
 
@@ -171,14 +172,14 @@ async def update_all_apps():
 async def create_and_deploy_app(
     bot_id: str,
     bot: BotInSchema = Body(...),
-    edit: bool = False  # New optional parameter
+    edit: bool = False,  # New optional parameter
 ):
     bot_name = bot.name
     template_id = "2"
     bot_groupme_id = bot.groupme_bot_id
     bot_type = "GroupMe"
     league_id = bot.league_id
-
+    
     for feature in bot.features:
         print(f"Feature: {feature.global_feature.name}, Enabled: {feature.enabled}")
 
@@ -228,6 +229,7 @@ async def create_and_deploy_app(
             {"name": "LEAGUE_ID", "label": "Yahoo League Id", "default": league_id},
             {"name": "FEATURE_ENV_VARS", "label": "Feature Environment Variables", "default": feature_env_vars},
             {"name": "BACKEND_URL", "label": "Backend API", "default": backend_url},
+
         ],
         "devices": [],
         "labels": [],
@@ -236,6 +238,18 @@ async def create_and_deploy_app(
         "cpus": None,
         "mem_limit": None,
     }
+    is_private = bot.private
+    if is_private:
+        user_id = await bots.get_bot_user_id(bot_id)  # Replace with the actual token ID
+        print(user_id)
+        token_data = await oauth.get_oauth_token_by_id(user_id)
+        new_payload["env"].extend([
+            {"name": "access_token", "label": "Access Token", "default": token_data["access_token"]},
+            {"name": "refresh_token", "label": "Refresh Token", "default": token_data["refresh_token"]},
+            {"name": "token_time", "label": "Token Time", "default": token_data["expires_in"]}
+            # {"name": "consumer_key", "label": "Consumer Key", "default": os.getenv('YAHOO_CONSUMER_KEY')},
+            # {"name": "consumer_secret", "label": "Consumer Secret", "default": os.getenv('YAHOO_CONSUMER_SECRET')}
+        ])
     if edit:
         new_payload["edit"] = True
         new_payload["id"] = app_id

@@ -2,7 +2,7 @@ import os
 import base64
 import requests
 import time
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 import cryptography.fernet as fernet
 from src.database.models import OAuthTokens, Users
 from src.schemas.users import UserOutSchema
@@ -47,16 +47,47 @@ async def exchange_code_for_token(code):
     details["token_time"] = time.time()
     return details
 
+
 @router.get("/oauth/yahoo/tokens")
-async def get_oauth_tokens(current_user: UserOutSchema = Depends(get_current_user)):
+async def get_oauth_tokens(current_user: UserOutSchema = Depends(get_current_user), user_id: int = Query()  # Optional query parameter
+):
     try:
-        oauth_token = await OAuthTokens.get(user=current_user.id)
+        #oauth_token = await OAuthTokens.get(user=current_user.id)
+        oauth_token = await OAuthTokens.filter(user=current_user.id).first()
         # Serialize the OAuthTokens object
         token_data = {
             "id": oauth_token.id,
             "user_id": oauth_token.user_id,
             "provider": oauth_token.provider,
-            "access_token": oauth_token.access_token,
+            # "access_token": oauth_token.access_token,
+            # "refresh_token": oauth_token.refresh_token,
+            "token_type": oauth_token.token_type,
+            "expires_in": oauth_token.expires_in,
+            "created_at": oauth_token.created_at,
+            "modified_at": oauth_token.modified_at
+        }
+        return token_data
+    except DoesNotExist:
+        raise HTTPException(status_code=200, detail="OAuth token not found for the current user")
+
+async def get_oauth_token_by_id(user_id: int):
+    try:
+        oauth_token = await OAuthTokens.filter(user=user_id).first()
+        # Get the encryption key from the environment variable
+        token_secret_key = os.getenv("TOKEN_SECRET_KEY")
+        if not token_secret_key:
+            raise HTTPException(status_code=500, detail="Encryption key not found")
+
+        # Decrypt the access token
+        f = fernet.Fernet(token_secret_key)
+        decrypted_access_token = f.decrypt(oauth_token.access_token.encode()).decode()
+
+        # Serialize the OAuthTokens object with decrypted access token
+        token_data = {
+            "id": oauth_token.id,
+            "user_id": oauth_token.user_id,
+            "provider": oauth_token.provider,
+            "access_token": decrypted_access_token,
             "refresh_token": oauth_token.refresh_token,
             "token_type": oauth_token.token_type,
             "expires_in": oauth_token.expires_in,
@@ -65,14 +96,14 @@ async def get_oauth_tokens(current_user: UserOutSchema = Depends(get_current_use
         }
         return token_data
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="OAuth token not found for the current user")
+        raise HTTPException(status_code=404, detail="OAuth token not found for the specified ID or not belonging to the current user")
 
 @router.delete("/oauth/yahoo/tokens/{token_id}")
 async def delete_oauth_token(token_id: int, current_user: UserOutSchema = Depends(get_current_user)):
     try:
         # Retrieve the token to ensure it exists and belongs to the current user
         oauth_token = await OAuthTokens.get(id=token_id, user_id=current_user.id)
-    except OAuthTokens.DoesNotExist:
+    except DoesNotExist:
         raise HTTPException(status_code=404, detail="OAuth token not found or does not belong to the current user")
 
     # Delete the token

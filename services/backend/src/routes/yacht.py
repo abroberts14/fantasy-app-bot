@@ -80,6 +80,7 @@ async def deploy_app(
     bot_id = new_app["groupme_bot_id"]
     bot_type = "GroupMe"
     league_id = new_app["league_id"]
+    is_private = new_app["private"]
     url = yacht_endpoint + f"/templates/{template_id}"
 
     cookies = get_cookies(tokens)

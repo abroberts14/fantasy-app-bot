@@ -49,8 +49,22 @@
               <div class="mb-3">
                 <label for="league_id" class="form-label">Yahoo League ID:</label>
                 <input type="text" id="league_id" v-model="bot.league_id" class="form-control" />
+                
               </div>
             </div>
+            <div class="mb-3">
+              <label for="private_league" class="form-label mr-2">Private League:</label>
+
+              <!-- <div v-if="oauthTokens && !oauthTokens.length == 0" class="flex items-center">
+                <input type="checkbox" id="private_league" v-model="bot.private" class="form-checkbox" />
+              </div>
+              <div v-else> -->
+
+                <input type="checkbox" id="private_league" :disabled="!oauthTokens || oauthTokens.length == 0"  v-model="bot.private" class="form-checkbox" />
+
+                <p v-if="!oauthTokens || oauthTokens.length == 0"  class="text-400" >Note: you must connect to Yahoo to access private leagues, visit your <router-link to="/profile">profile</router-link> to setup your yahoo integration</p>
+     
+            </div>  
             <div class="mb-3">
               <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
               <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id" class="form-control" />
@@ -58,7 +72,7 @@
             <div class="flex py-4">
                 <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || !bot.groupme_bot_id" @click="nextCallback" />
             </div>
-
+            
         </template>
     </StepperPanel>
     <StepperPanel header="Bot Features">
@@ -124,8 +138,10 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted, computed } from 'vue';
 import useBotsStore from '@/store/bots';
+import useUsersStore from '@/store/users';
+
 import { useToast } from 'vue-toastification';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import axios from 'axios';
@@ -144,11 +160,30 @@ export default defineComponent({
     });
     const isLoading = ref(false);
     const features = ref([]);
+    const oauthTokens = ref(null);
     const toast = useToast();
     const active = ref(0);
     const router = useRouter();
     const { formatFeatureName } = useFormatting(); // Use the composable
+    const usersStore = useUsersStore(); 
+    const user = computed(() => usersStore.stateUser);    
+    async function fetchUserTokens() {
+      try {
+        isLoading.value = true;
 
+        const response = await axios.get(`/oauth/yahoo/tokens`, {
+          params: {
+            user_id: user.value.id
+          }
+        });        
+        oauthTokens.value = response.data;
+      } catch (error) {
+        console.error('Failed to fetch Yahoo integration:', error);
+      }
+      finally {
+        isLoading.value = false;
+      }
+    }
     const fetchFeatures = async () => {
       console.log('Fetching features');
       try {
@@ -236,6 +271,7 @@ export default defineComponent({
 
     onMounted(() => {
         fetchFeatures();
+        fetchUserTokens();
         });
     return {
       bot,
@@ -243,7 +279,8 @@ export default defineComponent({
       features,
       submit,
       active,
-      formatFeatureName 
+      formatFeatureName,
+      oauthTokens,
     };
   },
 });

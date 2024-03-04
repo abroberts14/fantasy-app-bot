@@ -31,3 +31,4 @@ temp/
 test.yaml
 services/baseball_bot/auth/token.json
 services/baseball_bot/auth/private.json
+services/baseball_bot/token.json

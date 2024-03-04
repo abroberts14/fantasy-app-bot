@@ -1,7 +1,7 @@
 <template>
   <div class="surface-section">
     <div class="font-medium text-3xl text-900 mb-3">Integrations</div>
-    <div v-if="oauthTokens">
+    <div v-if="oauthTokens ">
       <div class="text-500 mb-5">Provider: {{ oauthTokens.provider }}</div>
       <ul class="list-none p-0 m-0">
         <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
@@ -39,18 +39,24 @@ export default defineComponent({
     const oauthTokens = ref(null);
     const toast = useToast();
 
-    onMounted(async () => {
-      try {
-        const response = await axios.get('/oauth/yahoo/tokens');
-        oauthTokens.value = response.data;
-      } catch (error) {
-        console.error('Failed to fetch OAuth tokens:', error);
-      }
+    onMounted( () => {
+      fetchData();
     });
 
     const user = computed(() => usersStore.stateUser);
-    async function connectToYahoo() {
-      // Existing connectToYahoo logic
+
+    async function fetchData() {
+      try {
+        const response = await axios.get(`/oauth/yahoo/tokens`, {
+          params: {
+            user_id: user.value.id
+          }
+        });        
+        oauthTokens.value = response.data;
+        console.log('oauthTokens:', oauthTokens.value);
+      } catch (error) {
+        console.error('Failed to fetch Yahoo integration:', error);
+      }
     }
     async function removeIntegration(tokenId) {
       try {
@@ -75,7 +81,52 @@ export default defineComponent({
         }
       });
     }
+    function connectToYahoo() {
+      document.cookie = 'oauth_started=true; path=/';
+      const toast = useToast();
+      console.log('This window origin:', window.location.origin); // Log the origin of this window
 
+    // Open a blank new window with specified features
+     // let authWindow = window.open('', '_blank', windowFeatures);
+
+
+      const oauthListener = (event) => {
+        console.log('event', event);
+        if (event.data === 'oauth_success') {
+          this.fetchData();
+          toast.success('Yahoo integration successful');
+          window.removeEventListener('message', oauthListener); // Remove event listener
+        }
+        if (event.data === 'oauth_error') {
+          this.fetchData();
+          toast.error('Yahoo integration failed, please try again.');
+          window.removeEventListener('message', oauthListener); // Remove event listener
+        }
+      };
+
+      // Add an event listener for the 'message' event
+      window.addEventListener('message', oauthListener, false);
+      const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
+  
+      const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;
+      const backendURL = (import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5000') + '/oauth/yahoo/callback';
+      console.log("redirect uri", backendURL);
+      const converted_url = encodeURIComponent(backendURL);
+      const YAHOO_AUTH_URI = `request_auth?redirect_uri=${converted_url}&response_type=code&client_id=`;
+      const link = `${YAHOO_API_URL}${YAHOO_AUTH_URI}${consumer_key}`;
+
+      const windowFeatures = "width=800,height=600,resizable,scrollbars=yes,status=1";
+
+      let authWindow = window.open(link, '_blank', windowFeatures);
+
+      if (authWindow) {
+        authWindow.location.href = link
+        authWindow.onload = () => {
+          console.log('New window origin:', authWindow.location.origin);
+        };
+      }
+
+    }
     function formatDate(dateString) {
       const options = { year: 'numeric', month: 'long', day: 'numeric' };
       return new Date(dateString).toLocaleDateString(undefined, options);

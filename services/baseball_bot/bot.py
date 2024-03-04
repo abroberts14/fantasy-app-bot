@@ -6,7 +6,7 @@ from yfpy.query import YahooFantasySportsQuery
 from utils.setup import get_env_vars
 import threading
 import logging 
-
+import json
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -114,17 +114,47 @@ def yahoo_bot(function, local_data = None):
 data = {
     "bot_type": "GroupMe",
     "bot_id": "1234567890",
-    "league_id": "3932",
-    "yahoo_private_key": "dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz",
+    "league_id": "51838",
+    "yahoo_private_key": "",
     "yahoo_private_secret": "",
     "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
     "backend_url": "https://api.draftwarroom.com",
     "init_msg": "Bot starting.."
 }
 
+def write_tokens_to_file():
+
+    try:
+        access_token = os.getenv('access_token')
+        refresh_token = os.getenv('refresh_token')
+        token_time = os.getenv('token_time')
+        consumer_key = os.getenv('yahoo_private_key')
+        consumer_secret = os.getenv('yahoo_private_secret')
+
+        # Check if the environment variables were found
+        if not all([access_token, refresh_token, token_time, consumer_key, consumer_secret]):
+            return
+
+        # Write the tokens to a JSON file
+        with open(get_auth_dir() + '/token.json', 'w') as f:
+            json.dump({
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+                'token_time': token_time,
+                'token_type': 'bearer',
+                'guid': None,
+                'consumer_key': consumer_key,
+                'consumer_secret': consumer_secret
+            }, f)
+    except Exception as e:
+        print(f"Error in write_tokens_to_file: {e}")
 
 if __name__ == "__main__":
-    logging.info("Starting bot")
+    logging.info("Starting bot checking json file for tokens..")
+    data = get_env_vars()
+
+    write_tokens_to_file(data)
+    logging.info("Starting scheduler")
     from utils.scheduler import scheduler
 
     def start_scheduler():
