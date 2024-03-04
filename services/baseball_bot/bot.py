@@ -40,27 +40,16 @@ def yahoo_bot(function, local_data = None):
 
     text = ''
 
-    
-    if (not(yahoo_private_key) or not(yahoo_private_secret)):
-        print("No yahoo private key or secret found")
-        
-        yahoo_query = YahooFantasySportsQuery(
-            get_auth_dir(),
-            yahoo_league_id,
-            "mlb",
-            offline=False,
-            all_output_as_json_str=False,
-        )
-    else:
-        yahoo_query = YahooFantasySportsQuery(
-            get_auth_dir(),
-            yahoo_league_id,
-            "mlb",
-            offline=False,
-            all_output_as_json_str=False,
-            consumer_key=yahoo_private_key,
-            consumer_secret=yahoo_private_secret
-        )
+
+    yahoo_query = YahooFantasySportsQuery(
+        get_auth_dir(),
+        yahoo_league_id,
+        "mlb",
+        offline=False,
+        all_output_as_json_str=False,
+        consumer_key=yahoo_private_key,
+        consumer_secret=yahoo_private_secret
+    )
     yahoo_query.game_id = yahoo_query.get_game_key_by_season(2024)
 
     #accept broadcasts from the API
