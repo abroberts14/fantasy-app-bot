@@ -4,7 +4,10 @@ from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import os
 import logging
+from dotenv import load_dotenv
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+load_dotenv()
 
 def get_league_teams(qry):
         return qry.get_league_teams()
@@ -76,7 +79,6 @@ def get_teams_info(teams):
 
 def get_daily_waiver_activity(qry):
     waiver_activity = qry.get_league_transactions()
-    logging.info(f"waiver_activity: {waiver_activity}")
     teams = qry.get_league_teams()
     teams_info, team_names = get_teams_info(teams)
     formatted_activity = ''
@@ -90,7 +92,6 @@ def get_daily_waiver_activity(qry):
     # Process each transaction
     for transaction in waiver_activity:
 
-        logging.info(f"Transaction: {transaction}")
        # Create a timezone-unaware datetime object from the timestamp
         try:
             transaction_time = datetime.fromtimestamp(transaction.timestamp)

@@ -30,6 +30,7 @@ def yahoo_bot(function, local_data = None):
     yahoo_private_key = data['yahoo_private_key']
     yahoo_private_secret = data['yahoo_private_secret']
 
+    logging.info(f'data: {data}')
     if bot_type == 'GroupMe':
         bot = GroupMe(bot_id)
     elif bot_type in ['Slack', 'Discord']:
@@ -42,26 +43,17 @@ def yahoo_bot(function, local_data = None):
 
     text = ''
 
-    if (not(yahoo_private_key) or not(yahoo_private_secret)):
-        print("No yahoo private key or secret found")
-        
-        yahoo_query = YahooFantasySportsQuery(
-            get_auth_dir(),
-            yahoo_league_id,
-            "mlb",
-            offline=False,
-            all_output_as_json_str=False,
-        )
-    else:
-        yahoo_query = YahooFantasySportsQuery(
-            get_auth_dir(),
-            yahoo_league_id,
-            "mlb",
-            offline=False,
-            all_output_as_json_str=False,
-            consumer_key=yahoo_private_key,
-            consumer_secret=yahoo_private_secret
-        )
+
+    logging.info("Yahoo private key and secret found")
+    yahoo_query = YahooFantasySportsQuery(
+        get_auth_dir(),
+        yahoo_league_id,
+        "mlb",
+        offline=False,
+        all_output_as_json_str=False,
+        consumer_key=yahoo_private_key,
+        consumer_secret=yahoo_private_secret
+    )
     yahoo_query.game_id = yahoo_query.get_game_key_by_season(2024)
 
     #accept broadcasts from the API
@@ -154,12 +146,7 @@ def write_tokens_to_file(data):
                 'consumer_key': consumer_key,
                 'consumer_secret': consumer_secret
             }, f)
-        file_path = get_auth_dir() + '/private.json'
-        with open(file_path, 'w') as f:
-            json.dump({
-                'consumer_key': consumer_key,
-                'consumer_secret': consumer_secret
-            }, f)
+
         logging.info("Tokens written to JSON file")
 
     except Exception as e:
@@ -168,8 +155,8 @@ def write_tokens_to_file(data):
 
 if __name__ == "__main__":
     logging.info("Starting bot checking json file for tokens..")
-    data = get_env_vars()
 
+    data = get_env_vars()
     write_tokens_to_file(data)
     logging.info("Starting scheduler")
     from utils.scheduler import scheduler

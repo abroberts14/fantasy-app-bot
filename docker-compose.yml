@@ -42,13 +42,14 @@ services:
       #Bot ID from the GroupMe developers page (REQUIRED IF USING GROUPME)
       BOT_ID: 29d18b385eb0307982d596c2da
       BOT_TYPE: GroupMe
-      #ESPN league id (REQUIRED)
-      LEAGUE_ID: 51838
+      LEAGUE_ID: 3932
       FEATURE_ENV_VARS: DAILY_WAIVERS,GET_LEAGUE_MATCHUPS
       BACKEND_URL: https://api.draftwarroom.com
-      access_token:  KzYjCgeZ4xoW3WJ1Ue_nVGMgCLKCvTM95iajuoLkc8xvFNGqBHAP5Af.ExHPKqWFtWrstnCv8eiFi0lrIuyIVPvOWpadhvcMU3EIuQ5D1szMiGQCwUsy.qllKeSsYnBp6UDYwbUZzyvqLWRDhLfdQ4WJfU8Bl4Esy82aW_D0cx4Rm0aySzZUhpPpvoBD0zw5Em.N0dSraJ1hZ5FfK7rto0y4Svkeo2bLLhLnUyRgSTuf.HXQ6pEluW6SobEb9e4hwZQkfAWZrgLrBQ2MoaMW6cCsYKYllfVPtBqivLOs_kpunxQl8Xgur7rwYaTz24UgSmO.hZZU0R6BUcL8aBgdhswquJOUhn__iVCGlJhJzI4aSLfEdjWTphwHfHrfz0uJFhG7fNMOFY5sFhovur2LITThxh3sRHZYlnSfp_zCn7ueoiVIWkRhBIWBRDoEPYSEvowJxPTfrqWhLNmGGu1cSa4M1lc9XBz_ET9iur8wFVmmfQAtWzd7ZMbycLEoi9MxSn_9xOOAre26KuwRNnHPOL9QizUmPuSZHNKYNFPHSLcp8NQlHMQ7yTDy4DKFvMqfAe4LDe_7MjlVKeGFcovz4zWxK64qrHb4odztm4XQFKR0FRmlTm8yLjScYzHD53uQ7NI1fdFCkwAk45TsGGmafwFvo3o5D7MKfcD2rNIXZsMzc0BemLe0LRHKDTO3Tco7T5ZDKfsJz5P8WlOmMruLSi4JgelgZHU0wwAXdDqXtt8b7Bd2zH_7nl3h5oiR0HSMoIIPkhG_eEsCGOH4Efvk7vvkLFkr7ouqho58PLnKMRibSQlma1lDicyIKRx3kZv8_1Cx4VYYhJB9025sU.ChzwgHsF7lp058U33Gq9yBt4URNTnf4ZUf8wfaRBOdHijNXdYfuGHqjteQcY7qkalP3pCeEHllZCk-
-      refresh_token: ALughGWBOfDVvzKpzpU9Sz01SD98~000~JrELwagUtMLxhMDCVUiyCOU-
-      token_time: 3600
+      RUNTIME_ENVIRONMENT: docker
+      # access_token:
+      # refresh_token: AL
+      #token_time: 3600
+ 
     image: yahoo_bot:2.8
 
 # data = {
