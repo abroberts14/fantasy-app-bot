@@ -76,6 +76,7 @@ def get_teams_info(teams):
 
 def get_daily_waiver_activity(qry):
     waiver_activity = qry.get_league_transactions()
+    logging.info(f"waiver_activity: {waiver_activity}")
     teams = qry.get_league_teams()
     teams_info, team_names = get_teams_info(teams)
     formatted_activity = ''
@@ -88,7 +89,15 @@ def get_daily_waiver_activity(qry):
 
     # Process each transaction
     for transaction in waiver_activity:
-        transaction_time = datetime.fromtimestamp(transaction.timestamp, timezone.utc)
+
+        logging.info(f"Transaction: {transaction}")
+       # Create a timezone-unaware datetime object from the timestamp
+        try:
+            transaction_time = datetime.fromtimestamp(transaction.timestamp)
+        except:
+            continue
+        # Set the timezone to UTC
+        transaction_time = transaction_time.replace(tzinfo=timezone.utc)        
         if transaction_time >= twenty_four_hours_ago and transaction.type == "add/drop":
             for player in transaction.players:
                 player_data = player.transaction_data

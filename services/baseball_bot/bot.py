@@ -7,12 +7,15 @@ from utils.setup import get_env_vars
 import threading
 import logging 
 import json
-
+from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_auth_dir():
+    logging.info("Getting auth directory")
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(script_directory, "auth")
+    auth_dir = os.path.join(script_directory, "auth")
+    logging.info(f"Auth directory: {auth_dir}")  # logging.info the auth directory
+    return auth_dir
 
 
 
@@ -21,7 +24,6 @@ def yahoo_bot(function, local_data = None):
         data = local_data
     else:
         data = get_env_vars()
-    logging.info(data)
     bot_type = data['bot_type']
     bot_id = data['bot_id']
     yahoo_league_id = data['league_id']
@@ -40,16 +42,26 @@ def yahoo_bot(function, local_data = None):
 
     text = ''
 
-
-    yahoo_query = YahooFantasySportsQuery(
-        get_auth_dir(),
-        yahoo_league_id,
-        "mlb",
-        offline=False,
-        all_output_as_json_str=False,
-        consumer_key=yahoo_private_key,
-        consumer_secret=yahoo_private_secret
-    )
+    if (not(yahoo_private_key) or not(yahoo_private_secret)):
+        print("No yahoo private key or secret found")
+        
+        yahoo_query = YahooFantasySportsQuery(
+            get_auth_dir(),
+            yahoo_league_id,
+            "mlb",
+            offline=False,
+            all_output_as_json_str=False,
+        )
+    else:
+        yahoo_query = YahooFantasySportsQuery(
+            get_auth_dir(),
+            yahoo_league_id,
+            "mlb",
+            offline=False,
+            all_output_as_json_str=False,
+            consumer_key=yahoo_private_key,
+            consumer_secret=yahoo_private_secret
+        )
     yahoo_query.game_id = yahoo_query.get_game_key_by_season(2024)
 
     #accept broadcasts from the API
@@ -58,7 +70,7 @@ def yahoo_bot(function, local_data = None):
     except KeyError:
         broadcast_message = None
 
-    print(f'Function: {function}')
+    logging.info(f'Function: {function}')
     try:
         if function == "get_league_team_names":
             text = 'Team Names For League ID: ' +str(data['league_id'])
@@ -94,37 +106,45 @@ def yahoo_bot(function, local_data = None):
     logging.info(data)
 
     if text != '':
-        print(text)
+        logging.info(text)
         if (not local_data):
              bot.send_message(text)
     
 
 #send this as an argument to the both yahoo_bot and scheduler so you can run locally without sending to groupme
-data = {
-    "bot_type": "GroupMe",
-    "bot_id": "1234567890",
-    "league_id": "51838",
-    "yahoo_private_key": "",
-    "yahoo_private_secret": "",
-    "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
-    "backend_url": "https://api.draftwarroom.com",
-    "init_msg": "Bot starting.."
-}
+# data = {
+#     "bot_type": "GroupMe",
+#     "bot_id": "1234567890",
+#     "league_id": "51838",
+#     "yahoo_private_key": "dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz",
+#     "yahoo_private_secret": "",
+#     "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
+#     "backend_url": "https://api.draftwarroom.com",
+#     "init_msg": "Bot starting..",
+#     "access_token": ".....-",
+#     "refresh_token": "~000~-",
+#     "token_time": 3600
+    
+# }
 
 def write_tokens_to_file(data):
-
     try:
+
         access_token = os.getenv('access_token')
         refresh_token = os.getenv('refresh_token')
         token_time = os.getenv('token_time')
         consumer_key = data['yahoo_private_key']
-        consumer_secret = data['yahoo_private_secret'] 
+        consumer_secret = data['yahoo_private_secret']
         # Check if the environment variables were found
         if not all([access_token, refresh_token, token_time, consumer_key, consumer_secret]):
+            logging.info("One or more environment variables not found")
             return
 
+        logging.info("All environment variables found")
+
         # Write the tokens to a JSON file
-        with open(get_auth_dir() + '/token.json', 'w') as f:
+        file_path = get_auth_dir() + '/token.json'
+        with open(file_path, 'w') as f:
             json.dump({
                 'access_token': access_token,
                 'refresh_token': refresh_token,
@@ -134,8 +154,17 @@ def write_tokens_to_file(data):
                 'consumer_key': consumer_key,
                 'consumer_secret': consumer_secret
             }, f)
+        file_path = get_auth_dir() + '/private.json'
+        with open(file_path, 'w') as f:
+            json.dump({
+                'consumer_key': consumer_key,
+                'consumer_secret': consumer_secret
+            }, f)
+        logging.info("Tokens written to JSON file")
+
     except Exception as e:
-        print(f"Error in write_tokens_to_file: {e}")
+        logging.info(f"Error in write_tokens_to_file: {e}")
+
 
 if __name__ == "__main__":
     logging.info("Starting bot checking json file for tokens..")
