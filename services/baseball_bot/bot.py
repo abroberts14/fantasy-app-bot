@@ -108,13 +108,13 @@ data = {
     "bot_type": "GroupMe",
     "bot_id": "1234567890",
     "league_id": "51838",
-    "yahoo_private_key": "dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz",
-    "yahoo_private_secret": "e656aa67c44c49a1c201c4f984ef6b83fb09fe73",
+    "yahoo_private_key": "",
+    "yahoo_private_secret": "",
     "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
     "backend_url": "https://api.draftwarroom.com",
     "init_msg": "Bot starting..",
 
-    "refresh_token": "ALughGWBOfDVvzKpzpU9Sz01SD98~000~JrELwagUtMLxhMDCVUiyCOU-",
+    "refresh_token": "",
     "token_time": 3600
     
 }
@@ -156,21 +156,21 @@ def write_tokens_to_file(data):
 if __name__ == "__main__":
     logging.info("Starting bot checking json file for tokens..")
 
-   # data = get_env_vars()
-   # write_tokens_to_file(data)
+    data = get_env_vars()
+    write_tokens_to_file(data)
     logging.info("Starting scheduler")
     from utils.scheduler import scheduler
 
     def start_scheduler():
-        scheduler(data)
+        scheduler()
     # Start the scheduler in a new thread
     scheduler_thread = threading.Thread(target=start_scheduler)
     scheduler_thread.daemon = True  # This ensures that the thread will not prevent the program from exiting
-    #scheduler_thread.start()
+    scheduler_thread.start()
 
     try:
         # Continue with the main script
-        yahoo_bot("init", data)
+        yahoo_bot("init")
     except Exception as e:
         logging.error("Main script error: %s", e)
 
