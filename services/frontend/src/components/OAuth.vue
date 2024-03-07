@@ -15,12 +15,16 @@
           <div class="text-900  md:w-8 md:flex-order-0 flex-order-1">{{ formatDate(oauthTokens.modified_at) }}</div>
         </li>
       </ul>
+      <ConfirmDialog></ConfirmDialog>
+      <Button label="Delete Integration" severity="danger" @click="confirmDelete(oauthTokens.id)" />
     </div>
     <div v-else>
       <p><button @click="connectToYahoo()" class="btn btn-primary">Connect to Yahoo</button></p>
+      <p> After integrating your yahoo account, you might need to refresh the page.</p>
+
     </div>
-    <ConfirmDialog></ConfirmDialog>
-    <Button label="Delete Integration" severity="danger" @click="confirmDelete(oauthTokens.id)" />
+
+
   </div>
 </template>
 
@@ -45,19 +49,20 @@ export default defineComponent({
 
     const user = computed(() => usersStore.stateUser);
 
-    async function fetchData() {
+
+    const fetchData = async () => {
       try {
         const response = await axios.get(`/oauth/yahoo/tokens`, {
           params: {
             user_id: user.value.id
           }
-        });        
+        });
         oauthTokens.value = response.data;
-        console.log('oauthTokens:', oauthTokens.value);
       } catch (error) {
         console.error('Failed to fetch Yahoo integration:', error);
       }
-    }
+    };
+
     async function removeIntegration(tokenId) {
       try {
         await axios.delete(`/oauth/yahoo/tokens/${tokenId}`);
@@ -82,30 +87,26 @@ export default defineComponent({
       });
     }
     function connectToYahoo() {
-      document.cookie = 'oauth_started=true; path=/';
-      const toast = useToast();
-      console.log('This window origin:', window.location.origin); // Log the origin of this window
+        document.cookie = 'oauth_started=true; path=/';
+        const toast = useToast();
+        console.log('This window origin:', window.location.origin); // Log the origin of this window
 
-    // Open a blank new window with specified features
-     // let authWindow = window.open('', '_blank', windowFeatures);
+        const oauthListener = (event) => {
+          console.log('event', event);
+          if (event.data === 'oauth_success') {
+            fetchData();
+            toast.success('Yahoo integration successful');
+            window.removeEventListener('message', oauthListener); // Remove event listener
+          }
+          if (event.data === 'oauth_error') {
+            fetchData();
+            toast.error('Yahoo integration failed, please try again.');
+            window.removeEventListener('message', oauthListener); // Remove event listener
+          }
+        };
 
-
-      const oauthListener = (event) => {
-        console.log('event', event);
-        if (event.data === 'oauth_success') {
-          this.fetchData();
-          toast.success('Yahoo integration successful');
-          window.removeEventListener('message', oauthListener); // Remove event listener
-        }
-        if (event.data === 'oauth_error') {
-          this.fetchData();
-          toast.error('Yahoo integration failed, please try again.');
-          window.removeEventListener('message', oauthListener); // Remove event listener
-        }
-      };
-
-      // Add an event listener for the 'message' event
-      window.addEventListener('message', oauthListener, false);
+      window.addEventListener('message', oauthListener);
+      
       const YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/";
   
       const consumer_key =  import.meta.env.VITE_APP_YAHOO_CLIENT_ID;

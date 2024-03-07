@@ -36,38 +36,47 @@
  -->
  <LoadingSpinner v-if="isLoading" />
 
- <Stepper v-model:activeStep="active" orientation="vertical">
+  <div v-if="isDialogVisible" class="modal">
+    <div class="modal-content">
+      <h3>No Yahoo Account Detected</h3>
+      <p>
+        To register a new bot, you must connect and authorize a Yahoo account.
+      </p>
+      <p>
+        Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
+      </p>
+      <button class="btn btn-primary" @click="closeModalAndNavigate" >Lets go!</button>
+    </div>
+  </div>
+<Stepper v-model:activeStep="active" orientation="vertical">
     <StepperPanel header="Bot Information">
 
       <template #content="{ nextCallback }">
+        <p v-if="!oauthTokens || oauthTokens.length == 0"  class="text-400" >Note: you must connect to Yahoo to access private leagues, visit your <router-link to="/profile">profile</router-link> to setup your yahoo integration</p>
 
             <div class="flex flex-column h-12rem">
               <div class="mb-3">
                 <label for="bot_name" class="form-label">Bot Name:</label>
-                <input type="text" id="bot_name" v-model="bot.name" class="form-control" />
+                <input type="text" id="bot_name" v-model="bot.name"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
               </div>
               <div class="mb-3">
                 <label for="league_id" class="form-label">Yahoo League ID:</label>
-                <input type="text" id="league_id" v-model="bot.league_id" class="form-control" />
+                <input type="text" id="league_id" v-model="bot.league_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
                 
               </div>
             </div>
-            <div class="mb-3">
+            <!-- <div class="mb-3">
               <label for="private_league" class="form-label mr-2">Private League:</label>
 
-              <!-- <div v-if="oauthTokens && !oauthTokens.length == 0" class="flex items-center">
-                <input type="checkbox" id="private_league" v-model="bot.private" class="form-checkbox" />
-              </div>
-              <div v-else> -->
 
                 <input type="checkbox" id="private_league" :disabled="!oauthTokens || oauthTokens.length == 0"  v-model="bot.private" class="form-checkbox" />
 
                 <p v-if="!oauthTokens || oauthTokens.length == 0"  class="text-400" >Note: you must connect to Yahoo to access private leagues, visit your <router-link to="/profile">profile</router-link> to setup your yahoo integration</p>
      
-            </div>  
+            </div>   -->
             <div class="mb-3">
               <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
-              <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id" class="form-control" />
+              <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
             </div>
             <div class="flex py-4">
                 <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || !bot.groupme_bot_id" @click="nextCallback" />
@@ -115,20 +124,20 @@
             <div class="flex flex-column  h-12rem">
               <div class="mb-3">
                 <label for="card_number" class="form-label">Card Number:</label>
-                <input type="text" id="card_number" class="form-control" />
+                <input type="text" id="card_number"   :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
               </div>
               <div class="mb-3">
                 <label for="expiry_date" class="form-label">Expiry Date:</label>
-                <input type="text" id="expiry_date" class="form-control" />
+                <input type="text" id="expiry_date"   :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
               </div>
               <div class="mb-3">
                 <label for="cvv" class="form-label">CVV:</label>
-                <input type="text" id="cvv" class="form-control" />
+                <input type="text" id="cvv"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
               </div>
             </div>
             <div class="flex py-8 gap-2">
                 <Button label="Back" severity="secondary" icon="pi pi-arrow-up" iconPos="right" @click="prevCallback" />
-                <button type="submit" class="btn btn-primary" @click="submit">Submit</button>
+                <button type="submit" class="btn btn-primary"  :disabled="!oauthTokens || oauthTokens.length == 0" @click="submit">Submit</button>
 
             </div>
         </template>
@@ -158,9 +167,17 @@ export default defineComponent({
       league_id: '',
       groupme_bot_id: '',
     });
+    const closeModalAndNavigate = () => {
+      // Logic to close the modal
+      router.push('/profile');
+    };
+
+    const oauthTokens = ref(null);
+
+    const isDialogVisible = ref(false);
+
     const isLoading = ref(false);
     const features = ref([]);
-    const oauthTokens = ref(null);
     const toast = useToast();
     const active = ref(0);
     const router = useRouter();
@@ -182,6 +199,8 @@ export default defineComponent({
       }
       finally {
         isLoading.value = false;
+        isDialogVisible.value = !oauthTokens.value || oauthTokens.value.length === 0;
+
       }
     }
     const fetchFeatures = async () => {
@@ -281,7 +300,34 @@ export default defineComponent({
       active,
       formatFeatureName,
       oauthTokens,
+      isDialogVisible,
+      closeModalAndNavigate
     };
   },
 });
 </script>
+
+<style>
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 5px;
+  width: 60%; /* Adjust this width as needed */
+  max-width: 600px; /* Optional: maximum width */
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Optional: for better visibility */
+  margin:  auto; /* Top and bottom margin */
+}
+</style>

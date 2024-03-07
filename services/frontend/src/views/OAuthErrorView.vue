@@ -14,13 +14,7 @@ export default {
         messageSent = true; // Mark message as sent
         // Close this window
         window.close();
-      } else {
-        const channel = new BroadcastChannel('oauth_error');
-        channel.postMessage('oauth_error');
-
-        console.warn('Warning: window.opener is null, using broadcast channel');
-        //window close
-      }
+      } 
     };
 
     sendMessage(); // Initial attempt to send message

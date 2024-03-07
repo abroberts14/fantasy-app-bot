@@ -17,6 +17,7 @@ import 'bootstrap';
 import { useToast } from 'vue-toastification'
 
 import Button from 'primevue/button';
+import Card from 'primevue/card';
 import Chip from 'primevue/chip';
 import Dialog from 'primevue/dialog';
 import SplitButton from 'primevue/splitbutton';
@@ -28,6 +29,7 @@ import Column from 'primevue/column';
 import Stepper from 'primevue/stepper';
 import StepperPanel from 'primevue/stepperpanel';
 import TreeTable from 'primevue/treetable';
+import InputText from 'primevue/inputtext';
 const app = createApp(App)
 app.use(PrimeVue, { ripple: true });
 app.use(ConfirmationService);
@@ -39,10 +41,11 @@ app.component('ProgressSpinner', ProgressSpinner);
 app.component('ConfirmDialog', ConfirmDialog);
 app.component('DataTable', DataTable);
 app.component('Column', Column);
-
 app.component('Stepper', Stepper);
 app.component('StepperPanel', StepperPanel);
 app.component('TreeTable', TreeTable);
+app.component('InputText', InputText);
+app.component('Card', Card);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

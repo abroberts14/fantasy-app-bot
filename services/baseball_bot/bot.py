@@ -104,20 +104,20 @@ def yahoo_bot(function, local_data = None):
     
 
 #send this as an argument to the both yahoo_bot and scheduler so you can run locally without sending to groupme
-# data = {
-#     "bot_type": "GroupMe",
-#     "bot_id": "1234567890",
-#     "league_id": "51838",
-#     "yahoo_private_key": "dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz",
-#     "yahoo_private_secret": "",
-#     "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
-#     "backend_url": "https://api.draftwarroom.com",
-#     "init_msg": "Bot starting..",
-#     "access_token": ".....-",
-#     "refresh_token": "~000~-",
-#     "token_time": 3600
+data = {
+    "bot_type": "GroupMe",
+    "bot_id": "1234567890",
+    "league_id": "51838",
+    "yahoo_private_key": "dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz",
+    "yahoo_private_secret": "e656aa67c44c49a1c201c4f984ef6b83fb09fe73",
+    "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
+    "backend_url": "https://api.draftwarroom.com",
+    "init_msg": "Bot starting..",
+
+    "refresh_token": "ALughGWBOfDVvzKpzpU9Sz01SD98~000~JrELwagUtMLxhMDCVUiyCOU-",
+    "token_time": 3600
     
-# }
+}
 
 def write_tokens_to_file(data):
     try:
@@ -156,21 +156,21 @@ def write_tokens_to_file(data):
 if __name__ == "__main__":
     logging.info("Starting bot checking json file for tokens..")
 
-    data = get_env_vars()
-    write_tokens_to_file(data)
+   # data = get_env_vars()
+   # write_tokens_to_file(data)
     logging.info("Starting scheduler")
     from utils.scheduler import scheduler
 
     def start_scheduler():
-        scheduler()
+        scheduler(data)
     # Start the scheduler in a new thread
     scheduler_thread = threading.Thread(target=start_scheduler)
     scheduler_thread.daemon = True  # This ensures that the thread will not prevent the program from exiting
-    scheduler_thread.start()
+    #scheduler_thread.start()
 
     try:
         # Continue with the main script
-        yahoo_bot("init")
+        yahoo_bot("init", data)
     except Exception as e:
         logging.error("Main script error: %s", e)
 

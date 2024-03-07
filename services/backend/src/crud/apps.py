@@ -238,18 +238,17 @@ async def create_and_deploy_app(
         "cpus": None,
         "mem_limit": None,
     }
-    is_private = bot.private
-    if is_private:
-        user_id = await bots.get_bot_user_id(bot_id)  # Replace with the actual token ID
-        print(user_id)
-        token_data = await oauth.get_oauth_token_by_id(user_id)
-        new_payload["env"].extend([
-            {"name": "access_token", "label": "Access Token", "default": token_data["access_token"]},
-            {"name": "refresh_token", "label": "Refresh Token", "default": token_data["refresh_token"]},
-            {"name": "token_time", "label": "Token Time", "default": token_data["expires_in"]}
-            # {"name": "consumer_key", "label": "Consumer Key", "default": os.getenv('YAHOO_CONSUMER_KEY')},
-            # {"name": "consumer_secret", "label": "Consumer Secret", "default": os.getenv('YAHOO_CONSUMER_SECRET')}
-        ])
+
+    user_id = await bots.get_bot_user_id(bot_id)  # Replace with the actual token ID
+    print(user_id)
+    token_data = await oauth.get_oauth_token_by_id(user_id)
+    new_payload["env"].extend([
+        {"name": "access_token", "label": "Access Token", "default": token_data["access_token"]},
+        {"name": "refresh_token", "label": "Refresh Token", "default": token_data["refresh_token"]},
+        {"name": "token_time", "label": "Token Time", "default": token_data["expires_in"]}
+        # {"name": "consumer_key", "label": "Consumer Key", "default": os.getenv('YAHOO_CONSUMER_KEY')},
+        # {"name": "consumer_secret", "label": "Consumer Secret", "default": os.getenv('YAHOO_CONSUMER_SECRET')}
+    ])
     if edit:
         new_payload["edit"] = True
         new_payload["id"] = app_id
