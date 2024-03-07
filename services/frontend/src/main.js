@@ -141,8 +141,11 @@ axios.interceptors.response.use(
 
       }
     } 
-    toast.error(errorMessage);
-    
+    if ((error.response?.status == 500 ) && error.response?.data?.detail) {
+      console.error(errorMessage)
+    } else {
+      toast.error(errorMessage);
+    }
     // reject the promise so the error is passed back to the caller (they can then handle if wanted/needed)
     return Promise.reject({ ...error, formattedMessage: errorMessage });
   }

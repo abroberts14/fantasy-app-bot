@@ -33,3 +33,27 @@ a,
     padding: 0 2rem;
   }
 }
+
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 5px;
+  width: 60%; /* Adjust this width as needed */
+  max-width: 600px; /* Optional: maximum width */
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Optional: for better visibility */
+  margin:  auto; /* Top and bottom margin */
+}

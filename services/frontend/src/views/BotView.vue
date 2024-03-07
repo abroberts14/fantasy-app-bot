@@ -1,7 +1,12 @@
 <template>
   <LoadingSpinner v-if="isLoading" />
+  <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
+  <h3 v-if="modalContent">{{ modalContent.name }}</h3>
+  <p>Description: </p><p v-html="modalContent.description"></p>
+ 
 
-  <div v-else-if="bot && (isAdmin || userOwnsBot)">
+</ModalOverlay>
+  <div v-if="bot && (isAdmin || userOwnsBot)">
     <div class="surface-section">
       <div class="font-medium text-3xl text-900 mb-3">{{ bot.name }}</div>
       <div class="text-500 mb-5">Created: {{ bot.created_at }}</div>
@@ -51,14 +56,15 @@
         <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
 
 
-          
-          <DataTable :value="bot.features" stripedRows>
+          <DataTable :value="bot.features"  selectionMode="single" dataKey="id" 
+          :metaKeySelection="false"    @rowSelect="onRowSelect" @rowUnselect="onRowUnselect"   stripedRows>
+
             <Column header="Name">
               <template #body="slotProps">
                 <div>{{ formatFeatureName( slotProps.data.global_feature.name) }}</div>
               </template>
             </Column>
-              <Column field="global_feature.description" header="Description" />
+              <Column field="global_feature.description" header="Description"  />
               <Column header="When">
                   <template #body="slotProps">
                       <div v-if="slotProps.data.global_feature.live">
@@ -111,63 +117,19 @@ import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { useConfirm } from "primevue/useconfirm";
 import useFormatting from '@/composables/useFormatting'; 
+import  ModalOverlay from '@/components/ModalOverlay.vue';
 
 export default defineComponent({
     name: 'BotComponent',
     props: ['id'],
-    components: { LoadingSpinner },
-    confirmDelete() {
-          this.$confirm.require({
-            message: "Are you sure you want to delete this bot?",
-            header: "Delete Confirmation",
-            icon: "pi pi-exclamation-triangle",
-            accept: () => this.removeBot(),
-            reject: () => {
-              console.log("Bot deletion cancelled.");
-              this.toast.warn('Whew. That was a close one');
-            
-            }
-          });
-        },
+    components: { LoadingSpinner, ModalOverlay },
+    
     setup(props) {
-        const botsStore = useBotsStore();
-        const usersStore = useUsersStore();
-        const isLoading = ref(true);
-        const router = useRouter();
-        const toast = useToast();
-        const confirm = useConfirm();
-        const { formatFeatureName } = useFormatting(); // Use the composable
-        
-
-
-        const confirmDelete = () => {
-          confirm.require({
-            message: "Are you sure you want to delete this bot?",
-            header: "Delete Confirmation",
-            icon: "pi pi-exclamation-triangle",
-            accept: () => {removeBot()},
-            reject: () => {
-              console.log("Bot deletion cancelled.");
-              this.toast.warn('Whew. That was a close one');
-            
-            }
-          });
-        };
-        const checkedFeatures = ref([]); // This should be bound to your checkbox component
-
-        const featuresChanged = computed(() => {
-            return bot.value.features.some((feature, index) => {
-                return feature.enabled !== checkedFeatures.value[index].enabled;
-            });
-        });
-
-
-        const handleCheckboxChange = (feature) => {
-            feature.enabled = !feature.enabled;
-        };
-
-        
-        const adminItems = ref([
+      const isLoading = ref(true);
+      const isDialogVisible = ref(false);
+      const checkedFeatures = ref([]); // This should be bound to your checkbox component
+      const modalContent = ref(null); 
+      const adminItems = ref([
             {
                 label: 'Refresh',
                 icon: 'pi pi-refresh'
@@ -184,7 +146,7 @@ export default defineComponent({
                 icon: 'pi pi-times'
             }
         ]);
-        async function fetchData() {
+      const fetchData = async () => {
             try {
                 await botsStore.viewBot(props.id);
                 await usersStore.viewMe();
@@ -200,10 +162,75 @@ export default defineComponent({
                 isLoading.value = false;
             }
         }
-
         onMounted(() => {
-          fetchData();
+          fetchData().catch(error => {
+            console.error("Error in onMounted fetchData:", error);
+          });
         });
+        const botsStore = useBotsStore();
+        const usersStore = useUsersStore();
+        const router = useRouter();
+        const toast = useToast();
+        const confirm = useConfirm();
+
+
+        const { formatFeatureName } = useFormatting(); // Use the composable
+      
+        
+        const confirmDelete = () => {
+          confirm.require({
+            message: "Are you sure you want to delete this bot?",
+            header: "Delete Confirmation",
+            icon: "pi pi-exclamation-triangle",
+            accept: () => {removeBot()},
+            reject: () => {
+              console.log("Bot deletion cancelled.");
+              this.toast.warn('Whew. That was a close one');
+            
+            }
+          });
+        };
+
+
+
+        const featuresChanged = computed(() => {
+          if (isLoading.value || !bot.value || !bot.value.features) {
+                return false; // Return a default value if bot or bot.features is not defined
+            }
+            return bot.value.features.some((feature, index) => {
+                return feature.enabled !== checkedFeatures.value[index].enabled;
+            });
+        });
+
+
+
+        const handleModalVisibilityChange = (newValue) => {
+
+            isDialogVisible.value = newValue;
+        }
+        const handleCheckboxChange = (feature) => {
+            feature.enabled = !feature.enabled;
+        };
+
+        
+
+
+
+
+
+        const onRowSelect = (event) => {
+          console.log(event.data.global_feature.description)
+          modalContent.value = event.data.global_feature // Set the content
+          isDialogVisible.value = true; // Show the modal
+        }
+        
+        
+        const onRowUnselect = (event) => {
+          console.log(event.data.global_feature.description)
+          isDialogVisible.value = false
+
+        }
+        
 
         const bot = computed(() => botsStore.stateBot);
         const user = computed(() => usersStore.stateUser);
@@ -321,7 +348,10 @@ export default defineComponent({
             window.open(`http://167.99.4.120:8000/#/apps/${bot.value.app.name}`, '_blank');
         };
 
-        return { bot, user, isAdmin, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, stopBot, startBot, restartBot, updateBot, confirmDelete, confirm, formatFeatureName, featuresChanged, checkedFeatures, handleCheckboxChange };
-    }
+        return { bot, user, modalContent, isAdmin, onRowSelect, onRowUnselect, handleModalVisibilityChange, isDialogVisible, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, stopBot, startBot, restartBot, updateBot, confirmDelete, confirm, formatFeatureName, featuresChanged, checkedFeatures, handleCheckboxChange };
+    },
+
+  
+
 });
 </script>

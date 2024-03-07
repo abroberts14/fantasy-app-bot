@@ -16,7 +16,7 @@
 
       <Column header="Actions">
         <template #body="slotProps">
-          <router-link :to="{name: 'Bot', params:{id: slotProps.data.id}}">View</router-link>
+          <router-link  class="btn btn-primary btn-sm raised" :to="{name: 'Bot', params:{id: slotProps.data.id}}">View</router-link>
         </template>
       </Column>
     </DataTable>

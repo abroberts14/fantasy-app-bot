@@ -1,43 +1,8 @@
 <template>
-  <!-- <section>
-    <LoadingSpinner v-if="isLoading" />
-    <form @submit.prevent="submit">
-      <div class="mb-3">
-        <label for="bot_name" class="form-label">Bot Name:</label>
-        <input type="text" id="bot_name" v-model="bot.name" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label for="league_id" class="form-label">Yahoo League ID:</label>
-        <input type="text" id="league_id" v-model="bot.league_id" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
-        <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id" class="form-control" />
-      </div>
-      <DataTable :value="features" stripedRows>
-      <Column field="name" header="Feature Name" />
-      <Column field="description" header="Description" />
-      <Column header="Time (00:00 -> 23:59)">
-        <template #body="slotProps">
-          {{ slotProps.data.hour }}:{{ slotProps.data.minute.toString().padStart(2, '0') }} 
-        </template>
-      </Column>
-      <Column header="Enabled">
-        <template #body="slotProps">
-          <input type="checkbox" v-model="slotProps.data.enabled" />
-        </template>
-      </Column>
-    </DataTable>
 
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-  </section>
-
- -->
  <LoadingSpinner v-if="isLoading" />
 
-  <div v-if="isDialogVisible" class="modal">
-    <div class="modal-content">
+ <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
       <h3>No Yahoo Account Detected</h3>
       <p>
         To register a new bot, you must connect and authorize a Yahoo account.
@@ -45,9 +10,7 @@
       <p>
         Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
       </p>
-      <button class="btn btn-primary" @click="closeModalAndNavigate" >Lets go!</button>
-    </div>
-  </div>
+  </ModalOverlay> 
 <Stepper v-model:activeStep="active" orientation="vertical">
     <StepperPanel header="Bot Information">
 
@@ -156,21 +119,17 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import useFormatting from '@/composables/useFormatting'; 
-
+import  ModalOverlay from '@/components/ModalOverlay.vue';
 export default defineComponent({
   name: 'RegisterBotComponent',
 
-  components: { LoadingSpinner, },
+  components: { LoadingSpinner, ModalOverlay },
   setup() {
     const bot = ref({
       name: '',
       league_id: '',
       groupme_bot_id: '',
     });
-    const closeModalAndNavigate = () => {
-      // Logic to close the modal
-      router.push('/profile');
-    };
 
     const oauthTokens = ref(null);
 
@@ -200,7 +159,14 @@ export default defineComponent({
       finally {
         isLoading.value = false;
         isDialogVisible.value = !oauthTokens.value || oauthTokens.value.length === 0;
-
+        console.log("isDialogVisible: ", isDialogVisible.value);
+      }
+    }
+    const handleModalVisibilityChange = (newValue) => {
+      console.log("eventvalue: ", newValue);
+      isDialogVisible.value = newValue;
+      if (!newValue) { // if newValue is false, indicating the modal is closed
+        router.push('/profile'); // navigate to /profile
       }
     }
     const fetchFeatures = async () => {
@@ -286,7 +252,6 @@ export default defineComponent({
       }
     };
 
-    onMounted(fetchFeatures);
 
     onMounted(() => {
         fetchFeatures();
@@ -300,34 +265,10 @@ export default defineComponent({
       active,
       formatFeatureName,
       oauthTokens,
-      isDialogVisible,
-      closeModalAndNavigate
+      handleModalVisibilityChange,
+      isDialogVisible
+      
     };
   },
 });
 </script>
-
-<style>
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000; /* Ensure it's above other content */
-}
-
-.modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 5px;
-  width: 60%; /* Adjust this width as needed */
-  max-width: 600px; /* Optional: maximum width */
-  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Optional: for better visibility */
-  margin:  auto; /* Top and bottom margin */
-}
-</style>

@@ -11,10 +11,11 @@
 <script>
 import NavBar from '@/components/NavBar.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
+
 export default {
   components: {
     NavBar,
-    LoadingSpinner
+    LoadingSpinner,
   }
 }
 </script>

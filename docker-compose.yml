@@ -56,22 +56,22 @@ services:
 #     "bot_type": "GroupMe",
 #     "bot_id": "1234567890",
 #     "league_id": "51838",
-#     "yahoo_private_key": "dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz",
-#     "yahoo_private_secret": "e656aa67c44c49a1c201c4f984ef6b83fb09fe73",
+#     "yahoo_private_key": "",
+#     "yahoo_private_secret": "",
 #     "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
 #     "backend_url": "https://api.draftwarroom.com",
 #     "init_msg": "Bot starting..",
-#     "access_token": "KzYjCgeZ4xoW3WJ1Ue_nVGMgCLKCvTM95iajuoLkc8xvFNGqBHAP5Af.ExHPKqWFtWrstnCv8eiFi0lrIuyIVPvOWpadhvcMU3EIuQ5D1szMiGQCwUsy.qllKeSsYnBp6UDYwbUZzyvqLWRDhLfdQ4WJfU8Bl4Esy82aW_D0cx4Rm0aySzZUhpPpvoBD0zw5Em.N0dSraJ1hZ5FfK7rto0y4Svkeo2bLLhLnUyRgSTuf.HXQ6pEluW6SobEb9e4hwZQkfAWZrgLrBQ2MoaMW6cCsYKYllfVPtBqivLOs_kpunxQl8Xgur7rwYaTz24UgSmO.hZZU0R6BUcL8aBgdhswquJOUhn__iVCGlJhJzI4aSLfEdjWTphwHfHrfz0uJFhG7fNMOFY5sFhovur2LITThxh3sRHZYlnSfp_zCn7ueoiVIWkRhBIWBRDoEPYSEvowJxPTfrqWhLNmGGu1cSa4M1lc9XBz_ET9iur8wFVmmfQAtWzd7ZMbycLEoi9MxSn_9xOOAre26KuwRNnHPOL9QizUmPuSZHNKYNFPHSLcp8NQlHMQ7yTDy4DKFvMqfAe4LDe_7MjlVKeGFcovz4zWxK64qrHb4odztm4XQFKR0FRmlTm8yLjScYzHD53uQ7NI1fdFCkwAk45TsGGmafwFvo3o5D7MKfcD2rNIXZsMzc0BemLe0LRHKDTO3Tco7T5ZDKfsJz5P8WlOmMruLSi4JgelgZHU0wwAXdDqXtt8b7Bd2zH_7nl3h5oiR0HSMoIIPkhG_eEsCGOH4Efvk7vvkLFkr7ouqho58PLnKMRibSQlma1lDicyIKRx3kZv8_1Cx4VYYhJB9025sU.ChzwgHsF7lp058U33Gq9yBt4URNTnf4ZUf8wfaRBOdHijNXdYfuGHqjteQcY7qkalP3pCeEHllZCk-",
-#     "refresh_token": "ALughGWBOfDVvzKpzpU9Sz01SD98~000~JrELwagUtMLxhMDCVUiyCOU-",
+#     "access_token": "-",
+#     "refresh_token": "~000~-",
 #     "token_time": 3600
     
 # }
 
 
 # Build, tag and push docker image to docker hub:
-#docker build -t aarondawg14/draftwarroom:2.9 ./services/baseball_bot
+#docker build -t aarondawg14/draftwarroom:3.0 ./services/baseball_bot
 #docker tag aarondawg14/draftwarroom:2.1 aarondawg14/draftwarroom:latest
-#docker push aarondawg14/draftwarroom:2.9
+#docker push aarondawg14/draftwarroom:3.0
 #docker push aarondawg14/draftwarroom:latest
 
 
