@@ -31,6 +31,8 @@ import StepperPanel from 'primevue/stepperpanel';
 import TreeTable from 'primevue/treetable';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
+import Tooltip from 'primevue/tooltip';
+
 const app = createApp(App)
 app.use(PrimeVue, { ripple: true });
 app.use(ConfirmationService);
@@ -48,6 +50,9 @@ app.component('TreeTable', TreeTable);
 app.component('InputText', InputText);
 app.component('Card', Card);
 app.component('Dropdown', Dropdown);
+
+app.directive('tooltip', Tooltip);
+
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

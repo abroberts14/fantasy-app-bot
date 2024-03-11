@@ -178,5 +178,5 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error("Main script error: %s", e)
 
-    #scheduler_thread.join()  # Wait for the scheduler thread to finish if needed
+    scheduler_thread.join()  # Wait for the scheduler thread to finish if needed
     logging.info('done')
