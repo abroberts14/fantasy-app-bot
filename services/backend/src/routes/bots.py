@@ -58,6 +58,12 @@ async def get_bots(
 async def create_bot(
     bot: BotInSchema, current_user: UserOutSchema = Depends(get_current_user)
 ) -> BotOutSchema:
+    if not bot.groupme_bot_id and not bot.discord_webhook_url:
+        raise HTTPException(
+            status_code=400,
+            detail="Either 'groupme_bot_id' or 'discord_webhook_url' must be provided."
+     )
+
     try:
         return await crud.create_bot(bot, current_user)
     except IntegrityError as e:

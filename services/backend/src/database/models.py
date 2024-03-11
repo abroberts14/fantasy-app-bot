@@ -28,7 +28,8 @@ class OAuthTokens(models.Model):
 class Bots(models.Model):
     name = fields.CharField(max_length=20, null=True)
     league_id = fields.CharField(max_length=6)
-    groupme_bot_id = fields.CharField(max_length=100)
+    groupme_bot_id = fields.CharField(max_length=100,  null=True)
+    discord_webhook_url = fields.CharField(max_length=200, null=True)
     user = fields.ForeignKeyField("models.Users", related_name="bots")
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)

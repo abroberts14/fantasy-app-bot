@@ -177,6 +177,7 @@ async def create_and_deploy_app(
     bot_name = bot.name
     template_id = "2"
     bot_groupme_id = bot.groupme_bot_id
+    discord_webhook_url = bot.discord_webhook_url
     bot_type = "GroupMe"
     league_id = bot.league_id
     
@@ -213,7 +214,17 @@ async def create_and_deploy_app(
                 status_code=400,
                 detail="An app with the same name already exists!"
             )
-
+        
+    if bot_groupme_id is None:
+        if discord_webhook_url is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Either 'groupme_bot_id' or 'discord_webhook_url' must be provided."
+            )
+    bot_webhook_url = bot_groupme_id 
+    if discord_webhook_url is not None:
+        bot_webhook_url = discord_webhook_url
+        bot_type = "Discord"
     new_payload = {
         "name": new_app_name,
         "image": app["image"],
@@ -224,7 +235,7 @@ async def create_and_deploy_app(
         "ports": [],
         "volumes": [],
         "env": [
-            {"name": "BOT_ID", "label": "GroupMe Bot ID", "default": bot_groupme_id},
+            {"name": "BOT_ID", "label": "Messaging Platform Webhook/ID", "default": bot_webhook_url},
             {"name": "BOT_TYPE", "label": "Chat Bot Type", "default": bot_type},
             {"name": "LEAGUE_ID", "label": "Yahoo League Id", "default": league_id},
             {"name": "FEATURE_ENV_VARS", "label": "Feature Environment Variables", "default": feature_env_vars},

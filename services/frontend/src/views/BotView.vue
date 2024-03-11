@@ -49,10 +49,22 @@
           <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{bot.league_id}}</div>
         </li>
 
-        <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
-          <div class="text-500 w-6 md:w-2 font-medium">GroupMe Bot ID</div>
-          <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{bot.groupme_bot_id}}</div>
-        </li>
+
+          <div v-if="bot.groupme_bot_id ">
+            <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
+
+              <div class="text-500 md:w-2 font-medium flex-shrink-0">GroupMe Bot ID</div>
+              <div class="text-900 flex-grow">{{bot.groupme_bot_id}}</div>
+            </li>
+          </div>
+          <div v-else >
+            <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
+
+              <div class="text-500 md:w-2 font-medium flex-shrink-0">Discord Webhook:</div>
+             <div class="text-900 flex-grow">{{bot.discord_webhook_url}}</div>
+            </li>
+          </div>
+        
         <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
 
 

@@ -1,6 +1,7 @@
 import os
 import sys
 from chat.groupme import GroupMe
+from chat.discord import Discord
 from yahoo import yahoo_worker
 from yfpy.query import YahooFantasySportsQuery
 from utils.setup import get_env_vars
@@ -33,7 +34,9 @@ def yahoo_bot(function, local_data = None):
     logging.info(f'data: {data}')
     if bot_type == 'GroupMe':
         bot = GroupMe(bot_id)
-    elif bot_type in ['Slack', 'Discord']:
+    elif bot_type == 'Discord':
+        bot = Discord(bot_id)
+    else:
         logging.error(f'{bot_type} not supported yet')
         sys.exit(1)
 
@@ -107,7 +110,7 @@ def yahoo_bot(function, local_data = None):
 data = {
     "bot_type": "GroupMe",
     "bot_id": "1234567890",
-    "league_id": "51838",
+    "league_id": "3932",
     "yahoo_private_key": "",
     "yahoo_private_secret": "",
     "feature_flags": "DAILY_WAIVERS,GET_LEAGUE_MATCHUPS",
@@ -171,8 +174,9 @@ if __name__ == "__main__":
     try:
         # Continue with the main script
         yahoo_bot("init")
+        #yahoo_bot("daily_waivers", data)
     except Exception as e:
         logging.error("Main script error: %s", e)
 
-    scheduler_thread.join()  # Wait for the scheduler thread to finish if needed
+    #scheduler_thread.join()  # Wait for the scheduler thread to finish if needed
     logging.info('done')

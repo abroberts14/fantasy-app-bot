@@ -25,7 +25,7 @@ services:
   frontend:
     build: ./services/frontend
     environment:
-      - VITE_APP_BACKEND_URL=https://api.draftwarroom.com
+     # - VITE_APP_BACKEND_URL=https://api.draftwarroom.com
       - VITE_APP_YAHOO_CLIENT_ID=dj0yJmk9NTZlWXZjdlY1SUZhJmQ9WVdrOVkxWnZjemRJVVhFbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTgz
     volumes:
       - './services/frontend:/app'
@@ -34,6 +34,8 @@ services:
       - 5173:5173
     command: npm run dev
 
+
+#https://discord.com/api/webhooks/1216563146177777794/Bvj8FUdig6L8Q48Na0p1bg45P9VYm0s_IZkbFxDUGuTgswctvW12SR-ZhgH5RQ8Yf0tz
   # yahoo_bot:
   #   build:
   #     context: ./services/baseball_bot

@@ -28,6 +28,11 @@
                 
               </div>
             </div>
+            <div class="mb-3">
+              <label for="chat_type" class="form-label">Message Platform:</label>
+              <Dropdown v-model="selectedPlatform" :options="platforms"  :showCheckbox="true" optionLabel="Platform" placeholder="Select a platform for delivering messages"  :highlightOnSelect="true"       @change="onPlatformChange"  class="flex lg:w-25rem" />
+            </div>
+
             <!-- <div class="mb-3">
               <label for="private_league" class="form-label mr-2">Private League:</label>
 
@@ -38,11 +43,17 @@
      
             </div>   -->
             <div class="mb-3">
-              <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
-              <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+              <div v-if="selectedPlatform.Platform === 'GroupMe'">
+                <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
+                <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+              </div>
+              <div v-else>
+                <label for="discord_webhook_url" class="form-label">Discord Webhook URL:</label>
+                <input type="text" id="discord_webhook_url" v-model="bot.discord_webhook_url"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+                </div>
             </div>
             <div class="flex py-4">
-                <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || !bot.groupme_bot_id" @click="nextCallback" />
+                <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || (!bot.groupme_bot_id && !bot.discord_webhook_url)" @click="nextCallback" />
             </div>
             
         </template>
@@ -124,6 +135,7 @@ export default defineComponent({
   name: 'RegisterBotComponent',
 
   components: { LoadingSpinner, ModalOverlay },
+
   setup() {
     const bot = ref({
       name: '',
@@ -132,7 +144,17 @@ export default defineComponent({
     });
 
     const oauthTokens = ref(null);
+    const selectedPlatform = ref({Platform: ''});
+    const platforms = ref([
+      { Platform: 'GroupMe' },
+      { Platform: 'Discord' }
+    ]);
 
+    function onPlatformChange(event) {
+      console.log("Selected platform:", selectedPlatform.value);
+      selectedPlatform.value = event.value;  
+      // Additional logic for the selected platform change
+    }
     const isDialogVisible = ref(false);
 
     const isLoading = ref(false);
@@ -184,7 +206,6 @@ export default defineComponent({
       }
     };
 
-
     const submit = async () => {
       const errorMessages = [];
       const namePattern = /^[A-Za-z0-9]+$/; // Regex for letters and digits
@@ -211,8 +232,8 @@ export default defineComponent({
         redirect_page = 0
       }
 
-      if (!bot.value.groupme_bot_id) {
-        errorMessages.push('GroupMe Bot ID cannot be empty');
+      if ((!bot.value.groupme_bot_id) && (!bot.value.discord_webhook_url)) {
+        errorMessages.push('GroupMe ID or Discord Webhook must be given');
         redirect_page = 0
       }
 
@@ -238,6 +259,7 @@ export default defineComponent({
         };
 
         console.log("Mapped features for botData:", botData.features);
+        console.log("Bot data:", botData);
         const botsStore = useBotsStore();
         const response = await botsStore.createBot(botData);
 
@@ -266,7 +288,10 @@ export default defineComponent({
       formatFeatureName,
       oauthTokens,
       handleModalVisibilityChange,
-      isDialogVisible
+      isDialogVisible,
+      selectedPlatform,
+      platforms,
+      onPlatformChange,
       
     };
   },
