@@ -140,6 +140,36 @@ def yf_get_league_matchups(qry):
             formatted_matchups += f"{alert_emoji} {alert_emoji} LARGEST LEAD {alert_emoji} {alert_emoji} \n{matchup_line} \n\n" if is_blowout else f"{matchup_line}\n\n"
 
     return formatted_matchups.strip()
+
+def get_league_standings(qry):
+    standings = qry.get_league_standings().teams
+    week = get_current_week(qry)
+    standings_str = f"🏆 League Standings - Week {week}** 🏆\n\n"
+    last_place = len(standings)  # Assuming 'standings' is a list
+
+    for team in standings:
+        print(team.team_standings)
+        rank = team.team_standings.rank
+        name = team.name.decode('utf-8')
+        wins = team.team_standings.outcome_totals.wins
+        losses = team.team_standings.outcome_totals.losses
+        ties = team.team_standings.outcome_totals.ties
+        if rank == None:
+            rank = 1
+        # Adding emoji based on rank
+        if rank == 1:
+            rank_str = "🥇"
+        elif rank == 2:
+            rank_str = "🥈"
+        elif rank == last_place:
+            rank_str = "🤡"
+        else:
+            rank_str = f"{rank}"
+
+        standings_str += f"{rank_str}: {name} - {wins}-{losses}-{ties}\n"
+
+    return standings_str
+
 def get_teams_info(teams):
     """
     Gathers information about each team, including the team key and the number of moves made.
@@ -212,6 +242,42 @@ def get_daily_waiver_activity(qry):
         #msg = align_messages(aligned) 
         msg = "Transaction Report For Last 24 Hours:\n\n" + formatted_activity
     return msg if team_transactions else ""
+
+def trade_tracker(qry):
+    transactions = qry.get_league_transactions()
+    teams = qry.get_league_teams()
+    teams_info, team_names = get_teams_info(teams)
+    ten_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=11)
+
+    trade_alert = ''
+    trades = defaultdict(lambda: {'trader_players': [], 'tradee_players': []})
+
+    for transaction in transactions:
+        try:
+            transaction_time = datetime.fromtimestamp(transaction.timestamp).replace(tzinfo=timezone.utc)
+        except:
+            continue
+
+        if transaction_time >= ten_minutes_ago and transaction.type == "trade":
+            # Collecting player info for the transaction
+            for player in transaction.players:
+                player_info = f"🔹 {player.name.full} ({player.editorial_team_abbr} - {player.display_position})"
+                if player.transaction_data.destination_team_key == transaction.trader_team_key:
+                    trades[(transaction.trader_team_key, transaction.tradee_team_key, transaction_time.timestamp())]['trader_players'].append(player_info)
+                else:
+                    trades[(transaction.trader_team_key, transaction.tradee_team_key, transaction_time.timestamp())]['tradee_players'].append(player_info)
+
+    for (trader_key, tradee_key, timestamp), players in trades.items():
+        trader_name = team_names.get(trader_key, 'Unknown Team')
+        tradee_name = team_names.get(tradee_key, 'Unknown Team')
+        trade_time = datetime.fromtimestamp(timestamp).strftime("%m/%d/%Y, %H:%M:%S")
+
+        trade_alert += f"🚨 Trade Alert! 🚨\n{trader_name} traded with {tradee_name}\n\n"
+        trade_alert += f"{trader_name} received:\n" + '\n'.join(players['trader_players']) + "\n\n"
+        trade_alert += f"{tradee_name} received:\n" + '\n'.join(players['tradee_players']) + "\n\n"
+
+    return trade_alert if trades else ""
+
 
 def get_starter_count(qry):
     sc =  yf_get_starter_counts(qry)

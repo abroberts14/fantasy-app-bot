@@ -83,6 +83,10 @@ def yahoo_bot(function, local_data = None):
             text = text + "\n\n" + ' Next run tomorrow!'
         if function == "daily_waivers":
             text = text + "\n\n" +  yahoo_worker.get_daily_waiver_activity(yahoo_query)
+        if function == "get_league_standings":
+            text = text + "\n\n" +  yahoo_worker.get_league_standings(yahoo_query)
+        if function == "trade_tracker":
+            text = text + "\n\n" +  yahoo_worker.trade_tracker(yahoo_query)
         if function == "broadcast":
             try:
                 text = broadcast_message
@@ -103,7 +107,9 @@ def yahoo_bot(function, local_data = None):
     if text != '':
         logging.info(text)
         if (not local_data):
-             bot.send_message(text)
+            if (len(text) > 999):
+                text = text[:999]
+            bot.send_message(text)
     
 
 #send this as an argument to the both yahoo_bot and scheduler so you can run locally without sending to groupme

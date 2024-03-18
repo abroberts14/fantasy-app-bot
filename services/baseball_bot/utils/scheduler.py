@@ -53,7 +53,7 @@ def scheduler(local_data = None):
             continue
 
         if timing.get('live', False):
-            trigger = IntervalTrigger(minutes=30)
+            trigger = IntervalTrigger(minutes=10)
         else:
             days = timing['day']
             if "," in days:
