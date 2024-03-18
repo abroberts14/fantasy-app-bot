@@ -155,7 +155,7 @@ def get_league_standings(qry):
         losses = team.team_standings.outcome_totals.losses
         ties = team.team_standings.outcome_totals.ties
         if rank == None:
-            rank_str = "1"
+            rank = 0
         # Adding emoji based on rank
         if rank == 1:
             rank_str = "🥇"
@@ -231,16 +231,16 @@ def get_daily_waiver_activity(qry):
     for team_key, actions in team_transactions.items():
         if team_key in teams_info:
             moves_made = teams_info[team_key]
-            team_info = f" 🔹 {team_names.get(team_key, 'Unknown Team')}🔹 (#{moves_made})"
+            team_info = f"\n🔹 {team_names.get(team_key, 'Unknown Team')}🔹 (#{moves_made})"
             formatted_activity += f"{team_info}\n"
             for action, players in actions.items():
-                formatted_activity += "\n".join([f"{action} {player}" for player in players]) + "\n\n"
+                formatted_activity += "\n".join([f"{action} {player}" for player in players]) + "\n"
         #formatted_activity += "\n"
 
     if team_transactions:
         #aligned = formatted_activity.split('\n')
         #msg = align_messages(aligned) 
-        msg = "Transaction Report For Last 24 Hours:\n\n" + formatted_activity
+        msg = "Transaction Report For Last 24 Hours:\n" + formatted_activity
     return msg if team_transactions else ""
 
 def trade_tracker(qry):
