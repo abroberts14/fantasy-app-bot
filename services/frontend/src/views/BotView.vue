@@ -83,8 +83,13 @@
                           Every 30 minutes
                       </div>
                       <div v-else>
-                          {{ slotProps.data.global_feature.day === 'all' ? 'Daily' : slotProps.data.global_feature.day.charAt(0).toUpperCase() + slotProps.data.global_feature.day.slice(1) }} - 
-                          {{ slotProps.data.global_feature.hour }}:{{ slotProps.data.global_feature.minute.toString().padStart(2, '0') }}
+                        <span v-if="slotProps.data.global_feature.day === 'all'">
+                          Daily
+                        </span>
+                        <span v-else>
+                          {{ formatDays(slotProps.data.global_feature.day) }}
+                        </span>
+                        - {{ formatTime( slotProps.data.global_feature.hour , slotProps.data.global_feature.minute, bot.timezone) }}  {{timezoneValue}}
                       </div>
                   </template>
               </Column>
@@ -130,6 +135,8 @@ import { useToast } from 'vue-toastification';
 import { useConfirm } from "primevue/useconfirm";
 import useFormatting from '@/composables/useFormatting'; 
 import  ModalOverlay from '@/components/ModalOverlay.vue';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { format as fnsFormat } from 'date-fns';
 
 export default defineComponent({
     name: 'BotComponent',
@@ -158,6 +165,14 @@ export default defineComponent({
                 icon: 'pi pi-times'
             }
         ]);
+      const timezones = ref([
+        { label: 'America/New_York', value: 'Eastern' },
+        { label: 'America/Chicago', value: 'Central' },
+        { label: 'America/Denver', value: 'Mountain' },
+        { label: 'America/Los_Angeles', value: 'Pacific' },
+      // Add other US timezones as needed
+     ]);
+
       const fetchData = async () => {
             try {
                 await botsStore.viewBot(props.id);
@@ -174,11 +189,46 @@ export default defineComponent({
                 isLoading.value = false;
             }
         }
+        const formatDays = (days) => {
+          if (!days ) {
+            return 'Daily';
+          } else {
+            console.log("days: ", days);
+            if (days.includes(',')) {
+              return days.split(',')
+                        .map(day => day.charAt(0).toUpperCase() + day.slice(1).toLowerCase())
+                        .join(', ');
+            }
+            return days.charAt(0).toUpperCase() + days.slice(1);
+          }
+        
+        };
+        const formatTime = (hour, minute, tz) => {
+          if (!hour || !minute) {
+            return '';
+          }
+
+          const timezone = tz
+          const default_date = new Date().setHours(hour, minute, 0, 0);
+          if (hour == 18) {
+            console.log("selectedTimezone: ", tz);
+          }
+
+          return fnsFormat(utcToZonedTime(default_date, timezone), 'h:mm a');
+        };
+
         onMounted(() => {
           fetchData().catch(error => {
             console.error("Error in onMounted fetchData:", error);
           });
         });
+        const timezoneValue = computed(() => {
+          if (bot.value) {
+            const timezone = timezones.value.find(tz => tz.label === bot.value.timezone);
+            return timezone ? timezone.value : 'Unknown';
+          }
+          return 'Not Set'; // Default text or handling when timezone is not set
+        });   
         const botsStore = useBotsStore();
         const usersStore = useUsersStore();
         const router = useRouter();
@@ -360,7 +410,7 @@ export default defineComponent({
             window.open(`http://167.99.4.120:8000/#/apps/${bot.value.app.name}`, '_blank');
         };
 
-        return { bot, user, modalContent, isAdmin, onRowSelect, onRowUnselect, handleModalVisibilityChange, isDialogVisible, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, stopBot, startBot, restartBot, updateBot, confirmDelete, confirm, formatFeatureName, featuresChanged, checkedFeatures, handleCheckboxChange };
+        return { timezoneValue, formatDays, formatTime, bot, user, modalContent, isAdmin, onRowSelect, onRowUnselect, handleModalVisibilityChange, isDialogVisible, isLoading, userOwnsBot, removeBot, adminItems, visit, initiateBot, stopBot, startBot, restartBot, updateBot, confirmDelete, confirm, formatFeatureName, featuresChanged, checkedFeatures, handleCheckboxChange };
     },
 
   
