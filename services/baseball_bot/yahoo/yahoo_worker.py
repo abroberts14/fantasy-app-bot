@@ -144,7 +144,7 @@ def yf_get_league_matchups(qry):
 def get_league_standings(qry):
     standings = qry.get_league_standings().teams
     week = get_current_week(qry)
-    standings_str = f"🏆 League Standings - Week {week}** 🏆\n\n"
+    standings_str = f"🏆 League Standings - Week {week} 🏆\n\n"
     last_place = len(standings)  # Assuming 'standings' is a list
 
     for team in standings:
@@ -155,7 +155,7 @@ def get_league_standings(qry):
         losses = team.team_standings.outcome_totals.losses
         ties = team.team_standings.outcome_totals.ties
         if rank == None:
-            rank = 1
+            rank_str = "1"
         # Adding emoji based on rank
         if rank == 1:
             rank_str = "🥇"
@@ -234,7 +234,7 @@ def get_daily_waiver_activity(qry):
             team_info = f" 🔹 {team_names.get(team_key, 'Unknown Team')}🔹 (#{moves_made})"
             formatted_activity += f"{team_info}\n"
             for action, players in actions.items():
-                formatted_activity += "\n".join([f"{action} {player}" for player in players]) + "\n"
+                formatted_activity += "\n".join([f"{action} {player}" for player in players]) + "\n\n"
         #formatted_activity += "\n"
 
     if team_transactions:
