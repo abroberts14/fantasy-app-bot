@@ -80,7 +80,7 @@
               <Column header="When">
                   <template #body="slotProps">
                       <div v-if="slotProps.data.global_feature.live">
-                          Every 30 minutes
+                          Every 10 minutes
                       </div>
                       <div v-else>
                         <span v-if="slotProps.data.global_feature.day === 'all'">
