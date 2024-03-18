@@ -28,32 +28,30 @@
                 
               </div>
             </div>
-            <div class="mb-3">
-              <label for="chat_type" class="form-label">Message Platform:</label>
-              <Dropdown v-model="selectedPlatform" :options="platforms"  :showCheckbox="true" optionLabel="Platform" placeholder="Select a platform for delivering messages"  :highlightOnSelect="true"       @change="onPlatformChange"  class="flex lg:w-25rem" />
-            </div>
+            <div class="flex flex-column h-12rem">
 
-            <!-- <div class="mb-3">
-              <label for="private_league" class="form-label mr-2">Private League:</label>
-
-
-                <input type="checkbox" id="private_league" :disabled="!oauthTokens || oauthTokens.length == 0"  v-model="bot.private" class="form-checkbox" />
-
-                <p v-if="!oauthTokens || oauthTokens.length == 0"  class="text-400" >Note: you must connect to Yahoo to access private leagues, visit your <router-link to="/profile">profile</router-link> to setup your yahoo integration</p>
-     
-            </div>   -->
-            <div class="mb-3">
-              <div v-if="selectedPlatform.Platform === 'GroupMe'">
-                <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
-                <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
-              </div>
-              <div v-else>
-                <label for="discord_webhook_url" class="form-label">Discord Webhook URL:</label>
-                <input type="text" id="discord_webhook_url" v-model="bot.discord_webhook_url"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+              <div class="mb-3 ">
+                  <label for="timezone" class="form-label ">Timezone:</label>
+                  <Dropdown v-model="selectedTimezone" :options="timezones"   optionLabel="label" placeholder="Select a timezone"   class="flex lg:w-25rem"/>
                 </div>
-            </div>
-            <div class="flex py-4">
-                <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || (!bot.groupme_bot_id && !bot.discord_webhook_url)" @click="nextCallback" />
+              <div class="mb-3">
+                <label for="chat_type" class="form-label">Message Platform:</label>
+                <Dropdown v-model="selectedPlatform" :options="platforms"  optionLabel="Platform" placeholder="Select a platform for delivering messages"  :highlightOnSelect="true"       @change="onPlatformChange"  class="flex lg:w-25rem" />
+              </div>
+           
+              <div class="mb-3">
+                <div v-if="selectedPlatform.Platform === 'GroupMe'" >
+                  <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
+                  <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+                </div>
+                <div v-else-if="selectedPlatform.Platform === 'Discord'" >
+                  <label for="discord_webhook_url" class="form-label">Discord Webhook URL:</label>
+                  <input type="text" id="discord_webhook_url" v-model="bot.discord_webhook_url"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+                </div>
+              </div>
+          </div>
+            <div class="flex pt-8">
+                <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || (!bot.groupme_bot_id && !bot.discord_webhook_url) || !selectedTimezone" @click="nextCallback" />
             </div>
             
         </template>
@@ -74,8 +72,13 @@
                           Every 30 minutes
                       </div>
                       <div v-else>
-                          {{ slotProps.data.day === 'all' ? 'Daily' : slotProps.data.day.charAt(0).toUpperCase() + slotProps.data.day.slice(1) }} - 
-                          {{ slotProps.data.hour }}:{{ slotProps.data.minute.toString().padStart(2, '0') }}
+                        <span v-if="slotProps.data.day === 'all'">
+                          Daily
+                        </span>
+                        <span v-else>
+                          {{ formatDays(slotProps.data.day) }}
+                        </span>
+                        - {{ formatTime(slotProps.data.hour, slotProps.data.minute) }} {{ selectedTimezone.label }}
                       </div>
                   </template>
               </Column>
@@ -122,6 +125,8 @@
 
 <script>
 import { defineComponent, ref, onMounted, computed } from 'vue';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { format as fnsFormat } from 'date-fns';
 import useBotsStore from '@/store/bots';
 import useUsersStore from '@/store/users';
 
@@ -149,12 +154,16 @@ export default defineComponent({
       { Platform: 'GroupMe' },
       { Platform: 'Discord' }
     ]);
+    const selectedTimezone = ref('America/New_York'); // Default timezone
+    const timezones = ref([
+      { label: 'Eastern', value: 'America/New_York' },
+      { label: 'Central', value: 'America/Chicago' },
+      { label: 'Mountain', value: 'America/Denver' },
+      { label: 'Pacific', value: 'America/Los_Angeles' },
+      // Add other US timezones as needed
+    ]);
 
-    function onPlatformChange(event) {
-      console.log("Selected platform:", selectedPlatform.value);
-      selectedPlatform.value = event.value;  
-      // Additional logic for the selected platform change
-    }
+
     const isDialogVisible = ref(false);
 
     const isLoading = ref(false);
@@ -164,7 +173,35 @@ export default defineComponent({
     const router = useRouter();
     const { formatFeatureName } = useFormatting(); // Use the composable
     const usersStore = useUsersStore(); 
-    const user = computed(() => usersStore.stateUser);    
+    const user = computed(() => usersStore.stateUser); 
+
+    const formatDays = (days) => {
+      if (days.includes(',')) {
+        return days.split(',')
+                   .map(day => day.charAt(0).toUpperCase() + day.slice(1).toLowerCase())
+                   .join(', ');
+      }
+      return days.charAt(0).toUpperCase() + days.slice(1);
+    };
+    const formatTime = (hour, minute) => {
+      if (!hour || !minute) {
+        return '';
+      }
+
+      const timezone = selectedTimezone.value.value;
+      const default_date = new Date().setHours(hour, minute, 0, 0);
+      if (hour == 18) {
+        console.log("selectedTimezone: ", selectedTimezone.value.value);
+      }
+
+      return fnsFormat(utcToZonedTime(default_date, timezone), 'h:mm a');
+    };
+
+    function onPlatformChange(event) {
+      console.log("Selected platform:", selectedPlatform.value);
+      selectedPlatform.value = event.value;  
+      // Additional logic for the selected platform change
+    }   
     async function fetchUserTokens() {
       try {
         isLoading.value = true;
@@ -205,7 +242,10 @@ export default defineComponent({
         toast.error('Error fetching features');
       }
     };
-
+    onMounted(() => {
+        fetchFeatures();
+        fetchUserTokens();
+        });
     const submit = async () => {
       const errorMessages = [];
       const namePattern = /^[A-Za-z0-9]+$/; // Regex for letters and digits
@@ -255,7 +295,8 @@ export default defineComponent({
             features: features.value.map(feature => ({
                 global_feature_id: feature.id,
                 enabled: feature.enabled
-            }))
+            })),
+            timezone: selectedTimezone.value.value,
         };
 
         console.log("Mapped features for botData:", botData.features);
@@ -275,10 +316,7 @@ export default defineComponent({
     };
 
 
-    onMounted(() => {
-        fetchFeatures();
-        fetchUserTokens();
-        });
+   
     return {
       bot,
       isLoading,
@@ -292,7 +330,10 @@ export default defineComponent({
       selectedPlatform,
       platforms,
       onPlatformChange,
-      
+      timezones,
+      selectedTimezone,
+      formatTime,
+      formatDays
     };
   },
 });

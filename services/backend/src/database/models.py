@@ -33,8 +33,7 @@ class Bots(models.Model):
     user = fields.ForeignKeyField("models.Users", related_name="bots")
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
-    running = fields.BooleanField(default=False)
-    active = fields.BooleanField(default=True)
+    timezone = fields.CharField(max_length=50, default="America/New_York")
     app = fields.ForeignKeyField("models.Apps", related_name="bots", null=True)
     features =  fields.ReverseRelation["features"]  # Reverse relation for bots
     private = fields.BooleanField(default=False)
@@ -62,7 +61,7 @@ class Features(models.Model):
 class GlobalFeatures(models.Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=50, unique=True)
-    day = fields.CharField(max_length=3, default="mon")
+    day = fields.CharField(max_length=40, default="mon")
     hour = fields.IntField(min_value=0, max_value=23)
     minute = fields.IntField(min_value=0, max_value=59)
     live = fields.BooleanField(default=False)

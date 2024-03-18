@@ -178,6 +178,7 @@ async def create_and_deploy_app(
     template_id = "2"
     bot_groupme_id = bot.groupme_bot_id
     discord_webhook_url = bot.discord_webhook_url
+    timezone = bot.timezone
     bot_type = "GroupMe"
     league_id = bot.league_id
     
@@ -238,6 +239,7 @@ async def create_and_deploy_app(
             {"name": "BOT_ID", "label": "Messaging Platform Webhook/ID", "default": bot_webhook_url},
             {"name": "BOT_TYPE", "label": "Chat Bot Type", "default": bot_type},
             {"name": "LEAGUE_ID", "label": "Yahoo League Id", "default": league_id},
+            {"name": "TIMEZONE", "label": "Timezone", "default": timezone},
             {"name": "FEATURE_ENV_VARS", "label": "Feature Environment Variables", "default": feature_env_vars},
             {"name": "BACKEND_URL", "label": "Backend API", "default": backend_url},
 

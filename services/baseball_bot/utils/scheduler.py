@@ -55,15 +55,22 @@ def scheduler(local_data = None):
         if timing.get('live', False):
             trigger = IntervalTrigger(minutes=30)
         else:
-            day_of_week = 'mon,tue,wed,thu,fri,sat,sun' if timing['day'] == 'all' else timing['day'].capitalize()
+            days = timing['day']
+            if "," in days:
+                day_of_week = ','.join(day.strip().capitalize() for day in days.split(','))
+            elif days == 'all':
+                day_of_week = 'mon,tue,wed,thu,fri,sat,sun'
+            else:
+                day_of_week = days.capitalize()
+            print("day_of_week: " + day_of_week)
             trigger = CronTrigger(day_of_week=day_of_week, hour=timing['hour'], minute=timing['minute'], 
                                   start_date=datetime.now(), end_date=datetime.now() + timedelta(days=730), 
-                                  timezone='America/New_York')
+                                  timezone=data['bot_timezone'])
         if trigger != None:
             sched.add_job(yahoo_bot, trigger, [job_name, local_data], id=job_name, replace_existing=True)
         print(f"Added job: {job_name} with trigger {trigger} ")
 
-    print("Ready! Scheduled a total of " + str(len(sched.get_jobs())) + " jobs")
+    print("Ready! Scheduled a total of " + str(len(sched.get_jobs())) + " jobs for timezone  " + data['bot_timezone'] )
     #if local_data:
         #lets kick off the jobs to see it run immediately when local
     for job in sched.get_jobs():
