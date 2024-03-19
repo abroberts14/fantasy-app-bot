@@ -27,9 +27,14 @@
                 <input type="text" id="league_id" v-model="bot.league_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
                 
               </div>
+              
             </div>
-            <div class="flex flex-column h-12rem">
 
+            <div class="flex flex-column h-16rem">
+              <div class="mb-3 d-flex align-items-center">
+                <label for="personal" class="form-label mr-2">Personal:</label>
+                <Checkbox id="personal" v-model="personalRef" :binary="true" @change="filterFeatures"/>
+              </div>
               <div class="mb-3 ">
                   <label for="timezone" class="form-label ">Timezone:</label>
                   <Dropdown v-model="selectedTimezone" :options="timezones"   optionLabel="label" placeholder="Select a timezone"   class="flex lg:w-25rem"/>
@@ -59,7 +64,7 @@
     <StepperPanel header="Bot Features">
       <template #content="{ prevCallback, nextCallback }">
       <div class="flex flex-column">
-          <DataTable :value="features" stripedRows>
+          <DataTable :value="filteredFeatures" stripedRows>
             <Column header="Name">
               <template #body="slotProps">
                 <div>{{ formatFeatureName(slotProps.data.name) }}</div>
@@ -147,7 +152,7 @@ export default defineComponent({
       league_id: '',
       groupme_bot_id: '',
     });
-
+    const personalRef = ref(false);
     const oauthTokens = ref(null);
     const selectedPlatform = ref({Platform: ''});
     const platforms = ref([
@@ -196,7 +201,19 @@ export default defineComponent({
 
       return fnsFormat(utcToZonedTime(default_date, timezone), 'h:mm a');
     };
-
+    const filteredFeatures = computed(() => {
+      console.log("personalRef: ", personalRef.value);
+      console.log("features: ", features.value);
+      if (personalRef.value) {
+        return features.value.filter(feature => feature.private_feature);
+      } else {
+        return features.value.filter(feature => !feature.private_feature);
+      }
+    });
+        // Method to call when the checkbox is clicked
+    const filterFeatures = () => {
+      // No need to do anything here as the computed property handles the filtering
+    };
     function onPlatformChange(event) {
       console.log("Selected platform:", selectedPlatform.value);
       selectedPlatform.value = event.value;  
@@ -232,16 +249,18 @@ export default defineComponent({
       console.log('Fetching features');
       try {
         const response = await axios.get('/global-features');
-        features.value = response.data.map(feature => ({
+        const updatedFeatures = response.data.map(feature => ({
           ...feature,
-        
           enabled: false // Initialize an 'enabled' property for the checkbox
         }));
+
+        features.value = updatedFeatures;
       } catch (error) {
         console.error('Error fetching features:', error);
         toast.error('Error fetching features');
       }
     };
+   
     onMounted(() => {
         fetchFeatures();
         fetchUserTokens();
@@ -297,6 +316,7 @@ export default defineComponent({
                 enabled: feature.enabled
             })),
             timezone: selectedTimezone.value.value,
+            private: personalRef.value,
         };
 
         console.log("Mapped features for botData:", botData.features);
@@ -333,7 +353,11 @@ export default defineComponent({
       timezones,
       selectedTimezone,
       formatTime,
-      formatDays
+      formatDays,
+      personalRef,
+      filteredFeatures,
+      filterFeatures
+      
     };
   },
 });
