@@ -87,6 +87,10 @@ def yahoo_bot(function, local_data = None):
             text = text + "\n\n" +  yahoo_worker.get_league_standings(yahoo_query)
         if function == "trade_tracker":
             text = text + "\n\n" +  yahoo_worker.trade_tracker(yahoo_query)
+        if function == "starter_pitchers_status":
+            text = text + "\n\n" +  yahoo_worker.starter_pitchers_status(yahoo_query)
+        if function == "get_starting_pitchers_for_week":
+            text = text + "\n\n" +  yahoo_worker.get_starting_pitchers_for_week(yahoo_query)
         if function == "broadcast":
             try:
                 text = broadcast_message
@@ -104,7 +108,7 @@ def yahoo_bot(function, local_data = None):
             pass
     logging.info(data)
 
-    if text != '':
+    if text != '' and text is not None and text != "\n\n":
         logging.info(text)
         if (not local_data):
             if (len(text) > 999):
