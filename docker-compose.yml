@@ -71,9 +71,9 @@ services:
 
 
 # Build, tag and push docker image to docker hub:
-#docker build -t aarondawg14/draftwarroom:3.6 ./services/baseball_bot
+#docker build -t aarondawg14/draftwarroom:3.8 ./services/baseball_bot
 #docker tag aarondawg14/draftwarroom:2.1 aarondawg14/draftwarroom:latest
-#docker push aarondawg14/draftwarroom:3.6
+#docker push aarondawg14/draftwarroom:3.8
 #docker push aarondawg14/draftwarroom:latest
 
 

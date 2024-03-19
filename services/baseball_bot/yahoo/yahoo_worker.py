@@ -6,6 +6,7 @@ import os
 import logging
 from dotenv import load_dotenv
 import random
+import json
 import itertools 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -277,7 +278,132 @@ def trade_tracker(qry):
         trade_alert += f"{tradee_name} received:\n" + '\n'.join(players['tradee_players']) + "\n\n"
 
     return trade_alert if trades else ""
+            
+            
+#chosen_date = "2024-03-20"
+def yf_get_player_from_team(qry, id, team_id=None, chosen_date=None):
+    if chosen_date is None:
+        chosen_date = datetime.now().strftime("%Y-%m-%d")
+    players = qry.get_team_roster_player_info_by_date(team_id, chosen_date)
+    if not players:
+        return None 
+    for player in players:
+        if (player.player_id == int(id)):
+            return player
 
+def starter_pitchers_status(qry, team=None):
+    if team is None:
+        team = yf_get_current_user_team(qry)
+        if team is None:
+            return "⚠️ No team found for the current login."
+        return yf_starter_pitchers_status(qry, team, date=None, count=False)
+    
+def get_starting_pitchers_for_week(qry, team=None):
+    if team is None:
+        team = yf_get_current_user_team(qry)
+        if team is None:
+            return "⚠️ No team found for the current login."
+
+    try:
+        week_dates = yf_get_week_start_and_end_dates(qry)
+        total_pitcher_appearances = {}
+
+        for dt in week_dates:
+            daily_pitcher_counts = yf_starter_pitchers_status(qry, team, date=str(dt), count=True)
+            # Increment counts for each pitcher
+            for pitcher, daily_count in daily_pitcher_counts.items():
+                total_pitcher_appearances[pitcher] = total_pitcher_appearances.get(pitcher, 0) + daily_count
+        total_appearances = sum(total_pitcher_appearances.values())
+
+        # Sort by count and prepare result string
+        sorted_pitchers = sorted(total_pitcher_appearances.items(), key=lambda x: x[1], reverse=True)
+        result_string = f"⚾ {total_appearances} Pitchers Scheduled: ⚾\n\n"
+        for pitcher, count in sorted_pitchers:
+            result_string += f"🔹 {pitcher}: {count} time(s)\n"
+
+        return result_string
+
+    except Exception as e:
+        return f"❗ An error occurred: {e}"
+    
+def yf_starter_pitchers_status(qry, team=None, date=None, count=False):
+    if team is None:
+        team = yf_get_current_user_team(qry)
+        if team is None:
+            return "⚠️ No team found for the current login."
+
+    try:
+        if date is None:
+            date = datetime.now().strftime("%Y-%m-%d")
+
+        #date = "2024-03-28"
+        #team_id = 8
+        team_id = team.team_id  # Assuming team_id is available in team object
+        tk = f"{qry.get_league_key()}.t.{team_id}"
+        plys = qry.get_response(
+            f"https://fantasysports.yahooapis.com/fantasy/v2/team/{tk}/roster{';date=' + date}"
+        )
+        response_json = json.loads(plys.content.decode('utf-8'))
+        roster = response_json['fantasy_content']['team'][1]['roster']
+
+        result_string = f"{team.name.decode('utf-8')} starting pitchers for {date}\n\n"
+        result_dict = {}
+        for player_key in roster:
+            if player_key.isdigit():
+                players = roster[player_key]['players']
+                for player_number in players:
+                    try:
+                        player_data = players[player_number]['player']
+                    except:
+                        continue
+                    # Initialize variables
+                    player_name = ""
+                    position_type = ""
+                    selected_position = ""
+
+                    # Iterate through each dictionary in player_data
+                    for all_player_list in player_data:
+                        for player_list in all_player_list:
+                            try:
+                                for key, value in player_list.items():
+                                    if key == 'name':
+                                        player_name = value['full']
+                                    elif key == 'position_type':
+                                        position_type = value
+                            except:
+                                continue
+                    selected_position = player_data[1]['selected_position'][1]['position']
+                    # Output for verification
+                    #print(f"Player Name: {player_name} - Position Type: {position_type} - Selected Position: {selected_position}")
+
+                    is_starting = 0
+
+                    # Check if 'starting_status' exists in the response
+                    try:
+                        if 'starting_status' in player_data[2]:
+                            is_starting = player_data[2]['starting_status'][1].get('is_starting', 0)
+                    except:
+                        continue
+                
+                    # Check if player is a pitcher, on the bench, and starting
+
+                    if position_type == 'P' and is_starting:
+                        if player_name not in result_dict:
+                            result_dict[player_name] = 0
+                        result_dict[player_name] += 1
+                        if selected_position == 'BN':
+                            result_string += f"🔴 - {player_name} is starting today and is on your bench!\n"
+                        else:
+                            result_string += f"🟢 - {player_name} \n"
+
+
+        if count == False:        
+            return result_string if result_string else f"No pitchers are scheduled to take the mound today 🤷. Hit the free agents!"
+        else:
+            return result_dict
+            
+    except Exception as e:
+        return f"❗ An error occurred: {e}"
 
 def get_starter_count(qry):
     sc =  yf_get_starter_counts(qry)
@@ -287,22 +413,30 @@ def get_current_team_players(qry):
     team = yf_get_current_user_team(qry)
     if team is None:
         return "⚠️ No team found for the current login."
-    return yf_get_team_players(qry, team)
+    return yf_get_team_players(qry, team.team_id)
 
 
-def yf_get_team_players(query, team, formatted = True):
+def yf_get_team_players(query, team, date=None, formatted = True):
     try:
         # Using yfpy_query to get the players for the given team
-        players = query.get_team_roster_by_week(team.team_id, get_current_week(query))
+        if date is not None:
+            print(date)
+            players = query.get_team_roster_player_info_by_date(team.team_id, date)
+
+        else:
+            players = query.get_team_roster_by_week(team.team_id, get_current_week(query))
         if not players:
             return "⚠️ No players found for this team."
-
+       # print(players)
         players_list = []
         on_pitchers = False 
         players_list.append("🔹 Batters 🔹") 
-
-        for player in players.players:
-            print(player)
+        if formatted == False:
+            return players
+        
+        for player in players:
+            if player.position_type == 'P':
+                print(player)
             first_letter = player.name.first[0]
             display_name = f"{first_letter}. {player.name.last}"
 
@@ -310,15 +444,11 @@ def yf_get_team_players(query, team, formatted = True):
                 on_pitchers = True
                 players_list.append("🔹 Pitchers 🔹") 
             player_info = f" {player.selected_position.position}: {display_name} {player.editorial_team_abbr} - {player.display_position}"
-            print(player)
             players_list.append(player_info)
 
         formatted_response = f"🏅 {team.name.decode('utf-8')  } Roster:\n" + "\n".join(players_list)
-        if formatted:
-            return formatted_response
-        else:
-            return players.players
-
+        return formatted_response
+       
     except Exception as e:
         return f"❗ An error occurred: {e}"
 
@@ -328,6 +458,19 @@ def yf_get_current_user_team(query):
 
         for team in teams:
             if team.is_owned_by_current_login:
+                return team
+
+        return None  # No team is owned by the current login
+
+    except Exception as e:
+        return f"❗ An error occurred: {e}"
+    
+def yf_get_team_by_id(query, team_id):
+    try:
+        teams = query.get_league_teams()
+
+        for team in teams:
+            if team.team_id == int(team_id):
                 return team
 
         return None  # No team is owned by the current login
@@ -414,6 +557,20 @@ def get_auth_dir():
 def get_current_week(qry):
     return qry.get_league_info().current_week
 
+
+def yf_get_week_start_and_end_dates(qry, week=None):
+    if week is None:
+        week = get_current_week(qry)
+    league_scoreboard = qry.get_league_scoreboard_by_week( week)
+    matchup_start_date = league_scoreboard.matchups[0].week_start
+    matchup_end_date = league_scoreboard.matchups[0].week_end
+    start_date = datetime.strptime(matchup_start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(matchup_end_date, "%Y-%m-%d")
+
+    # Generating all dates in the range
+    date_list = [start_date + timedelta(days=x) for x in range((end_date - start_date).days + 1)]
+
+    return date_list
 
 def align_messages(messages):
     split_lines = [line.split(" | ") for line in messages if line.strip()]

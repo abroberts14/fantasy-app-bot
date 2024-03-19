@@ -66,6 +66,7 @@ class GlobalFeatures(models.Model):
     minute = fields.IntField(min_value=0, max_value=59)
     live = fields.BooleanField(default=False)
     description = fields.TextField(null=True, blank=True)  # Allow NULL and empty strings
+    private_feature = fields.BooleanField(default=False)
     def __str__(self):
         return self.name
     
