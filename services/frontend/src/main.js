@@ -32,7 +32,7 @@ import TreeTable from 'primevue/treetable';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Tooltip from 'primevue/tooltip';
-
+import Checkbox from 'primevue/checkbox';
 const app = createApp(App)
 app.use(PrimeVue, { ripple: true });
 app.use(ConfirmationService);
@@ -50,7 +50,7 @@ app.component('TreeTable', TreeTable);
 app.component('InputText', InputText);
 app.component('Card', Card);
 app.component('Dropdown', Dropdown);
-
+app.component('Checkbox', Checkbox);
 app.directive('tooltip', Tooltip);
 
 app.use(Toast, {

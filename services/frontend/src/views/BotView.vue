@@ -15,6 +15,10 @@
           <div class="text-500 w-6 md:w-2 font-medium">Name</div>
           <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{ bot.name }}</div>
         </li>
+        <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+          <div class="text-500 w-6 md:w-2 font-medium">Personal</div>
+          <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{ bot.private }}</div>
+        </li>
 
         <li v-if="bot.app" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
           <div class="text-500 w-6 md:w-2 font-medium">Status</div>
@@ -95,7 +99,7 @@
               </Column>
               <Column header="Enabled">
                   <template #body="slotProps">
-                    <input type="checkbox" :disabled="bot.app && bot.app.running" :checked="slotProps.data.enabled" @change="() => handleCheckboxChange(slotProps.data)" />
+                    <input type="checkbox" :disabled="bot.app && bot.app.running || ((slotProps.data.global_feature.private_feature && !bot.private) || (!slotProps.data.global_feature.private_feature && bot.private))" :checked="slotProps.data.enabled" @change="() => handleCheckboxChange(slotProps.data)" />
                   </template>
                   <!-- @change="handleCheckboxChange(slotProps.data) -->
               </Column>
