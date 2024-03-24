@@ -39,7 +39,7 @@ class Bots(models.Model):
     private = fields.BooleanField(default=False)
 
     class Meta:
-        unique_together = ("league_id", "groupme_bot_id")
+        unique_together = ("league_id", "groupme_bot_id", "private")
 
     def __str__(self):
         return f"{self.name}, {self.groupme_bot_id} for league {self.league_id} - created on {self.created_at}"

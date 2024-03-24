@@ -63,15 +63,15 @@ def yf_get_league_matchups(qry):
     current_week = get_current_week(qry)
     league_matchups = qry.get_league_scoreboard_by_week(current_week).matchups
      # Emoji assignments
-    highest_score_emoji = "🏆"
+    highest_score_emoji = "🥇"
     lowest_score_emoji = "🤡"
     default_emoji = "🔹"
     first_place_emoji = "🥇"
     second_place_emoji = "🥈"
-    blowout_emoji = "💣"
+    third_place_emoji = "💣"
     alert_emoji = "🚨"
 
-    formatted_matchups = f" {highest_score_emoji} League Scores: {highest_score_emoji} \n\n"
+    formatted_matchups = f"🏆 League Scores 🏆 \n\n"
     mock_data = False
     mocked_scores = {}
     # Find highest and lowest scores and biggest blowout
@@ -138,7 +138,7 @@ def yf_get_league_matchups(qry):
                 team_2_emoji = highest_score_emoji if team_2_score == highest_score else lowest_score_emoji if team_2_score == 0 else first_place_emoji if team_2_score > team_1_score else second_place_emoji
 
             matchup_line = f"{team_1_emoji} {team_1_name} - {team_1_score}\n{team_2_emoji} {team_2_name} - {team_2_score}"
-            formatted_matchups += f"{alert_emoji} {alert_emoji} LARGEST LEAD {alert_emoji} {alert_emoji} \n{matchup_line} \n\n" if is_blowout else f"{matchup_line}\n\n"
+            formatted_matchups += f"{matchup_line}\n\n"
 
     return formatted_matchups.strip()
 
@@ -162,6 +162,8 @@ def get_league_standings(qry):
             rank_str = "🥇"
         elif rank == 2:
             rank_str = "🥈"
+        elif rank == 3:
+            rank_str = "🥉"
         elif rank == last_place:
             rank_str = "🤡"
         else:
