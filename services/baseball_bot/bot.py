@@ -67,24 +67,16 @@ def yahoo_bot(function, local_data = None):
 
     logging.info(f'Function: {function}')
     try:
-        if function == "get_league_team_names":
-            text = 'Team Names For League ID: ' +str(data['league_id'])
-            text = text + "\n\n" +  yahoo_worker.get_league_team_names(yahoo_query)
-            text = text + "\n\n" 
         if function == "get_league_matchups":
             text = 'Team Matchups For League ID: ' +str(data['league_id'])
             text = text + "\n\n" +  yahoo_worker.get_league_matchups(yahoo_query)
             text = text + "\n\n" 
-        if function == "test_live":
-            text = '30 Minute Task For League ID: ' +str(data['league_id'])
-            text = text + "\n\n" + ' Next run in 30 minutes!'
-        if function == "test_daily":
-            text = 'Daily Task For League ID: ' +str(data['league_id'])
-            text = text + "\n\n" + ' Next run tomorrow!'
-        if function == "daily_waivers":
-            text = text + "\n\n" +  yahoo_worker.get_daily_waiver_activity(yahoo_query)
         if function == "get_league_standings":
             text = text + "\n\n" +  yahoo_worker.get_league_standings(yahoo_query)
+        if function == "daily_waivers":
+            text = text + "\n\n " +  str(yahoo_worker.get_daily_waiver_activity(yahoo_query))
+        if function == "current_team_players":
+            text = text + "\n\n" +  yahoo_worker.get_current_team_players(yahoo_query)
         if function == "trade_tracker":
             text = text + "\n\n" +  yahoo_worker.trade_tracker(yahoo_query)
         if function == "starter_pitchers_status":
