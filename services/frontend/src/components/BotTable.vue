@@ -17,8 +17,18 @@
             @click="copyToClipboard(getPlatformId(slotProps.data), slotProps.data)"
             class="cursor-pointer"
           >
-            {{ truncateText(getPlatformId(slotProps.data), 30) }}
+            {{ truncateText(getPlatformId(slotProps.data), 15) }}
           </span>
+        </template>
+      </Column>
+      <Column header="Private">
+        <template #body="slotProps">
+          <div v-if = "slotProps.data.private">
+              Personal
+            </div>
+            <div v-else >
+              Entire Leage
+              </div>
         </template>
       </Column>
       <Column field="running" header="Running"> 
