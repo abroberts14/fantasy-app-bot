@@ -12,6 +12,7 @@ import createPersistedState from 'pinia-plugin-persistedstate'
 import Toast from "vue-toastification";
 import PrimeVue from 'primevue/config';
 
+import '@/assets/main.css'
 import '@/assets/styles.scss';
 import 'bootstrap';
 import { useToast } from 'vue-toastification'
@@ -142,7 +143,7 @@ axios.interceptors.response.use(
       }  else {
         // The 401 error is likely due to an expired token
         usersStore.logout(null); 
-        router.push('/login');
+        router.push('/');
         toast.info("Your login session has expired. Please log in again.");
         return Promise.reject({ ...error, formattedMessage: errorMessage });
 

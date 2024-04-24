@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <!-- <section>
     <form @submit.prevent="submit">
       <div class="mb-3">
         <label for="username" class="form-label">Username:</label>
@@ -15,16 +15,22 @@
       </div>
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
-  </section>
+  </section> -->
+  <RegisterComponent />
 </template>
 
 <script>
 import { defineComponent } from 'vue';
 import useUsersStore from '@/store/users'; 
 import { useToast } from 'vue-toastification';
+import RegisterComponent from '@/components/RegisterComponent.vue'; 
 
 export default defineComponent({
-  name: 'RegisterComponent',
+  name: 'RegisterView',
+
+  components: {
+    RegisterComponent,
+  },
   data() {
     return {
       user: {

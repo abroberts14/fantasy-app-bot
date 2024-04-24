@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <NavBar />
+    <NavBar v-if="showNavBar" />
     <div class="main container">
       
       <router-view />
@@ -16,6 +16,11 @@ export default {
   components: {
     NavBar,
     LoadingSpinner,
+  },
+  computed: {
+    showNavBar() {
+      return !(this.$route.meta && this.$route.meta.hideNavBar);
+    }
   }
 }
 </script>

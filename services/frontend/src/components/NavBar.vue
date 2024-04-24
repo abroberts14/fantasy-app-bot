@@ -145,7 +145,7 @@ export default defineComponent({
   methods: {
     async logout() {
       await this.usersStore.logOut();
-      this.$router.push('/login');
+      this.$router.push('/');
     }
   }
 })
