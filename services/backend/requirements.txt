@@ -13,6 +13,5 @@ python-dateutil
 cryptography
 pybaseball
 bs4
-moviepy
 pygame
 yfpy
