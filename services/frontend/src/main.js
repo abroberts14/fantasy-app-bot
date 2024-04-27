@@ -34,6 +34,9 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Tooltip from 'primevue/tooltip';
 import Checkbox from 'primevue/checkbox';
+import AutoComplete from 'primevue/autocomplete';
+import Calendar from 'primevue/calendar';
+import FloatLabel from 'primevue/floatlabel';
 const app = createApp(App)
 app.use(PrimeVue, { ripple: true });
 app.use(ConfirmationService);
@@ -52,6 +55,9 @@ app.component('InputText', InputText);
 app.component('Card', Card);
 app.component('Dropdown', Dropdown);
 app.component('Checkbox', Checkbox);
+app.component('AutoComplete', AutoComplete);
+app.component('Calendar', Calendar);
+app.component('FloatLabel', FloatLabel);
 app.directive('tooltip', Tooltip);
 
 app.use(Toast, {

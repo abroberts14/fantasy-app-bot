@@ -83,8 +83,12 @@
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/register-bot" @click.native="collapseNavbar">Register New Bot</router-link>
-            </li>                        <li v-if="isAdmin" class="nav-item">
+            </li>                        
+            <li v-if="isAdmin" class="nav-item">
               <router-link class="nav-link" to="/admin" @click.native="collapseNavbar">Admin</router-link>
+            </li>
+            <li v-if="isAdmin" class="nav-item">
+              <router-link class="nav-link" to="/pitch-replays" @click.native="collapseNavbar">Pitch Replays</router-link>
             </li>
           </ul>
           <ul v-if="isLoggedIn" class="navbar-nav ms-auto align-items-center">

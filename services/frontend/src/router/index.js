@@ -11,6 +11,7 @@ import AdminView from '@/views/AdminView.vue'
 import useUsersStore from '@/store/users'; 
 import OAuthSuccessView from '@/views/OAuthSuccessView.vue'
 import OAuthErrorView from '@/views/OAuthErrorView.vue'
+import PitchReplaysView from '@/views/PitchReplaysView.vue'
 
 const routes = [
   {
@@ -34,7 +35,7 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: LoginView,
+    component: HomeView,
     meta: { hideNavBar: true }
 
   },
@@ -79,7 +80,12 @@ const routes = [
     path: '/oauth-error',
     name: 'OAuthError',
     component: OAuthErrorView
-  }
+  },
+  {
+    path: '/pitch-replays',
+    name: 'PitchReplays',
+    component: PitchReplaysView,
+  },
 ]
 
 const router = createRouter({
