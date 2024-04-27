@@ -42,7 +42,6 @@ def get_mp4s(player_id, date):
 
     return at_bat_pitches[batter]
 
-
 def get_video_file(play_id):
     site = requests.get('https://baseballsavant.mlb.com/sporty-videos?playId='+ play_id)
     soup = bs4.BeautifulSoup(site.text, features="lxml")
@@ -104,98 +103,72 @@ router = APIRouter()
 
 
 @router.get("/baseball/pitches")
-async def get_oauth_tokens(player_id: int, date: str ):
+async def get_pitches_by_id(player_id: int, date: str ):
+    print(f"Received player_id: {player_id}")
+    print(f"Received date: {date}")
     if not player_id:
+        print("No player_id provided")
         return {"error": "No id provided"} 
     if not date:
+        print("No date provided")
         return {"error": "No date provided"}
     
     try:
         date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d")
+        print(f"Converted date: {date}")
     except:
-        print('using orignal date', date)
+        print('Failed to convert date, using original date', date)
     try:
+        print(f"Fetching mp4s for player_id: {player_id} and date: {date}")
         token_data = {
             "id": player_id,
             'pitches': get_mp4s(player_id, date)
         }
+        print(f"Returning token_data")
         return token_data
     except DoesNotExist:
-        raise HTTPException(status_code=200, detail="OAuth token not found for the current user")
+        print("No player found with that id")
+        raise HTTPException(status_code=200, detail="No player found with that id")
 
 
 @router.get("/baseball/players/")
 async def get_players(name: Optional[str] = None):
+    print(f"Received name: {name}")
     if not name:
+        print("No name provided")
         return {"error": "No name provided"}
     
     names = name.split()
-    print('received name', names)
-    if len(names) == 1:
-        last_name = names[0]
-        print(last_name)
-        try:
-            s =  playerid_lookup(last_name, fuzzy=True)
-            print(s)
-            print(s.columns)
+    print(f"Split names: {names}")
+    try:
+        if len(names) == 1:
+            last_name = names[0]
+            print(f"Last name: {last_name}")
+            try:
+                print(f"Looking up player id for last name: {last_name}")
+                s =  playerid_lookup(last_name, fuzzy=True)
+                print(f"Received player id lookup result: {s}")
+                cleaned_df = s.dropna()
+                cleaned_df = cleaned_df.sort_values(by='mlb_played_last', ascending=False)
+                resp = cleaned_df.to_dict('records')
+                print(f"Returning response: {resp}")
+                return resp
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                return {"error": e}
+        elif len(names) > 1:
+            last_name = names[-1]
+            first_name = " ".join(names[:-1])
+            print(f"Last name: {last_name}, First name: {first_name}")
+            s =  playerid_lookup(last_name, first_name, fuzzy=True)
             cleaned_df = s.dropna()
             cleaned_df = cleaned_df.sort_values(by='mlb_played_last', ascending=False)
-
             resp = cleaned_df.to_dict('records')
-            print(resp)
+            print(f"Returning response: {resp}")
             return resp
-        except Exception as e:
-            return {"error": e}
-    elif len(names) > 1:
-        last_name = names[-1]
-        first_name = " ".join(names[:-1])
-        print(last_name, first_name)
-        s =  playerid_lookup(last_name, first_name, fuzzy=True)
-        cleaned_df = s.dropna()
-        cleaned_df = cleaned_df.sort_values(by='mlb_played_last', ascending=False)
-        resp = cleaned_df.to_dict('records')
-
-        print(resp)
-
-
-        return resp
-    else:
-        return {"error": "Invalid name format"}
-    
-
-
-def yf_get_team_players(query, team, date=None, formatted = True):
-    try:
-        # Using yfpy_query to get the players for the given team
-        if date is not None:
-            print(date)
-            players = query.get_team_roster_player_info_by_date(team.team_id, date)
-
         else:
-            players = query.get_team_roster_by_week(team.team_id, get_current_week(query))
-        if not players:
-            return "⚠️ No players found for this team."
-       # print(players)
-        players_list = []
-        on_pitchers = False 
-        players_list.append("🔹 Batters 🔹") 
-        if formatted == False:
-            return players
-        
-        for player in players:
-            if player.position_type == 'P':
-                print(player)
-            first_letter = player.name.first[0]
-            display_name = f"{first_letter}. {player.name.last}"
-
-            if "P" in player.display_position and not on_pitchers:
-                on_pitchers = True
-                players_list.append("🔹 Pitchers 🔹") 
-            player_info = f" {player.selected_position.position}: {display_name} {player.editorial_team_abbr} - {player.display_position}"
-            players_list.append(player_info)
-
-        formatted_response = f"🏅 {team.name.decode('utf-8')  } Roster:\n" + "\n".join(players_list)
-        return formatted_response
-       
+            print("Invalid name format")
+            return {"error": "Invalid name format"}
     except Exception as e:
-        return f"❗ An error occurred: {e}"
+        print(f"Error occurred: {e}")
+        return {"error": e}
