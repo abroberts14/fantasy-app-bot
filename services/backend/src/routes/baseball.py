@@ -1,16 +1,10 @@
 import os
-import base64
 import requests
-import time
-from fastapi import APIRouter, Depends, HTTPException, Query
-import cryptography.fernet as fernet
-from src.database.models import OAuthTokens, Users
-from src.schemas.users import UserOutSchema
-from src.auth.jwthandler import get_current_user
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+import concurrent.futures
+
 from typing import Optional
 from datetime import datetime
-from fastapi.responses import RedirectResponse
-
 from tortoise.exceptions import DoesNotExist
 
 from pybaseball import statcast_batter 
@@ -18,10 +12,9 @@ from pybaseball import playerid_lookup
 import pandas as pd
 import requests
 import bs4
-from io import BytesIO
-import tempfile 
 import os 
-import numpy as np
+import asyncio
+
 os.environ['SDL_AUDIODRIVER'] = 'dummy'
 # id = playerid_lookup('trout', 'mike')['key_mlbam'][0]
 # print(id)
@@ -29,6 +22,9 @@ os.environ['SDL_AUDIODRIVER'] = 'dummy'
 def get_mp4s(player_id, date):
     data = statcast_batter(date, date, player_id)
     # Get the first row
+    if data.empty:
+        return []
+    print(data)
     first_row = data.iloc[0]
     print(first_row)
     print(data.columns)
@@ -130,8 +126,44 @@ async def get_pitches_by_id(player_id: int, date: str ):
         print("No player found with that id")
         raise HTTPException(status_code=200, detail="No player found with that id")
 
+def sync_lookup_player(last_name: str, first_name: Optional[str] = None):
+    try:
+        print(f"Initiating lookup for {first_name} {last_name}")
+        s = playerid_lookup(last_name, first_name, fuzzy=True)
+        print(f"Lookup successful: {s}")
+        cleaned_df = s.dropna()
+        cleaned_df = cleaned_df.sort_values(by='mlb_played_last', ascending=False)
+        return cleaned_df.to_dict('records')
+    except Exception as e:
+        print(f"An error occurred during lookup: {e}")
+        return {"error": str(e)}
 
 @router.get("/baseball/players/")
+async def get_players(name: Optional[str] = None):
+    print(f"Received name: {name}")
+    if not name:
+        print("No name provided")
+        return {"error": "No name provided"}
+    
+    names = name.split()
+    print(f"Split names: {names}")
+    if len(names) == 1:
+        print(f"Looking up player id for last name: {names[0]}")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            result = await asyncio.get_running_loop().run_in_executor(executor, sync_lookup_player, names[0])
+        return result
+    elif len(names) > 1:
+        first_name = " ".join(names[:-1])
+        last_name = names[-1]
+        print(f"Looking up player id for last name: {last_name} and first name: {first_name}")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            result = await asyncio.get_running_loop().run_in_executor(executor, sync_lookup_player, last_name, first_name)
+        return result
+    else:
+        print("Invalid name format")
+        return {"error": "Invalid name format"}
+
+@router.get("/baseball/players-old/")
 async def get_players(name: Optional[str] = None):
     print(f"Received name: {name}")
     if not name:

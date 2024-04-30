@@ -35,8 +35,9 @@
 </div>
   </section>
 </template>
+
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent, onMounted } from 'vue';
 import useUsersStore from '@/store/users'; 
 import LoginComponent from '@/components/LoginComponent.vue'; 
 
@@ -51,6 +52,11 @@ export default defineComponent({
       const usersStore = useUsersStore(); 
       return usersStore.isAuthenticated; 
     },
+  },
+  mounted() {
+    if (this.isLoggedIn) {
+      this.$router.push('/dashboard');
+    }
   },
 });
 </script>
