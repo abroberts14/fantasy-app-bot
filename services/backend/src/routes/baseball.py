@@ -160,12 +160,19 @@ async def get_players(name: Optional[str] = None):
             last_name = names[-1]
             first_name = " ".join(names[:-1])
             print(f"Last name: {last_name}, First name: {first_name}")
-            s =  playerid_lookup(last_name, first_name, fuzzy=True)
-            cleaned_df = s.dropna()
-            cleaned_df = cleaned_df.sort_values(by='mlb_played_last', ascending=False)
-            resp = cleaned_df.to_dict('records')
-            print(f"Returning response: {resp}")
-            return resp
+            try:
+                s =  playerid_lookup(last_name, first_name, fuzzy=True)
+                print(f"Received player id lookup result: {s}")
+                cleaned_df = s.dropna()
+                print('cleaned_df')
+                cleaned_df = cleaned_df.sort_values(by='mlb_played_last', ascending=False)
+                print('sorted cleaned')
+                resp = cleaned_df.to_dict('records')
+                print(f"Returning response: {resp}")
+                return resp
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                return {"error": e}
         else:
             print("Invalid name format")
             return {"error": "Invalid name format"}
