@@ -129,6 +129,7 @@ async def get_pitches_by_id(player_id: int, date: str ):
 def sync_lookup_player(last_name: str, first_name: Optional[str] = None):
     try:
         print(f"Initiating lookup for {first_name} {last_name}")
+        # Correctly use the playerid_lookup function from pybaseball library
         s = playerid_lookup(last_name, first_name, fuzzy=True)
         print(f"Lookup successful: {s}")
         cleaned_df = s.dropna()
@@ -149,20 +150,21 @@ async def get_players(name: Optional[str] = None):
     print(f"Split names: {names}")
     if len(names) == 1:
         print(f"Looking up player id for last name: {names[0]}")
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ProcessPoolExecutor() as executor:
             result = await asyncio.get_running_loop().run_in_executor(executor, sync_lookup_player, names[0])
         return result
     elif len(names) > 1:
         first_name = " ".join(names[:-1])
         last_name = names[-1]
         print(f"Looking up player id for last name: {last_name} and first name: {first_name}")
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ProcessPoolExecutor() as executor:
             result = await asyncio.get_running_loop().run_in_executor(executor, sync_lookup_player, last_name, first_name)
         return result
     else:
         print("Invalid name format")
         return {"error": "Invalid name format"}
-
+    
+    
 @router.get("/baseball/players-old/")
 async def get_players(name: Optional[str] = None):
     print(f"Received name: {name}")
