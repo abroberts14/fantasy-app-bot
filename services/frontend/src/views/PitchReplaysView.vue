@@ -11,7 +11,7 @@
             :suggestions="players"
             :loading="loading"
             field="name"
-            :delay="300"
+            :delay="750"
             forceSelection 
             placeholder="Search player..."
             @complete="searchPlayers($event)" 
