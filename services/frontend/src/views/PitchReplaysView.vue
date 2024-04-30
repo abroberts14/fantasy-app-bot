@@ -15,13 +15,14 @@
             forceSelection 
             placeholder="Search player..."
             @complete="searchPlayers($event)" 
+            @item-select="onPlayerSelect"
             :dropdown="true" 
             id="search-player"
           />
           <label for="search-player">Search Batters</label>
         </FloatLabel>
       <FloatLabel>
-          <Calendar :showIcon="true" dateFormat="yy-mm-dd" :showButtonBar="true" v-model="calendarValue" id="calendar"></Calendar>
+          <Calendar   @month-change="onMonthChange" :showIcon="true" dateFormat="yy-mm-dd" :disabledDates="disabledDates" :showButtonBar="true" v-model="calendarValue" id="calendar"></Calendar>
           <label for="calendar">Date</label>
       </FloatLabel>
       </div>
@@ -75,6 +76,8 @@ export default defineComponent({
       searchQuery: '',
       selectedPlayer: {'name': '', 'id': 0}, // Store selected player data
       calendarValue: this.getYesterdayDate(),
+      disabledDates: []
+  
     };
   },
 
@@ -93,6 +96,61 @@ export default defineComponent({
   },
 
   methods: {
+    onPlayerSelect(event) {
+      console.log('Player selected:', event);
+      this.selectedPlayer = event.value;
+      console.log('Selected player:', this.selectedPlayer);
+      if (this.selectedPlayer && this.selectedPlayer.id) {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+        
+        // Format dates as 'YYYY-MM-DD'
+        const startDate = thirtyDaysAgo.toISOString().slice(0, 10);
+        const endDate = today.toISOString().slice(0, 10);
+
+        console.log(`Fetching valid dates for ${startDate} to ${endDate}`);
+        this.fetchValidDates(this.selectedPlayer.id, thirtyDaysAgo, today);
+      }
+    },
+    onMonthChange(date) {
+      // date parameter is the date of the month shown in the calendar after the change
+      console.log('Month changed:', date);  
+      const startOfMonth = new Date(date.year, date.month -1, 1);
+      const endOfMonth = new Date(date.year, date.month, 0); // Last day of the month
+
+      console.log(`Month change fetch valid dates from ${startOfMonth} to ${endOfMonth}`);
+      this.fetchValidDates(this.selectedPlayer.id, startOfMonth, endOfMonth);
+    },
+
+
+    fetchValidDates(playerId, startDate, endDate) {
+      if (!startDate || !endDate) {
+        console.error('fetchValidDates requires both startDate and endDate.');
+        this.disabledDates = []; // Handle case where no valid dates are available
+
+        return;  // Exit the function if either date is not provided
+      }
+      const params = new URLSearchParams({
+        start_date: startDate.toISOString().slice(0, 10), // format as 'YYYY-MM-DD'
+        end_date:  endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
+      }).toString();
+
+      axios.get(`/baseball/player-valid-dates/${playerId}?${params}`)
+        .then(response => {
+          if (response.data) {
+            this.disabledDates = response.data.map(date => new Date(date));
+          } else {
+            this.disabledDates = []; // Handle case where no valid dates are available
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching valid dates:', error);
+          this.disabledDates = [];
+        })
+        .finally(() => {
+          console.log('Disabled dates:', this.disabledDates);
+        });
+    },
     getYesterdayDate() {
       const today = new Date();
       const yesterday = new Date(today);
@@ -114,12 +172,14 @@ export default defineComponent({
                 id: player.key_mlbam  // Ensure this matches your data structure
             }));
             console.log('Fetched players:', this.players);  // Log to debug
+            
         })
         .catch(error => {
             console.error('Error fetching players:', error);
         })
         .finally(() => {
             this.loading = false;
+
         });
     },
 

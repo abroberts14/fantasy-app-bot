@@ -1,10 +1,10 @@
 import os
 import requests
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 import concurrent.futures
 
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from tortoise.exceptions import DoesNotExist
 
 from pybaseball import statcast_batter 
@@ -95,8 +95,56 @@ def get_all_event_videos(game_id, batter, player_id):
 
 
 
+def get_missing_dates(player_id: int, start_date: str = None, end_date: str = None):
+    print(f"Fetching data for player ID {player_id} between {start_date} and {end_date}")
+
+    # Determine the date range
+    if not start_date or not end_date:
+        end_date = datetime.today()
+        start_date = end_date - timedelta(days=30)
+    else:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+    print(f"Fetching data for player ID {player_id} between {start_date} and {end_date}")
+    # Generate all dates within the specified range
+    num_days = (end_date - start_date).days
+    all_dates = [start_date + timedelta(days=x) for x in range(num_days + 1)]
+    all_date_strings = [date.strftime('%Y-%m-%d') for date in all_dates]
+
+    try:
+        # Fetch data for the given player ID within the specified date range
+        data = statcast_batter(start_dt=start_date.strftime('%Y-%m-%d'), end_dt=end_date.strftime('%Y-%m-%d'), player_id=player_id)
+        if data.empty:
+            return all_date_strings  # Return all dates if no data is fetched
+        
+        # Find all unique dates where data is available
+        valid_dates_strings = data['game_date'].dropna().unique().tolist()
+        valid_dates_strings.sort()
+
+        # Find missing dates by comparing sets
+        valid_dates_set = set(valid_dates_strings)
+        missing_dates = [date for date in all_date_strings if date not in valid_dates_set]
+
+        return missing_dates
+    except Exception as e:
+        raise ValueError(f"Failed to fetch or process data for player ID {player_id}: {str(e)}")
+    
+
 router = APIRouter()
 
+@router.get("/baseball/player-valid-dates/{player_id}")
+async def fetch_valid_dates(player_id: int, start_date: str = Query(None), end_date: str = Query(None)):
+    try:
+        # Call get_missing_dates with optional start and end date parameters
+        missing_dates = get_missing_dates(player_id, start_date, end_date)
+        if not missing_dates:
+            return []
+        return missing_dates
+    except ValueError as ve:
+        return {"error": str(ve)}
+    except Exception as e:
+        return {"error": f"An unexpected error occurred: {str(e)}"}
 
 
 @router.get("/baseball/pitches")
