@@ -39,21 +39,26 @@
 
   <section class="video-section">
     <div v-if="currentPitches.length > 0">
-      <VideoPlayer :videos="currentPitches" :reset-player="resetPlayer" :loading="videoPlayerLoading" />
+
+      <div v-for="(video, index) in currentPitches" :key="index" class="video-container">
+        <MobileVideoPlayer :videoUrl="video.mp4"  autoplay="false"  />
+      </div>
     </div>
-    <div v-else>
-      <p> No pitches found. </p>
-    </div>
+      <div v-else>
+        <p> No pitches found. </p>
+      </div>
   </section>
 </template>
 
 <script>
+
 import { defineComponent } from 'vue';
 import useUsersStore from '@/store/users';
 import LoginComponent from '@/components/LoginComponent.vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
 import axios from 'axios';
+import MobileVideoPlayer from '@/components/MobileVideoPlayer.vue';
 
 export default defineComponent({
   name: 'HomeView',
@@ -61,6 +66,7 @@ export default defineComponent({
   components: {
     LoginComponent,
     VideoPlayer,
+    MobileVideoPlayer,
     LoadingSpinner
   },
 
@@ -76,8 +82,10 @@ export default defineComponent({
       searchQuery: '',
       selectedPlayer: {'name': '', 'id': 0}, // Store selected player data
       calendarValue: this.getYesterdayDate(),
-      disabledDates: []
-  
+      disabledDates: [],
+      screenWidth: window.innerWidth,
+      screenHeight: window.innerHeight
+
     };
   },
 
@@ -192,6 +200,7 @@ export default defineComponent({
       this.$nextTick(() => {
         this.resetPlayer = false;
       });
+      console.log('currentPitches:', this.currentPitches);
       axios.get('/baseball/pitches', { params: { player_id: this.selectedPlayer.id, date: this.formattedCalendarValue } })
         .then(response => {
           this.$router.push({ query: { date:  this.formattedCalendarValue, name:this.selectedPlayer.name, playerId: this.selectedPlayer.id } });
@@ -225,6 +234,8 @@ export default defineComponent({
       this.$nextTick(() => {
         this.resetPlayer = false;
       });
+      console.log('currentPitches:', this.currentPitches);
+      console.log('mp4 ', this.currentPitches[0].mp4);
     },
 
     handleError(error) {
@@ -256,8 +267,8 @@ export default defineComponent({
 
 <style scoped>
 .card-settings {
-  width: 50rem;
-  overflow: hidden;
+  width: auto;;
+  overflow:auto;
   
 }
 
@@ -303,6 +314,11 @@ export default defineComponent({
   align-items: center; /* Center align the button and checkbox vertically */
   gap: 20px; /* Space between the button and the checkbox */
   text-align: center;}
+
+
+.video-container {
+  margin-bottom: 20px; /* Adjust the gap size as needed */
+}
 
 </style>
 

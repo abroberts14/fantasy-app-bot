@@ -11,10 +11,10 @@ import { createPinia } from 'pinia'
 import createPersistedState from 'pinia-plugin-persistedstate'
 import Toast from "vue-toastification";
 import PrimeVue from 'primevue/config';
-
+import 'primeflex/primeflex.css';
 import '@/assets/main.css'
 import '@/assets/styles.scss';
-import 'bootstrap';
+import 'primevue/resources/themes/lara-light-green/theme.css';
 import { useToast } from 'vue-toastification'
 
 import Button from 'primevue/button';
@@ -37,8 +37,24 @@ import Checkbox from 'primevue/checkbox';
 import AutoComplete from 'primevue/autocomplete';
 import Calendar from 'primevue/calendar';
 import FloatLabel from 'primevue/floatlabel';
+import Menubar from 'primevue/menubar';
 const app = createApp(App)
-app.use(PrimeVue, { ripple: true });
+app.use(PrimeVue, {
+  rippling: true,
+  // pt: {
+  //     floatlabel: {
+  //         root: {
+  //             class: ' text-900'
+  //         }
+  //     },
+  //     stepperpanel: { 
+  //       header: {
+  //         class: ' text-900 '
+        
+  //       }
+  //     }
+  // }
+});
 app.use(ConfirmationService);
 app.component('Button', Button);
 app.component('Chip', Chip);
@@ -58,6 +74,7 @@ app.component('Checkbox', Checkbox);
 app.component('AutoComplete', AutoComplete);
 app.component('Calendar', Calendar);
 app.component('FloatLabel', FloatLabel);
+app.component('Menubar', Menubar);
 app.directive('tooltip', Tooltip);
 
 app.use(Toast, {

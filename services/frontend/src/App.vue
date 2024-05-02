@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <NavBar v-if="showNavBar" />
+    <NewNavBar v-if="showNavBar" />
     <div class="main container">
       
       <router-view />
@@ -9,12 +9,13 @@
 </template>
 
 <script>
-import NavBar from '@/components/NavBar.vue'
+import NewNavBar from '@/components/NewNavBar.vue'
+
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 export default {
   components: {
-    NavBar,
+    NewNavBar,
     LoadingSpinner,
   },
   computed: {

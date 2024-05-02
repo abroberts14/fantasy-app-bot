@@ -17,14 +17,14 @@
       <template #content="{ nextCallback }">
         <p v-if="!oauthTokens || oauthTokens.length == 0"  class="text-400" >Note: you must connect to Yahoo to access private leagues, visit your <router-link to="/profile">profile</router-link> to setup your yahoo integration</p>
 
-            <div class="flex flex-column h-12rem">
-              <div class="mb-3">
-                <label for="bot_name" class="form-label">Bot Name:</label>
-                <input type="text" id="bot_name" v-model="bot.name"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+            <div class="flex flex-column  justify-center  h-12rem">
+              <div class="mb-3 ">
+                <label for="bot_name" >Bot Name:</label>
+                <InputText  class="flex lg:w-25rem md:w-20rem sm:w-18rem   w-18rem"  type="text" id="bot_name" v-model="bot.name"  :disabled="!oauthTokens || oauthTokens.length == 0"   />
               </div>
               <div class="mb-3">
-                <label for="league_id" class="form-label">Yahoo League ID:</label>
-                <input type="text" id="league_id" v-model="bot.league_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+                <label for="league_id"  >Yahoo League ID:</label>
+                <InputText   class="flex lg:w-25rem md:w-20rem sm:w-18rem   w-18rem"  type="text" id="league_id" v-model="bot.league_id"  :disabled="!oauthTokens || oauthTokens.length == 0"   />
                 
               </div>
               
@@ -32,26 +32,26 @@
 
             <div class="flex flex-column h-16rem">
               <div class="mb-3 d-flex align-items-center">
-                <label for="personal" class="form-label mr-2">Personal:</label>
+                <label for="personal" class="   mr-2">Personal:</label>
                 <Checkbox id="personal" v-model="personalRef" :binary="true" @change="filterFeatures"/>
               </div>
               <div class="mb-3 ">
-                  <label for="timezone" class="form-label ">Timezone:</label>
-                  <Dropdown v-model="selectedTimezone" :options="timezones"   optionLabel="label" placeholder="Select a timezone"   class="flex lg:w-25rem"/>
+                  <label for="timezone" class="   ">Timezone:</label>
+                  <Dropdown v-model="selectedTimezone" :options="timezones"   optionLabel="label" placeholder="Select a timezone"   class="flex lg:w-25rem md:w-20rem sm:w-18rem   w-18rem"/>
                 </div>
               <div class="mb-3">
-                <label for="chat_type" class="form-label">Message Platform:</label>
-                <Dropdown v-model="selectedPlatform" :options="platforms"  optionLabel="Platform" placeholder="Select a platform for delivering messages"  :highlightOnSelect="true"       @change="onPlatformChange"  class="flex lg:w-25rem" />
+                <label for="chat_type"  >Message Platform:</label>
+                <Dropdown v-model="selectedPlatform" :options="platforms"  optionLabel="Platform" placeholder="Select a message platform"  :highlightOnSelect="true"       @change="onPlatformChange"  class="flex lg:w-25rem md:w-20rem w-18rem 	" />
               </div>
            
               <div class="mb-3">
                 <div v-if="selectedPlatform.Platform === 'GroupMe'" >
-                  <label for="groupme_bot_id" class="form-label">GroupMe Bot ID:</label>
-                  <input type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+                  <label for="groupme_bot_id"  >GroupMe Bot ID:</label>
+                  <InputText class="flex lg:w-25rem md:w-20rem sm:w-18rem   w-18rem" type="text" id="groupme_bot_id" v-model="bot.groupme_bot_id"  :disabled="!oauthTokens || oauthTokens.length == 0"   />
                 </div>
                 <div v-else-if="selectedPlatform.Platform === 'Discord'" >
-                  <label for="discord_webhook_url" class="form-label">Discord Webhook URL:</label>
-                  <input type="text" id="discord_webhook_url" v-model="bot.discord_webhook_url"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
+                  <label for="discord_webhook_url"  >Discord Webhook URL:</label>
+                  <InputText  class="flex lg:w-25rem md:w-20rem sm:w-18rem   w-18rem"  type="text" id="discord_webhook_url" v-model="bot.discord_webhook_url"  :disabled="!oauthTokens || oauthTokens.length == 0"   />
                 </div>
               </div>
           </div>
@@ -96,34 +96,12 @@
 
           <div class="flex justify-content-start py-4 gap-2">
               <Button label="Back" icon="pi pi-arrow-up" iconPos="right" severity="secondary" @click="prevCallback" />
-              <Button label="Next" icon="pi pi-arrow-down" iconPos="right" @click="nextCallback" />
+              <button type="submit" class="btn btn-primary"  :disabled="!oauthTokens || oauthTokens.length == 0" @click="submit">Submit</button>
           </div>
       </div>
 </template>
     </StepperPanel>
-    <StepperPanel header="Payment (not complete)">
-        <template #content="{ prevCallback }">
-            <div class="flex flex-column  h-12rem">
-              <div class="mb-3">
-                <label for="card_number" class="form-label">Card Number:</label>
-                <input type="text" id="card_number"   :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
-              </div>
-              <div class="mb-3">
-                <label for="expiry_date" class="form-label">Expiry Date:</label>
-                <input type="text" id="expiry_date"   :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
-              </div>
-              <div class="mb-3">
-                <label for="cvv" class="form-label">CVV:</label>
-                <input type="text" id="cvv"  :disabled="!oauthTokens || oauthTokens.length == 0" class="form-control" />
-              </div>
-            </div>
-            <div class="flex py-8 gap-2">
-                <Button label="Back" severity="secondary" icon="pi pi-arrow-up" iconPos="right" @click="prevCallback" />
-                <button type="submit" class="btn btn-primary"  :disabled="!oauthTokens || oauthTokens.length == 0" @click="submit">Submit</button>
-
-            </div>
-        </template>
-    </StepperPanel>
+   
 </Stepper>
 
 </template>

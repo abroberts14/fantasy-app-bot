@@ -55,34 +55,78 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
+
 }
 
 body {
   min-height: 100vh;
   color: var(--color-text);
   background: var(--color-background);
-  /* transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale; */
+  width: 100%; /* Default to 100% width */
+  padding: 0 15px; /* Adding a tiny bit of padding */
+  margin: auto; /* Centering content horizontally */
+
+}
+
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .p-menubar {
+    position: fixed;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+  .p-menubar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto; /* Centering content horizontally */
+  
+    width: 100%;
+  }
+}
+.data-table-center th,
+.data-table-center td {
+  text-align: left;
+
+}
+
+.debug-border-red {
+  border: 1px solid red; /* You can change the color to make it stand out */
+}
+.debug-border-blue {
+  border: 1px solid blue; /* You can change the color to make it stand out */
+}
+.debug-border-green {
+  border: 1px solid green; /* You can change the color to make it stand out */
+}
+/* Medium screens (e.g., tablets) */
+@media (min-width: 768px) and (max-width: 1200px) {
+  body {
+    width: 90%; /* Keep 100% width on medium screens */
+
+  }
+}
+/* Medium screens (e.g., tablets) */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  body {
+    width: 75%; /* Keep 100% width on medium screens */
+
+  }
+}
+
+/* Large screens */
+@media (min-width: 1600px) {
+  body {
+    width: 60%; /* Reduce to 60% width on larger screens */
+
+  }
 }

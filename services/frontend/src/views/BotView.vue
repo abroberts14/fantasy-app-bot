@@ -55,24 +55,25 @@
 
 
           <div v-if="bot.groupme_bot_id ">
-            <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
-
-              <div class="text-500 md:w-2 font-medium flex-shrink-0">GroupMe Bot ID</div>
-              <div class="text-900 flex-grow">{{bot.groupme_bot_id}}</div>
+   
+            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+              <div class="text-500 w-6 md:w-2 font-medium">GroupMe Bot ID</div>
+              <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{bot.groupme_bot_id}}</div>
             </li>
+
           </div>
           <div v-else >
-            <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
-
-              <div class="text-500 md:w-2 font-medium flex-shrink-0">Discord Webhook:</div>
-             <div class="text-900 flex-grow">{{bot.discord_webhook_url}}</div>
+         
+            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+              <div class="text-500 w-6 md:w-2 font-medium">Discord Webhook</div>
+              <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{{bot.discord_webhook_url}}</div>
             </li>
           </div>
         
         <li class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
 
 
-          <DataTable :value="bot.features"  selectionMode="single" dataKey="id" 
+          <DataTable class="data-table-center" :value="bot.features"  selectionMode="single" dataKey="id" 
           :metaKeySelection="false"    @rowSelect="onRowSelect" @rowUnselect="onRowUnselect"   stripedRows>
 
             <Column header="Name">
@@ -109,8 +110,8 @@
 
         <li v-if="isAdmin || userOwnsBot" class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
           <div class="text-500 w-6 md:w-2 font-medium">Actions</div>
-          <div class="text-900 flex justify-content-start py-4 gap-2">
-            <Button :disabled="!featuresChanged" @click="updateBot" label="Update Bot" severity="info" />
+          <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
+            <Button :disabled="!featuresChanged" @click="updateBot" label="Update Bot" severity="info" style="margin-right: 10px;" />
 
             <SplitButton v-if="isAdmin" label="Visit" icon="pi pi-cog" :model="adminItems" raised rounded @click="visit" severity="secondary"></SplitButton>
 

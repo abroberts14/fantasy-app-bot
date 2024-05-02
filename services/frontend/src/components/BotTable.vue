@@ -1,6 +1,6 @@
 <template>
   
-    <DataTable :value="bots" stripedRows paginator :rows="20" :loading="!loaded" :rowsPerPageOptions="[5, 10, 20, 50]" >
+    <DataTable :value="bots" stripedRows paginator :rows="20" :loading="!loaded" :rowsPerPageOptions="[5, 10, 20, 50]" class="data-table-center" >
       <Column field="name" header="Bot Name" sortable ></Column>
       <Column field="league_id" header="League ID"></Column>
       <Column header="Platform">
@@ -139,4 +139,5 @@ export default defineComponent({
   .cursor-pointer {
     cursor: pointer;
   }
+
 </style>

@@ -1,7 +1,16 @@
 <template>
 
   <div class="video-container" style="position: relative;">
+    <template v-if="isMobile">
+      <!-- Render links for mobile users -->
+      <!-- <a :href="currentVideo" target="_blank">Open Video {{ currentVideoIndex + 1 }}</a>
+      <a ref="videoLink" :href="currentVideo" target="_blank" @click.prevent="autoPlayNextVideo">Open Video {{ currentVideoIndex + 1 }}</a> -->
+      <video ref="videoPlayer" @ended="playNextVideo"  controls>
+            <source :src="currentVideo" type="video/mp4">
+        </video>
 
+    </template>
+    <template v-else>
         <video ref="videoPlayer" @ended="playNextVideo"  controls>
             <source :src="currentVideo" type="video/mp4">
         </video>
@@ -45,14 +54,14 @@
             Home Run Parks: {{ currentVideoStats.hr_ct }} / 30
           </span><br v-if="currentVideoStats.hr_ct !== undefined">
         </div>
-      <div class="">
-        <Button @click="playPreviousVideo" :disabled="currentVideoIndex === 0" style="margin-right: 10px;">Previous Video</Button>
-        <Button @click="playNextVideo" :disabled="currentVideoIndex === videos.length - 1" style="margin-right: 10px;">Next Video</Button>
-        <Dropdown v-model="playbackSpeed" :options="playbackOptions" optionLabel="label" optionValue="value" @change="changePlaybackSpeed" style="width: 100px;" />
-      </div>
-    </div>
+        <div class="">
+          <Button @click="playPreviousVideo" :disabled="currentVideoIndex === 0" style="margin-right: 10px;">Previous Video</Button>
+          <Button @click="playNextVideo" :disabled="currentVideoIndex === videos.length - 1" style="margin-right: 10px;">Next Video</Button>
+          <Dropdown v-model="playbackSpeed" :options="playbackOptions" optionLabel="label" optionValue="value" @change="changePlaybackSpeed" style="width: 100px;" />
+        </div>
+    </template>
+  </div>
   </template>
-  
   <script>
   
   export default {
@@ -68,7 +77,8 @@
           { label: '1.5x', value: 1.5 },
           { label: '2x', value: 2 },
         ],
-        
+        isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
       };
     },
     computed: {
@@ -80,8 +90,11 @@
       }
     },
     mounted() {
-      this.$refs.videoPlayer.play();
+      if (!this.isMobile) {
+       // this.$refs.videoPlayer.play();
+        this.updateVideoLink();
 
+      }
     },
     props: ['videos', 'resetPlayer'],
     watch: {
@@ -138,6 +151,23 @@
             console.log("currentVideoIndex: ", this.currentVideoIndex);
             //this.$refs.videoPlayer.play();
             // Reset all other values here...
+        },
+        updateVideoLink() {
+          if (this.isMobile) {
+            this.$nextTick(() => {
+              this.$refs.videoLink.href = this.currentVideo;
+            });
+          } else {
+            this.$refs.videoPlayer.src = this.currentVideo;
+            this.$refs.videoPlayer.play();
+            this.$refs.videoPlayer.playbackRate = this.playbackSpeed;
+          }
+        },
+        autoPlayNextVideo() {
+          this.playNextVideo();
+          if (this.currentVideoIndex < this.videos.length - 1) {
+            this.$refs.videoLink.click();
+          }
         },
 
     },

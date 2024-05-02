@@ -27,8 +27,10 @@ allowed_origins = [
     "https://dolphin-app-n3ezl.ondigitalocean.app",  # Production frontend
     "https://draftwarroom.com",  # Another production frontend
     "http://167.99.4.120:8000",
-    "http://167.99.4.120"
-]
+    "http://167.99.4.120",
+    "http://192.168.1.170:5173",
+     "http://192.168.1.170:5000",
+    ]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,    
