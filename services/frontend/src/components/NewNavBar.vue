@@ -8,7 +8,7 @@
 </router-link>
         </template>
         <template #end v-if="isLoggedIn">
-          <button class="btn btn-secondary btn-sm" @click="logout">Log Out</button>
+          <Button class="p-button-sm" severity="secondary" @click="logout">Log Out</Button>
         </template>
       </Menubar>
     </div>
@@ -49,10 +49,15 @@ export default defineComponent({
       items
     };
   },
+  computed: {
+    isLoggedIn() {
+      return this.usersStore.isAuthenticated;
+    }
+  },
   methods: {
     async logout() {
       await this.usersStore.logOut();
-      router.push('/');
+      this.$router.push('/login');
     }
   }
 })

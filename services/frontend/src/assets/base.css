@@ -118,6 +118,17 @@ body {
   text-align: left;
 
 }
+@media (max-width: 769px) {
+  .col-league-id, .col-platform, .col-platform-id, .col-private {
+    display: none;
+  }
+}
+/* Medium screens (e.g., tablets) */
+@media (min-width: 769px) and (max-width: 1000px) {
+  .col-league-id, .col-platform-id, .col-private {
+    display: none;
+  }
+}
 
 .debug-border-red {
   border: 1px solid red; /* You can change the color to make it stand out */

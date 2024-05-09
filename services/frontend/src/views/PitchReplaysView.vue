@@ -52,7 +52,7 @@
 
         
 
-        <div>
+        <div v-if="userTokenPresent">
             <Button @click="syncMyPlayers">Sync My Players From Yahoo</Button>
             <div v-if="batters.length > 0">
               <p>My Players:</p>
@@ -105,7 +105,9 @@ export default defineComponent({
       disabledDates: [],
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
-      batters: []
+      batters: [],
+      userTokenPresent: false,
+      oauth_response: null
     };
   },
 
@@ -128,6 +130,25 @@ export default defineComponent({
   },
 
   methods: {
+    async  fetchUserTokens() {
+      try {
+
+        const response = await axios.get(`/oauth/yahoo/tokens`, {
+          params: {
+            user_id: this.user.id
+          }
+        });        
+        console.log('API Response:', response.data);
+        this.oauth_response = response.data;
+      } catch (error) {
+        console.error('Failed to fetch Yahoo integration:', error);
+      }
+      finally {
+        console.log("oauth_respons length: ", this.oauth_response);
+        this.userTokenPresent = this.oauth_response;
+        console.log("userTokenPresent: ", this.userTokenPresent);
+      }
+    },
     async fetchMyPlayers() {
       const usersStore = useUsersStore();
       if (!usersStore.isAuthenticated) {
@@ -328,7 +349,7 @@ export default defineComponent({
       this.calendarValue = this.$route.query.date;
       console.log("Setting from route query:", this.calendarValue);
     }
-
+    this.fetchUserTokens();
     this.fetchMyPlayers();
     this.fetchPitches();
   },

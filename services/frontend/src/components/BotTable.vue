@@ -1,56 +1,46 @@
 <template>
-  
-    <DataTable :value="bots" stripedRows paginator :rows="20" :loading="!loaded" :rowsPerPageOptions="[5, 10, 20, 50]" class="data-table-center" >
-      <Column field="name" header="Bot Name" sortable ></Column>
-      <Column field="league_id" header="League ID"></Column>
-      <Column header="Platform">
-        <template #body="slotProps">
-          {{ getPlatformType(slotProps.data) }}
-        </template>
-      </Column>
-
-      <Column header="Platform ID">
-        <template #body="slotProps">
-          <span 
-            :key="tooltipKey"
-            v-tooltip="copiedText === getPlatformId(slotProps.data) ? 'Copied to clipboard!' : getTooltipContent(slotProps.data)"
-            @click="copyToClipboard(getPlatformId(slotProps.data), slotProps.data)"
-            class="cursor-pointer"
-          >
-            {{ truncateText(getPlatformId(slotProps.data), 15) }}
-          </span>
-        </template>
-      </Column>
-      <Column header="Private">
-        <template #body="slotProps">
-          <div v-if = "slotProps.data.private">
-              Personal
-            </div>
-            <div v-else >
-              Entire Leage
-              </div>
-        </template>
-      </Column>
-      <Column field="running" header="Running"> 
-          <template #body="slotProps">
-            <div v-if = "slotProps.data.app">
-              <i class="pi" :class="{ 'pi-check-circle text-green-500': slotProps.data.app.running, 'pi-times-circle text-red-400': !slotProps.data.app.running }"></i>
-            </div>
-            <div v-else >
-              <i class="pi pi-times-circle text-red-400"></i>
-              </div>
-          </template>
-      </Column>
-
-      <Column header="Actions">
-        <template #body="slotProps">
-          <router-link  class="btn btn-primary btn-sm raised" :to="{name: 'Bot', params:{id: slotProps.data.id}}">View</router-link>
-        </template>
-      </Column>
-    </DataTable>
-    <div v-if="bots && !bots.length">
-      <p>No fantasy chat bots exist. <router-link to="/register-bot">Register a new bot</router-link></p>
-    </div>
+  <DataTable :value="bots" stripedRows paginator :rows="20" :loading="!loaded" :rowsPerPageOptions="[5, 10, 20, 50]" class="data-table-center">
+    <Column field="name" header="Bot Name" sortable class="col-bot-name"></Column>
+    <Column field="league_id" header="League ID" class="col-league-id"></Column>
+    <Column header="Platform" class="col-platform">
+      <template #body="slotProps">
+        {{ getPlatformType(slotProps.data) }}
+      </template>
+    </Column>
+    <Column header="Platform ID" class="col-platform-id">
+      <template #body="slotProps">
+        <span :key="tooltipKey" v-tooltip="copiedText === getPlatformId(slotProps.data) ? 'Copied to clipboard!' : getTooltipContent(slotProps.data)" @click="copyToClipboard(getPlatformId(slotProps.data), slotProps.data)" class="cursor-pointer">
+          {{ truncateText(getPlatformId(slotProps.data), 15) }}
+        </span>
+      </template>
+    </Column>
+    <Column header="Private" class="col-private">
+      <template #body="slotProps">
+        <div v-if="slotProps.data.private">Personal</div>
+        <div v-else>Entire League</div>
+      </template>
+    </Column>
+    <Column field="running" header="Running" class="col-running">
+      <template #body="slotProps">
+        <div v-if="slotProps.data.app">
+          <i class="pi" :class="{'pi-check-circle text-green-500': slotProps.data.app.running, 'pi-times-circle text-red-400': !slotProps.data.app.running}"></i>
+        </div>
+        <div v-else>
+          <i class="pi pi-times-circle text-red-400"></i>
+        </div>
+      </template>
+    </Column>
+    <Column header="Actions" class="col-actions">
+      <template #body="slotProps">
+        <router-link  :to="{name: 'Bot', params:{id: slotProps.data.id}}">
+        <Button icon="pi pi-pencil" class="p-button-sm" severity="info" label="View"></Button>
+        </router-link>
+      </template>
+    </Column>
+  </DataTable>
+  <div v-if="bots && !bots.length">
+    <p>No fantasy chat bots exist. <router-link to="/register-bot">Register a new bot</router-link></p>
+  </div>
   </template>
   
 
