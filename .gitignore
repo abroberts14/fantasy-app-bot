@@ -36,3 +36,4 @@ services/baseball_bot/bot_local.py
 docker-compose.yml
 docker-compose.yml
 services/backend/private.json
+services/backend/token.json

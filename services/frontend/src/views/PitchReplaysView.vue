@@ -17,20 +17,28 @@
             @complete="searchPlayers($event)" 
             @item-select="onPlayerSelect"
             :dropdown="true" 
+            :disabled="isPageLoading"
             id="search-player"
           />
           <label for="search-player">Search Batters</label>
         </FloatLabel>
-      <FloatLabel>
-          <Calendar   @month-change="onMonthChange" :showIcon="true" dateFormat="yy-mm-dd"  :showButtonBar="true" v-model="calendarValue" id="calendar"></Calendar>
-          <label for="calendar">Date</label>
-      </FloatLabel>
+          <div class="calendar-container">
+            <FloatLabel>
+
+              <Calendar   @month-change="onMonthChange" :disabledDates="disabledDates" :disabled="calendarLoading" :showIcon="true" dateFormat="yy-mm-dd"  :showButtonBar="true" v-model="calendarValue"  :maxDate="todayValue"  id="calendar"></Calendar>
+              <label for="calendar">Date</label>
+              <div v-if="calendarLoading" class="calendar-loading-overlay">
+                <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8"></ProgressSpinner>          
+              </div>
+            </FloatLabel>
+
+        </div>
       </div>
     </template>
     <template #footer>
       <div class="footer-buttons">
-        <Button label="Apply Filter" @click="fetchPitches" />
-        <Checkbox v-model="paOnly" inputId="plateAppearanceOnly" name="plateAppearanceOnly" binary class="filter-checkbox" />
+        <Button :disabled="isPageLoading" label="Apply Filter" @click="fetchPitches" />
+        <Checkbox :disabled="isPageLoading" v-model="paOnly" inputId="plateAppearanceOnly" name="plateAppearanceOnly" binary class="filter-checkbox" />
        <label for="plateAppearanceOnly">Plate Appearance Results Only</label>
       </div>
     </template>
@@ -44,7 +52,7 @@
       <!-- <div v-for="(video, index) in currentPitches" :key="index"> 
         <MobileVideoPlayer :videoUrl="video.mp4"  :videos="currentPitches"  autoplay="false"  />
         </div> -->
-        <MediaPlayer :videos="currentPitches"  autoplay="false"  />
+        <MediaPlayer :videos="currentPitches" :reset="videoPlayerLoading"  autoplay="false"  />
 
     </div>
       <div v-else>
@@ -95,19 +103,20 @@ export default defineComponent({
       currentPitches: [],
       pitches: [],
       paOnly: true,
-      resetPlayer: false,
       videoPlayerLoading: false,
       players: [],
       loading: false,
       searchQuery: '',
       selectedPlayer: {'name': '', 'id': 0}, // Store selected player data
       calendarValue: this.getYesterdayDate(),
+      calendarLoading: false,
       disabledDates: [],
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
       batters: [],
       userTokenPresent: false,
-      oauth_response: null
+      oauth_response: null,
+      todayValue: this.getYesterdayDate(false),
     };
   },
 
@@ -120,13 +129,16 @@ export default defineComponent({
       const usersStore = useUsersStore(); 
       return usersStore.stateUser; 
     },
+    isPageLoading() {
+      return this.videoPlayerLoading || this.calendarLoading;
+    },
     formattedCalendarValue() {
       if (this.calendarValue) {
         const date = new Date(this.calendarValue);
         return date.toISOString().slice(0, 10);
       }
       return null;
-   },
+   }
   },
 
   methods: {
@@ -223,21 +235,25 @@ export default defineComponent({
     fetchValidDates(playerId, startDate, endDate) {
       if (!startDate || !endDate) {
         console.error('fetchValidDates requires both startDate and endDate.');
-        this.disabledDates = []; // Handle case where no valid dates are available
-
-        return;  // Exit the function if either date is not provided
+        this.disabledDates = [];
+        return;
       }
+
       const params = new URLSearchParams({
         start_date: startDate.toISOString().slice(0, 10), // format as 'YYYY-MM-DD'
-        end_date:  endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
+        end_date: endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
       }).toString();
-
+      this.calendarLoading = true;
       axios.get(`/baseball/player-valid-dates/${playerId}?${params}`)
         .then(response => {
           if (response.data) {
+            // Assume response.data contains the disabled dates
             this.disabledDates = response.data.map(date => new Date(date));
+            this.disabledDates.push(new Date());
+            // Find the latest date that is not disabled
+            this.updateSelectedDate(startDate, endDate);
           } else {
-            this.disabledDates = []; // Handle case where no valid dates are available
+            this.disabledDates = [];
           }
         })
         .catch(error => {
@@ -246,15 +262,50 @@ export default defineComponent({
         })
         .finally(() => {
           console.log('Disabled dates:', this.disabledDates);
+          this.calendarLoading = false;
         });
     },
-    getYesterdayDate() {
+
+    updateSelectedDate(startDate, endDate) {
+      let latestValidDate = null;
+
+      // Create a loop from end of month to start of month
+      for (let d = endDate; d >= startDate; d.setDate(d.getDate() - 1)) {
+        if (!this.disabledDates.some(disabledDate => 
+          disabledDate.getDate() === d.getDate() && 
+          disabledDate.getMonth() === d.getMonth() && 
+          disabledDate.getFullYear() === d.getFullYear())) {
+          latestValidDate = new Date(d);
+          break;
+        }
+      }
+
+      if (latestValidDate) {
+        // If a valid date is found, update your calendar's selected date
+        this.calendarValue = latestValidDate;
+        console.log('Updated selected date to:', this.calendarValue);
+      } else {
+        console.log('No valid dates available in the selected month.');
+      }
+    },
+   
+    getTodayDate() {
+      const today = new Date();
+      const formattedDate = today.toISOString().slice(0, 10);
+      console.log("Today's date calculated as:", formattedDate); // Debug output
+      return today;
+    },
+    getYesterdayDate(formatted = true) {
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       const formattedDate = yesterday.toISOString().slice(0, 10);
       console.log("Yesterday's date calculated as:", formattedDate); // Debug output
-      return formattedDate;
+      if (formatted) {
+        return formattedDate;
+      } else {
+        return yesterday;
+      }
     },
     searchPlayers(event) {
       if (!event.query || !event.query.trim()) {
@@ -287,10 +338,7 @@ export default defineComponent({
     fetchPitches() {
       console.log('Fetching pitches for player:', this.selectedPlayer.id)
       this.videoPlayerLoading = true;
-      this.resetPlayer = true;
-      this.$nextTick(() => {
-        this.resetPlayer = false;
-      });
+
       console.log('currentPitches:', this.currentPitches);
       axios.get('/baseball/pitches', { params: { player_id: this.selectedPlayer.id, date: this.formattedCalendarValue } })
         .then(response => {
@@ -321,10 +369,7 @@ export default defineComponent({
         }
       }
       this.currentPitches = pitchData;
-      this.resetPlayer = true;
-      this.$nextTick(() => {
-        this.resetPlayer = false;
-      });
+
       console.log('currentPitches:', this.currentPitches);
       console.log('mp4 ', this.currentPitches[0].mp4);
     },
@@ -333,9 +378,7 @@ export default defineComponent({
       console.error('Operation failed:', error.message);
     },
 
-    toggleResetPlayer() {
-      this.resetPlayer = !this.resetPlayer;
-    },
+
 
 
   },
@@ -354,7 +397,6 @@ export default defineComponent({
     this.fetchPitches();
   },
 
-  emits: ['reset-video-player'],
 });
 
 </script>

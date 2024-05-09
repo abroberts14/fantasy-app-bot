@@ -50,14 +50,14 @@ import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 
 const props = defineProps({
-  videos: Array
+  videos: Array,
+  reset: Boolean
 });
 
 const currentIndex = ref(0);
 const videoPlayer = ref(null);
 const screenWidth = ref(window.innerWidth);
-const videoHeight = computed(() => (screenWidth.value / 16) * 9);
-const videoWidth = ref(100); // Use a reactive property if you need to adjust it dynamically
+
 const options = {
   controls: true,
   autoplay: false,
@@ -69,7 +69,7 @@ const options = {
   playbackRates: [0.7, 1.0, 1.5, 2.0]
 };
 
-const currentVideoUrl = computed(() => props.videos[currentIndex.value].mp4);
+const currentVideoUrl = computed(() => props.videos[currentIndex.value].mp4 + '#t=0.5' );
 const currentVideoStats = computed(() => props.videos[currentIndex.value]);
 
 onMounted(() => {
@@ -102,6 +102,13 @@ onMounted(() => {
   watch(currentVideoUrl, (newVal) => {
     console.log('Changing video to', newVal);
     player.src({ type: 'video/mp4', src: newVal });
+  });
+  watch(() => props.reset, (newVal) => {
+    console.log('Resetting video');
+    console.log('Resetting video to', newVal);
+    if (newVal) {
+      player.pause();
+    }
   });
 });
 

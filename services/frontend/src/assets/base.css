@@ -199,3 +199,14 @@ body {
     pointer-events: none;
   }
 }
+.calendar-container {
+  position: relative; /* This makes it a reference for absolutely positioned children */
+}
+
+.calendar-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+
+}

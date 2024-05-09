@@ -31,11 +31,11 @@ export default defineComponent({
         { label: 'Home', to: '/', command: () => { router.push('/'); } },
         { label: 'Dashboard', to: '/dashboard', command: () => { router.push('/dashboard'); } },
         { label: 'My Profile', to: '/profile', command: () => { router.push('/profile'); } },
-        { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } }
+        { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } },
+        { label: 'Pitch Replays', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } }
       ];
       if (usersStore.isAdmin) {
         baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });
-        baseItems.push({ label: 'Pitch Replays', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } });
       }
       if (!usersStore.isAuthenticated) {
         baseItems.push({ label: 'Log In', to: '/login', command: () => { router.push('/login'); } });
