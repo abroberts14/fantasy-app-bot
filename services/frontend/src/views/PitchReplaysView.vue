@@ -2,36 +2,42 @@
   <Card class="card-settings">
     <template #title>Settings</template>
     <template #content class="content-flex">
-
       <div class="settings-item">
         <FloatLabel>
-      
           <AutoComplete
             v-model="selectedPlayer"
             :suggestions="players"
             :loading="loading"
             field="name"
             :delay="750"
-            forceSelection 
+            forceSelection
             placeholder="Search player..."
-            @complete="searchPlayers($event)" 
+            @complete="searchPlayers"
             @item-select="onPlayerSelect"
-            :dropdown="true" 
+            :dropdown="true"
             :disabled="isPageLoading"
             id="search-player"
           />
           <label for="search-player">Search Batters</label>
         </FloatLabel>
-          <div class="calendar-container">
-            <FloatLabel>
-
-              <Calendar   @month-change="onMonthChange" :disabledDates="disabledDates" :disabled="calendarLoading" :showIcon="true" dateFormat="yy-mm-dd"  :showButtonBar="true" v-model="calendarValue"  :maxDate="todayValue"  id="calendar"></Calendar>
-              <label for="calendar">Date</label>
-              <div v-if="calendarLoading" class="calendar-loading-overlay">
-                <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8"></ProgressSpinner>          
-              </div>
-            </FloatLabel>
-
+        <div class="calendar-container">
+          <FloatLabel>
+            <Calendar
+              @month-change="onMonthChange"
+              :disabledDates="disabledDates"
+              :disabled="calendarLoading"
+              :showIcon="true"
+              dateFormat="yy-mm-dd"
+              :showButtonBar="true"
+              v-model="calendarValue"
+              :maxDate="todayValue"
+              id="calendar"
+            />
+            <label for="calendar">Date</label>
+            <div v-if="calendarLoading" class="calendar-loading-overlay">
+              <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" />
+            </div>
+          </FloatLabel>
         </div>
       </div>
     </template>
@@ -39,177 +45,96 @@
       <div class="footer-buttons">
         <Button :disabled="isPageLoading" label="Apply Filter" @click="fetchPitches" />
         <Checkbox :disabled="isPageLoading" v-model="paOnly" inputId="plateAppearanceOnly" name="plateAppearanceOnly" binary class="filter-checkbox" />
-       <label for="plateAppearanceOnly">Plate Appearance Results Only</label>
+        <label for="plateAppearanceOnly">Plate Appearance Results Only</label>
       </div>
     </template>
   </Card>
   <LoadingSpinner v-if="videoPlayerLoading" />
-
-  <!-- :disabledDates="disabledDates" -->
-
   <section class="video-section">
     <div v-if="currentPitches.length > 0">
-      <!-- <div v-for="(video, index) in currentPitches" :key="index"> 
-        <MobileVideoPlayer :videoUrl="video.mp4"  :videos="currentPitches"  autoplay="false"  />
-        </div> -->
-        <MediaPlayer :videos="currentPitches" :reset="videoPlayerLoading"  autoplay="false"  />
-
+      <MediaPlayer :videos="currentPitches" :reset="videoPlayerLoading" autoplay="false" />
     </div>
-      <div v-else>
-        <p> No pitches found. </p>
-
-        
-
-        <div v-if="userTokenPresent">
-            <Button @click="syncMyPlayers">Sync My Players From Yahoo</Button>
-            <div v-if="batters.length > 0">
-              <p>My Players:</p>
-              <ul>
-                <li v-for="(batter, index) in batters" :key="index">{{ batter.name }}</li>
-              </ul>
-            </div>
-          <!-- Add a fallback UI for empty batters -->
-          <div v-else>
-            <p>No players loaded.</p>
-          </div>
+    <div v-else>
+      <p>No pitches found.</p>
+      <div v-if="userTokenPresent">
+        <Button @click="syncMyPlayers">Sync My Players From Yahoo</Button>
+        <div v-if="batters.length > 0">
+          <p>My Players:</p>
+          <ul>
+            <li v-for="(batter, index) in batters" :key="index">{{ batter.name }}</li>
+          </ul>
+        </div>
+        <div v-else>
+          <p>No players loaded.</p>
         </div>
       </div>
+    </div>
   </section>
 </template>
 
 <script>
-
-import { defineComponent } from 'vue';
+import { defineComponent, ref, watch, computed, onMounted } from 'vue';
 import useUsersStore from '@/store/users';
-import LoginComponent from '@/components/LoginComponent.vue';
-import LoadingSpinner from '@/components/LoadingSpinner.vue';
-import VideoPlayer from '@/components/VideoPlayer.vue';
-import axios from 'axios';
-import MobileVideoPlayer from '@/components/MobileVideoPlayer.vue';
 import MediaPlayer from '@/components/MediaPlayer.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import axios from 'axios';
+
 export default defineComponent({
   name: 'HomeView',
-
   components: {
-    LoginComponent,
-    VideoPlayer,
-    MobileVideoPlayer,
+    MediaPlayer,
     LoadingSpinner,
-    MediaPlayer
   },
+  setup() {
+    const usersStore = useUsersStore();
+    const selectedPlayer = ref({ name: '', id: 0 });
+    const players = ref([]);
+    const loading = ref(false);
+    const currentPitches = ref([]);
+    const videoPlayerLoading = ref(false);
+    const calendarValue = ref(getYesterdayDate());
+    const calendarLoading = ref(false);
+    const disabledDates = ref([new Date()]);
+    const todayValue = ref(getYesterdayDate(false));
+    const paOnly = ref(true);
+    const batters = ref([]);
+    const userTokenPresent = ref(null);
 
-  data() {
-    return {
-      currentPitches: [],
-      pitches: [],
-      paOnly: true,
-      videoPlayerLoading: false,
-      players: [],
-      loading: false,
-      searchQuery: '',
-      selectedPlayer: {'name': '', 'id': 0}, // Store selected player data
-      calendarValue: this.getYesterdayDate(),
-      calendarLoading: false,
-      disabledDates: [],
-      screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight,
-      batters: [],
-      userTokenPresent: false,
-      oauth_response: null,
-      todayValue: this.getYesterdayDate(false),
-    };
-  },
+    const user = computed(() => usersStore.user);
 
-  computed: {
-    isLoggedIn() {
-      const usersStore = useUsersStore();
-      return usersStore.isAuthenticated;
-    },
-    user() {
-      const usersStore = useUsersStore(); 
-      return usersStore.stateUser; 
-    },
-    isPageLoading() {
-      return this.videoPlayerLoading || this.calendarLoading;
-    },
-    formattedCalendarValue() {
-      if (this.calendarValue) {
-        const date = new Date(this.calendarValue);
-        return date.toISOString().slice(0, 10);
+    const isLoggedIn = computed(() => usersStore.isAuthenticated);
+    const isPageLoading = computed(() => videoPlayerLoading.value || calendarLoading.value);
+    const formattedCalendarValue = computed(() => {
+      // Ensure calendarValue is a Date object before calling toISOString
+      if (calendarValue.value instanceof Date) {
+        return calendarValue.value.toISOString().slice(0, 10);
       }
-      return null;
-   }
-  },
-
-  methods: {
-    async  fetchUserTokens() {
-      try {
-
-        const response = await axios.get(`/oauth/yahoo/tokens`, {
-          params: {
-            user_id: this.user.id
-          }
-        });        
-        console.log('API Response:', response.data);
-        this.oauth_response = response.data;
-      } catch (error) {
-        console.error('Failed to fetch Yahoo integration:', error);
-      }
-      finally {
-        console.log("oauth_respons length: ", this.oauth_response);
-        this.userTokenPresent = this.oauth_response;
-        console.log("userTokenPresent: ", this.userTokenPresent);
-      }
-    },
-    async fetchMyPlayers() {
-      const usersStore = useUsersStore();
-      if (!usersStore.isAuthenticated) {
-        console.error('User is not logged in or token is not available');
+      console.error('calendarValue is not a valid Date object:', calendarValue.value);
+      return null; // Return null or a default date string if needed
+    });
+    function searchPlayers(event) {
+      if (!event.query.trim()) {
+        players.value = [];
         return;
       }
-      try {
-        const response = await axios.get('/baseball/players/my-players');
-        console.log('API Response:', response.data);
-        if (response.data.players.batters) {
-          this.batters = response.data.players.batters;
-          console.log('response assigned:', response.data.players.batters);
-
-          console.log('Batters assigned:', this.batters);
-        } else {
-          console.error('Batters data is not in expected format:', response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch players:', error);
-        this.batters = []; // Reset batters on error
-      }
-    },
-    async syncMyPlayers() {
-      const usersStore = useUsersStore();
-      if (!usersStore.isAuthenticated) {
-        console.error('User is not logged in or token is not available');
-        return;
-      }
-      try {
-        const response = await axios.get('/baseball/players/sync_players');
-        console.log('API Response:', response.data);
-        if (response.data.players.batters) {
-          this.batters = response.data.players.batters;
-          console.log('response assigned:', response.data.players.batters);
-
-          console.log('Batters assigned:', this.batters);
-        } else {
-          console.error('Batters data is not in expected format:', response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch players:', error);
-        this.batters = []; // Reset batters on error
-      }
-    },
-    onPlayerSelect(event) {
+      loading.value = true;
+      axios.get(`/baseball/players/?name=${encodeURIComponent(event.query)}`)
+        .then((response) => {
+          players.value = response.data.map((player) => ({
+            name_first: player.name_first,
+            name_last: player.name_last,
+            name: `${player.name_first} ${player.name_last}`,
+            id: player.key_mlbam
+          }));
+        })
+        .catch((error) => console.error('Error fetching players:', error))
+        .finally(() => loading.value = false);
+    }
+    function   onPlayerSelect(event) {
       console.log('Player selected:', event);
-      this.selectedPlayer = event.value;
-      console.log('Selected player:', this.selectedPlayer);
-      if (this.selectedPlayer && this.selectedPlayer.id) {
+      selectedPlayer.value = event.value;
+      console.log('Selected player:', selectedPlayer.value);
+      if (selectedPlayer.value && selectedPlayer.value.id) {
         const today = new Date();
         const thirtyDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
         
@@ -218,21 +143,77 @@ export default defineComponent({
         const endDate = today.toISOString().slice(0, 10);
 
         console.log(`Fetching valid dates for ${startDate} to ${endDate}`);
-        this.fetchValidDates(this.selectedPlayer.id, thirtyDaysAgo, today);
+        fetchValidDates(selectedPlayer.value.id, thirtyDaysAgo, today);
       }
-    },
-    onMonthChange(date) {
-      // date parameter is the date of the month shown in the calendar after the change
-      console.log('Month changed:', date);  
-      const startOfMonth = new Date(date.year, date.month -1, 1);
-      const endOfMonth = new Date(date.year, date.month, 0); // Last day of the month
+    }
+    async function syncMyPlayers() {
+      const usersStore = useUsersStore();
+      if (!usersStore.isAuthenticated) {
+        console.error('User is not logged in or token is not available');
+        return;
+      }
+      try {
+        videoPlayerLoading.value = true;
+        const response = await axios.get('/baseball/players/sync_players');
+        console.log('API Response:', response.data);
+        if (response.data.players.batters) {
+          batters.value = response.data.players.batters;
+          // console.log('response assigned:', response.data.players.batters);
 
-      console.log(`Month change fetch valid dates from ${startOfMonth} to ${endOfMonth}`);
-      this.fetchValidDates(this.selectedPlayer.id, startOfMonth, endOfMonth);
-    },
+          // console.log('Batters assigned:', this.batters);
+        } else {
+          console.error('Batters data is not in expected format:', response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch players:', error);
+        batters.value = []; // Reset batters on error
+      } finally {
+        videoPlayerLoading.value = false;
+      }
+    }
+    async function fetchUserTokens() {
+      try {
+        const response = await axios.get(`/oauth/yahoo/tokens`, {
+          params: {
+            user_id: user.value.id
+          }
+        });        
+        console.log('API Response:', response.data);
+        this.oauth_response = response.data;
+      } catch (error) {
+        console.error('Failed to fetch Yahoo integration:', error);
+      }
+      finally {
+        userTokenPresent.value = this.oauth_response;
+      }
+    }
+    function updateSelectedDate(startDate, endDate) {
+      let latestValidDate = null;
 
+      // Create a loop from end of month to start of month
+      for (let d = endDate; d >= startDate; d.setDate(d.getDate() - 1)) {
+        if (!disabledDates.value.some(disabledDate => 
+          disabledDate.getDate() === d.getDate() && 
+          disabledDate.getMonth() === d.getMonth() && 
+          disabledDate.getFullYear() === d.getFullYear())) {
+          latestValidDate = new Date(d);
+          break;
+        }
+      }
+      if (latestValidDate) {
+        // If a valid date is found, update your calendar's selected date
+        calendarValue.value = latestValidDate;
+        console.log('Updated selected date to:', calendarValue.value);
+      } else {
+        console.log('No valid dates available in the selected month.');
+      }
+    }
+    function onMonthChange(date) {
+      console.log('Month changed:', date);
+      fetchValidDates(selectedPlayer.value.id, new Date(date.year, date.month - 1, 1), new Date(date.year, date.month, 0));
+    }
 
-    fetchValidDates(playerId, startDate, endDate) {
+    function fetchValidDates(playerId, startDate, endDate) {
       if (!startDate || !endDate) {
         console.error('fetchValidDates requires both startDate and endDate.');
         this.disabledDates = [];
@@ -243,162 +224,121 @@ export default defineComponent({
         start_date: startDate.toISOString().slice(0, 10), // format as 'YYYY-MM-DD'
         end_date: endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
       }).toString();
-      this.calendarLoading = true;
+      calendarLoading.value = true;
       axios.get(`/baseball/player-valid-dates/${playerId}?${params}`)
         .then(response => {
           if (response.data) {
             // Assume response.data contains the disabled dates
-            this.disabledDates = response.data.map(date => new Date(date));
-            this.disabledDates.push(new Date());
+            disabledDates.value = response.data.map(date => new Date(date));
+            disabledDates.value.push(new Date());
             // Find the latest date that is not disabled
-            this.updateSelectedDate(startDate, endDate);
+            updateSelectedDate(startDate, endDate);
           } else {
-            this.disabledDates = [];
+            disabledDates.value = [];
           }
         })
         .catch(error => {
           console.error('Error fetching valid dates:', error);
-          this.disabledDates = [];
+          disabledDates.value = [];
         })
         .finally(() => {
-          console.log('Disabled dates:', this.disabledDates);
-          this.calendarLoading = false;
+          console.log('Disabled dates:', disabledDates.value);
+          calendarLoading.value = false;
         });
-    },
+    }
 
-    updateSelectedDate(startDate, endDate) {
-      let latestValidDate = null;
-
-      // Create a loop from end of month to start of month
-      for (let d = endDate; d >= startDate; d.setDate(d.getDate() - 1)) {
-        if (!this.disabledDates.some(disabledDate => 
-          disabledDate.getDate() === d.getDate() && 
-          disabledDate.getMonth() === d.getMonth() && 
-          disabledDate.getFullYear() === d.getFullYear())) {
-          latestValidDate = new Date(d);
-          break;
+    function getYesterdayDate(formatted = true) {
+      const today = new Date();
+      const yesterday = new Date(today.setDate(today.getDate() - 1));
+      return formatted ? yesterday.toISOString().slice(0, 10) : yesterday;
+    }
+    async function fetchPitches() {
+      videoPlayerLoading.value = true;
+        try {
+            const response = await axios.get('/baseball/pitches', { 
+                params: { player_id: selectedPlayer.value.id, date: formattedCalendarValue.value } 
+            });
+            if (response.data && response.data.pitches) {
+                const allPitches = Object.values(response.data.pitches); // This gives an array of arrays
+                currentPitches.value = allPitches.reduce((acc, pitchArray) => {
+                    if (paOnly.value) {
+                        acc.push(pitchArray[pitchArray.length - 1]); // Assuming each pitch array's last item is the most relevant
+                    } else {
+                        acc.push(...pitchArray);
+                    }
+                    return acc;
+                }, []);
+            }
+        } catch (error) {
+            console.error('Error fetching pitches:', error);
+        } finally {
+            videoPlayerLoading.value = false;
         }
+
       }
 
-      if (latestValidDate) {
-        // If a valid date is found, update your calendar's selected date
-        this.calendarValue = latestValidDate;
-        console.log('Updated selected date to:', this.calendarValue);
-      } else {
-        console.log('No valid dates available in the selected month.');
-      }
-    },
-   
-    getTodayDate() {
-      const today = new Date();
-      const formattedDate = today.toISOString().slice(0, 10);
-      console.log("Today's date calculated as:", formattedDate); // Debug output
-      return today;
-    },
-    getYesterdayDate(formatted = true) {
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const formattedDate = yesterday.toISOString().slice(0, 10);
-      console.log("Yesterday's date calculated as:", formattedDate); // Debug output
-      if (formatted) {
-        return formattedDate;
-      } else {
-        return yesterday;
-      }
-    },
-    searchPlayers(event) {
-      if (!event.query || !event.query.trim()) {
-        this.players = []; // Clear suggestions if query is empty or not a string
+    async function fetchMyPlayers() {
+      if (!this.isLoggedIn) {
+        console.error('User is not logged in or token is not available');
         return;
       }
       this.loading = true;
-      axios.get(`/baseball/players/?name=${encodeURIComponent(event.query)}`)
-        .then(response => {
-            this.players = response.data.map(player => ({
-                name_first: player.name_first,
-                name_last: player.name_last,
-                name: `${player.name_first} ${player.name_last}`,
-                id: player.key_mlbam  // Ensure this matches your data structure
-            }));
-            console.log('Fetched players:', this.players);  // Log to debug
-            
-        })
-        .catch(error => {
-            console.error('Error fetching players:', error);
-        })
-        .finally(() => {
-            this.loading = false;
-
-        });
-    },
-
-
-   
-    fetchPitches() {
-      console.log('Fetching pitches for player:', this.selectedPlayer.id)
-      this.videoPlayerLoading = true;
-
-      console.log('currentPitches:', this.currentPitches);
-      axios.get('/baseball/pitches', { params: { player_id: this.selectedPlayer.id, date: this.formattedCalendarValue } })
-        .then(response => {
-          this.$router.push({ query: { date:  this.formattedCalendarValue, name:this.selectedPlayer.name, playerId: this.selectedPlayer.id } });
-
-          this.processPitches(response.data.pitches);
-          this.videoPlayerLoading = false;
-
-        })
-        .catch(error => {
-          console.error('Error fetching pitches:', error);
-          this.handleError(error);
-          this.videoPlayerLoading = false;
-
-        });
-    },
-
-    processPitches(pitches) {
-      const pitchData = [];
-      for (const key in pitches) {
-        if (this.paOnly) {
-          const lastPitch = pitches[key][pitches[key].length - 1];
-          pitchData.push(lastPitch);
-        } else {
-          pitches[key].forEach(pitch => {
-            pitchData.push(pitch);
-          });
-        }
+      try {
+        const response = await axios.get('/baseball/players/my-players');
+        this.batters = response.data.players.batters || [];
+      } catch (error) {
+        console.error('Failed to fetch players:', error);
+        this.batters = [];
+      } finally {
+        this.loading = false;
       }
-      this.currentPitches = pitchData;
-
-      console.log('currentPitches:', this.currentPitches);
-      console.log('mp4 ', this.currentPitches[0].mp4);
-    },
-
-    handleError(error) {
-      console.error('Operation failed:', error.message);
-    },
-
-
-
-
+    }
+    return {
+      selectedPlayer,
+      players,
+      loading,
+      currentPitches,
+      videoPlayerLoading,
+      calendarValue,
+      calendarLoading,
+      disabledDates,
+      todayValue,
+      paOnly,
+      batters,
+      userTokenPresent,
+      isLoggedIn,
+      isPageLoading,
+      formattedCalendarValue,
+      searchPlayers,
+      onMonthChange,
+      fetchValidDates,
+      fetchPitches,
+      fetchMyPlayers,
+      onPlayerSelect,
+      getYesterdayDate,
+      fetchUserTokens,
+      syncMyPlayers
+    };
   },
-
   mounted() {
-    console.log("Before setting initial value:", this.calendarValue);
-    this.calendarValue = this.getYesterdayDate();
-    console.log("After setting initial value:", this.calendarValue);
+    this.fetchUserTokens();
+    this.calendarValue = this.getYesterdayDate(false);
+    this.disabledDates.push(new Date())
 
     if (this.$route.query.date) {
       this.calendarValue = this.$route.query.date;
       console.log("Setting from route query:", this.calendarValue);
     }
-    this.fetchUserTokens();
+    if (this.$route.query.playerId) {
+      this.selectedPlayer = { name: this.$route.query.name, id: this.$route.query.playerId };
+      console.log("Setting from route query:", this.selectedPlayer);
+    }
     this.fetchMyPlayers();
-    this.fetchPitches();
+    if (this.selectedPlayer && this.selectedPlayer.id) {
+      this.fetchPitches();
+    }
   },
-
 });
-
 </script>
 
 <style scoped>
@@ -455,6 +395,4 @@ export default defineComponent({
 .video-container {
   margin-bottom: 20px; /* Adjust the gap size as needed */
 }
-
 </style>
-
