@@ -16,6 +16,7 @@ import '@/assets/main.css'
 import '@/assets/styles.scss';
 import 'primevue/resources/themes/lara-light-green/theme.css';
 import { useToast } from 'vue-toastification'
+import 'vidstack/bundle';
 
 import Button from 'primevue/button';
 import Card from 'primevue/card';

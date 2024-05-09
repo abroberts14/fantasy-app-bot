@@ -113,8 +113,8 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
         expires=1800,
         samesite="Lax" if is_local else "None",
         secure=not is_local,
-        #domain=".draftwarroom.com" if not is_local else "192.168.1.170"
-        domain=".draftwarroom.com" if not is_local else "localhost"
+        domain=".draftwarroom.com" if not is_local else "192.168.1.170"
+        #domain=".draftwarroom.com" if not is_local else "localhost"
 
     )
 

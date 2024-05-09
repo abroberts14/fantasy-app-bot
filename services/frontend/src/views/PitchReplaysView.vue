@@ -22,7 +22,7 @@
           <label for="search-player">Search Batters</label>
         </FloatLabel>
       <FloatLabel>
-          <Calendar   @month-change="onMonthChange" :showIcon="true" dateFormat="yy-mm-dd" :disabledDates="disabledDates" :showButtonBar="true" v-model="calendarValue" id="calendar"></Calendar>
+          <Calendar   @month-change="onMonthChange" :showIcon="true" dateFormat="yy-mm-dd"  :showButtonBar="true" v-model="calendarValue" id="calendar"></Calendar>
           <label for="calendar">Date</label>
       </FloatLabel>
       </div>
@@ -37,15 +37,34 @@
   </Card>
   <LoadingSpinner v-if="videoPlayerLoading" />
 
+  <!-- :disabledDates="disabledDates" -->
+
   <section class="video-section">
     <div v-if="currentPitches.length > 0">
+      <!-- <div v-for="(video, index) in currentPitches" :key="index"> 
+        <MobileVideoPlayer :videoUrl="video.mp4"  :videos="currentPitches"  autoplay="false"  />
+        </div> -->
+        <MediaPlayer :videos="currentPitches"  autoplay="false"  />
 
-      <div v-for="(video, index) in currentPitches" :key="index" class="video-container">
-        <MobileVideoPlayer :videoUrl="video.mp4"  autoplay="false"  />
-      </div>
     </div>
       <div v-else>
         <p> No pitches found. </p>
+
+        
+
+        <div>
+            <Button @click="syncMyPlayers">Sync My Players From Yahoo</Button>
+            <div v-if="batters.length > 0">
+              <p>My Players:</p>
+              <ul>
+                <li v-for="(batter, index) in batters" :key="index">{{ batter.name }}</li>
+              </ul>
+            </div>
+          <!-- Add a fallback UI for empty batters -->
+          <div v-else>
+            <p>No players loaded.</p>
+          </div>
+        </div>
       </div>
   </section>
 </template>
@@ -59,7 +78,7 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
 import axios from 'axios';
 import MobileVideoPlayer from '@/components/MobileVideoPlayer.vue';
-
+import MediaPlayer from '@/components/MediaPlayer.vue';
 export default defineComponent({
   name: 'HomeView',
 
@@ -67,7 +86,8 @@ export default defineComponent({
     LoginComponent,
     VideoPlayer,
     MobileVideoPlayer,
-    LoadingSpinner
+    LoadingSpinner,
+    MediaPlayer
   },
 
   data() {
@@ -84,8 +104,8 @@ export default defineComponent({
       calendarValue: this.getYesterdayDate(),
       disabledDates: [],
       screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight
-
+      screenHeight: window.innerHeight,
+      batters: []
     };
   },
 
@@ -93,6 +113,10 @@ export default defineComponent({
     isLoggedIn() {
       const usersStore = useUsersStore();
       return usersStore.isAuthenticated;
+    },
+    user() {
+      const usersStore = useUsersStore(); 
+      return usersStore.stateUser; 
     },
     formattedCalendarValue() {
       if (this.calendarValue) {
@@ -104,6 +128,50 @@ export default defineComponent({
   },
 
   methods: {
+    async fetchMyPlayers() {
+      const usersStore = useUsersStore();
+      if (!usersStore.isAuthenticated) {
+        console.error('User is not logged in or token is not available');
+        return;
+      }
+      try {
+        const response = await axios.get('/baseball/players/my-players');
+        console.log('API Response:', response.data);
+        if (response.data.players.batters) {
+          this.batters = response.data.players.batters;
+          console.log('response assigned:', response.data.players.batters);
+
+          console.log('Batters assigned:', this.batters);
+        } else {
+          console.error('Batters data is not in expected format:', response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch players:', error);
+        this.batters = []; // Reset batters on error
+      }
+    },
+    async syncMyPlayers() {
+      const usersStore = useUsersStore();
+      if (!usersStore.isAuthenticated) {
+        console.error('User is not logged in or token is not available');
+        return;
+      }
+      try {
+        const response = await axios.get('/baseball/players/sync_players');
+        console.log('API Response:', response.data);
+        if (response.data.players.batters) {
+          this.batters = response.data.players.batters;
+          console.log('response assigned:', response.data.players.batters);
+
+          console.log('Batters assigned:', this.batters);
+        } else {
+          console.error('Batters data is not in expected format:', response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch players:', error);
+        this.batters = []; // Reset batters on error
+      }
+    },
     onPlayerSelect(event) {
       console.log('Player selected:', event);
       this.selectedPlayer = event.value;
@@ -163,7 +231,9 @@ export default defineComponent({
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      return yesterday.toISOString().slice(0, 10);
+      const formattedDate = yesterday.toISOString().slice(0, 10);
+      console.log("Yesterday's date calculated as:", formattedDate); // Debug output
+      return formattedDate;
     },
     searchPlayers(event) {
       if (!event.query || !event.query.trim()) {
@@ -250,19 +320,22 @@ export default defineComponent({
   },
 
   mounted() {
+    console.log("Before setting initial value:", this.calendarValue);
+    this.calendarValue = this.getYesterdayDate();
+    console.log("After setting initial value:", this.calendarValue);
+
     if (this.$route.query.date) {
       this.calendarValue = this.$route.query.date;
+      console.log("Setting from route query:", this.calendarValue);
     }
-    if (this.$route.query.playerId) {
-      this.selectedPlayer.id = this.$route.query.playerId;
-      this.selectedPlayer.name = this.$route.query.name;
-      // You might also need to fetch the player data here
-    }
+
+    this.fetchMyPlayers();
     this.fetchPitches();
   },
 
   emits: ['reset-video-player'],
 });
+
 </script>
 
 <style scoped>

@@ -73,15 +73,35 @@ body {
 @media (max-width: 768px) {
   .p-menubar {
     position: fixed;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
     top: 0;
     left: 0;
     width: 100%;
     z-index: 1000;
   }
-}
 
+  .p-menubar-button svg {
+    width: 25px; /* Increase the width of the SVG */
+    height:  25px; /* Increase the height of the SVG */
+    justify-content: end;
+
+    /* justify-content: start;
+    align-items: start;
+    margin: auto; */
+
+  }
+  
+  .p-menubar-start .navbar-brand img {
+    /* align-items: start;
+    align-content: start;
+    justify-content: start;
+    margin: auto; */
+    width: 50px; /* Increase the width of the SVG */
+    height:  50px; /* Increase the height of the SVG */
+  }
+}
+ 
 /* Desktop Styles */
 @media (min-width: 769px) {
   .p-menubar {
@@ -128,5 +148,43 @@ body {
   body {
     width: 60%; /* Reduce to 60% width on larger screens */
 
+  }
+}
+
+
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .video-overlay-text {
+    position: absolute;
+    color: white;
+
+    font-size: 11px; /* Smaller font size for mobile devices */
+    font-weight: bolder;
+    text-shadow: 2px 2px 4px #000000;
+    background-color: rgba(0, 0, 0, 0.13);
+    padding: 5px; /* Smaller padding to reduce overlay size */
+    top: 1%; /* Adjusted position to avoid blocking video controls */
+    right: 1%; /* Slightly off the edge for better visibility */
+    max-width: 90%; /* Ensures it doesn't span the full width of the screen */
+    border-radius: 3px; /* Smaller border-radius for a subtler appearance */
+    text-align: right; /* Centers the text within the overlay */
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+  .video-overlay-text {
+    position: absolute;
+    top: 2%;
+    left: 2%;
+    color: white;
+    font-size: 20px;
+    font-weight: bolder;
+    text-shadow: 2px 2px 4px #000000;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    pointer-events: none;
   }
 }

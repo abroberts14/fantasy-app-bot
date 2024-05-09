@@ -75,9 +75,10 @@ async def get_oauth_token_by_id(user_id: int):
         oauth_token = await OAuthTokens.filter(user=user_id).first()
         # Get the encryption key from the environment variable
         token_secret_key = os.getenv("TOKEN_SECRET_KEY")
+
         if not token_secret_key:
             raise HTTPException(status_code=500, detail="Encryption key not found")
-
+      
         # Decrypt the access token
         f = fernet.Fernet(token_secret_key)
         decrypted_access_token = f.decrypt(oauth_token.access_token.encode()).decode()

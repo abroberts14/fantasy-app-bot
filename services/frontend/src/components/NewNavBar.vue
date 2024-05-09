@@ -4,7 +4,8 @@
 
       <Menubar :model="items" class="">
         <template #start>
-          <router-link class="navbar-brand" to="/">SRC Bot</router-link>
+          <router-link class="navbar-brand" to="/"><img src="@/assets/dwr_icon.png" alt="Image" height="100" width="100" class="mr-3" />
+</router-link>
         </template>
         <template #end v-if="isLoggedIn">
           <button class="btn btn-secondary btn-sm" @click="logout">Log Out</button>

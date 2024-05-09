@@ -7,7 +7,7 @@
       controls
       :autoplay="options.autoplay"
       :preload="options.preload"
-      
+      d
       data-setup="{}"
     >
       <source :src="videoUrl" type="video/mp4" />
@@ -21,6 +21,7 @@ import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 
 const props = defineProps({
+  videos: Array,
   videoUrl: String
 });
 const videoPlayer = ref(null);
@@ -29,7 +30,6 @@ const screenWidth = ref(window.innerWidth);
 // Assuming a common aspect ratio of 16:9 for videos
 const videoHeight = computed(() => (screenWidth.value / 16) * 9);
 const videoWidth = ref(100); // Use a reactive property if you need to adjust it dynamically
-
 const options = {
   controls: true,
   autoplay: false,
@@ -75,15 +75,7 @@ onMounted(() => {
       player.src({ type: 'video/mp4', src: newVal });
     }
   });
-  // watch(() => screenWidth, (newWidth) => {
-  //   videoPlayer.value.style.width = `${newWidth * videoWidth.value / 100}px`;
-  //   videoPlayer.value.style.height = `${videoHeight.value}px`;
-  // }, { immediate: true });
 
-  // window.addEventListener('resize', () => {
-  //   screenWidth.value = window.innerWidth;
-  // });
-  
 });
 
 </script>

@@ -33,3 +33,6 @@ services/baseball_bot/auth/token.json
 services/baseball_bot/auth/private.json
 services/baseball_bot/token.json
 services/baseball_bot/bot_local.py
+docker-compose.yml
+docker-compose.yml
+services/backend/private.json

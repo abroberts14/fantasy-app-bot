@@ -11,7 +11,8 @@ class Users(models.Model):
     bots = fields.ReverseRelation["bots"]  # Reverse relation for bots
     role = fields.CharField(max_length=20, default="user")
     oauth_tokens = fields.ReverseRelation["OAuthTokens"]  # Reverse relation for oauth_tokens
-    
+    players = fields.ReverseRelation["Player"]  # Reverse relation for Player
+
 class OAuthTokens(models.Model):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField('models.Users', related_name='oauth_tokens')
@@ -87,4 +88,18 @@ class Apps(models.Model):
     bot = fields.ReverseRelation["Bots"]
     def __str__(self):
         return f"{self.name} - {self.state_status}"
+
+class Player(models.Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.Users', related_name='players')
+    full_name = fields.CharField(max_length=100, unique=True)
+    first_name = fields.CharField(max_length=50)
+    last_name = fields.CharField(max_length=50)
+    mlb_id = fields.IntField() # MLB ID as a string if it's alphanumeric, otherwise use IntField
+
+    created_at = fields.DatetimeField(auto_now_add=True)
+    modified_at = fields.DatetimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.mlb_id}) - {self.user.username}"
 
