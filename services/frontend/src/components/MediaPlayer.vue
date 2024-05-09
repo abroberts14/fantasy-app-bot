@@ -41,6 +41,9 @@
     </div>
     <Button @click="prevVideo" :disabled="currentIndex === 0" style="margin-right: 10px;">Previous Video</Button>
      <Button @click="nextVideo" :disabled="currentIndex === videos.length - 1" style="margin-right: 10px;">Next Video</Button>
+     <Button @click="copyLinkToClipboard" icon="pi pi-copy" severity="info" rounded  aria-label="Copy Link To Video" />
+
+
   </div>
 </template>
 
@@ -48,15 +51,18 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
-
+import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
 const props = defineProps({
   videos: Array,
-  reset: Boolean
+  reset: Boolean,
+  currentQuery: Object
 });
 
 const currentIndex = ref(0);
 const videoPlayer = ref(null);
 const screenWidth = ref(window.innerWidth);
+const router = useRouter();
 
 const options = {
   controls: true,
@@ -70,8 +76,12 @@ const options = {
 };
 
 const currentVideoUrl = computed(() => props.videos[currentIndex.value].mp4 + '#t=0.5' );
-const currentVideoStats = computed(() => props.videos[currentIndex.value]);
+const currentPitch = computed(() => props.currentQuery.current_pitch);
 
+const currentVideoStats = computed(() => props.videos[currentIndex.value]);
+const currentVideoData = computed(() => props.currentQuery);
+
+const toast = useToast();
 onMounted(() => {
   const player = videojs(videoPlayer.value, {
     ...options,
@@ -82,6 +92,7 @@ onMounted(() => {
     }
   });
 
+ 
   player.volume(options.volume);
 
   const events = [
@@ -98,10 +109,14 @@ onMounted(() => {
       }
     });
   });
-
+  currentIndex.value = currentPitch.value;
   watch(currentVideoUrl, (newVal) => {
     console.log('Changing video to', newVal);
     player.src({ type: 'video/mp4', src: newVal });
+  });
+  watch(currentPitch, (newVal) => {
+    console.log('Changing pitch to', newVal);
+    currentIndex.value = newVal;
   });
   watch(() => props.reset, (newVal) => {
     console.log('Resetting video');
@@ -110,8 +125,41 @@ onMounted(() => {
       player.pause();
     }
   });
+  watch(() => props.videos, (newVal) => {
+    console.log('Changing videos to', newVal);
+    player.src({ type: 'video/mp4', src: newVal[0].mp4 });
+  });
 });
+async function copyLinkToClipboard() {
+      // Construct the route object with query parameters
+      const route = router.resolve({
+        path: '/pitch-replays',
+        query: {
+          date: props.currentQuery.date,
+          name: encodeURIComponent(props.currentQuery.name),
+          playerId: props.currentQuery.player_id,
+          current_pitch: currentIndex.value, 
+        }
+      });
 
+      // Generate the full URL
+      const fullUrl = window.location.origin + route.href;
+      console.log('Full URL:', fullUrl);
+      if (navigator.clipboard) {
+
+        try {
+          // Use the Clipboard API to copy the URL
+          await navigator.clipboard.writeText(fullUrl);
+          console.log('Link copied to clipboard:', fullUrl);
+          toast.info('Sharable link copied to clipboard!');
+          // Optionally, show a notification to the user that the link has been copied
+        } catch (error) {
+          console.error('Failed to copy the URL:', error);
+        }
+      } else { // Fallback for browsers that do not support the Clipboard API
+        console.error('Clipboard API not available');
+      }
+    }
 function nextVideo() {
   if (currentIndex.value < props.videos.length - 1) {
     currentIndex.value += 1;

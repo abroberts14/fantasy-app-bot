@@ -38,6 +38,8 @@ import AutoComplete from 'primevue/autocomplete';
 import Calendar from 'primevue/calendar';
 import FloatLabel from 'primevue/floatlabel';
 import Menubar from 'primevue/menubar';
+import AnimateOnScroll from 'primevue/animateonscroll';
+
 const app = createApp(App)
 app.use(PrimeVue, {
   rippling: true,
@@ -76,7 +78,7 @@ app.component('Calendar', Calendar);
 app.component('FloatLabel', FloatLabel);
 app.component('Menubar', Menubar);
 app.directive('tooltip', Tooltip);
-
+app.directive('animateonscroll', AnimateOnScroll);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

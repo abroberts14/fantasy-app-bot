@@ -52,7 +52,8 @@
   <LoadingSpinner v-if="videoPlayerLoading" />
   <section class="video-section">
     <div v-if="currentPitches.length > 0">
-      <MediaPlayer :videos="currentPitches" :reset="videoPlayerLoading" autoplay="false" />
+
+      <MediaPlayer :videos="currentPitches" :reset="videoPlayerLoading" :currentQuery="currentQuery" autoplay="false" />
     </div>
     <div v-else>
       <p>No pitches found.</p>
@@ -73,7 +74,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, watch, computed, onMounted } from 'vue';
+import { defineComponent, ref, computed  } from 'vue';
 import useUsersStore from '@/store/users';
 import MediaPlayer from '@/components/MediaPlayer.vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
@@ -101,16 +102,19 @@ export default defineComponent({
     const userTokenPresent = ref(null);
 
     const user = computed(() => usersStore.user);
-
+    const currentPitch = ref(0);
+    const currentQuery = ref({ player_id: 0, date: '', name: '', current_pitch: 0});
     const isLoggedIn = computed(() => usersStore.isAuthenticated);
     const isPageLoading = computed(() => videoPlayerLoading.value || calendarLoading.value);
     const formattedCalendarValue = computed(() => {
+      
       // Ensure calendarValue is a Date object before calling toISOString
       if (calendarValue.value instanceof Date) {
         return calendarValue.value.toISOString().slice(0, 10);
+      } else {
+        return calendarValue.value
       }
-      console.error('calendarValue is not a valid Date object:', calendarValue.value);
-      return null; // Return null or a default date string if needed
+      c
     });
     function searchPlayers(event) {
       if (!event.query.trim()) {
@@ -253,6 +257,7 @@ export default defineComponent({
       return formatted ? yesterday.toISOString().slice(0, 10) : yesterday;
     }
     async function fetchPitches() {
+      console.log("current query", currentQuery.value)
       videoPlayerLoading.value = true;
         try {
             const response = await axios.get('/baseball/pitches', { 
@@ -273,10 +278,13 @@ export default defineComponent({
             console.error('Error fetching pitches:', error);
         } finally {
             videoPlayerLoading.value = false;
-        }
+            currentQuery.value = { player_id: selectedPlayer.value.id, date: formattedCalendarValue.value , name: selectedPlayer.value.name, current_pitch: currentPitch.value };
+            console.log("current query", currentQuery.value)
+
+          }
 
       }
-
+    
     async function fetchMyPlayers() {
       if (!this.isLoggedIn) {
         console.error('User is not logged in or token is not available');
@@ -309,6 +317,8 @@ export default defineComponent({
       isLoggedIn,
       isPageLoading,
       formattedCalendarValue,
+      currentQuery,
+      currentPitch,
       searchPlayers,
       onMonthChange,
       fetchValidDates,
@@ -318,7 +328,7 @@ export default defineComponent({
       getYesterdayDate,
       fetchUserTokens,
       syncMyPlayers
-    };
+      };
   },
   mounted() {
     this.fetchUserTokens();
@@ -330,7 +340,15 @@ export default defineComponent({
       console.log("Setting from route query:", this.calendarValue);
     }
     if (this.$route.query.playerId) {
-      this.selectedPlayer = { name: this.$route.query.name, id: this.$route.query.playerId };
+      this.selectedPlayer = { name: decodeURIComponent(this.$route.query.name), id: this.$route.query.playerId };      
+      if (this.$route.query.current_pitch) {
+        console.log("Setting current pitch from route query:", this.$route.query.current_pitch);
+        this.currentPitch = parseInt(this.$route.query.current_pitch);        
+        this.currentQuery = { player_id: this.$route.query.playerId, date: this.$route.query.date, name: this.$route.query.name, current_pitch: this.currentPitch };
+      } else {
+        this.currentQuery = { player_id: this.$route.query.playerId, date: this.$route.query.date, name: this.$route.query.name, current_pitch: 0 };
+      }
+
       console.log("Setting from route query:", this.selectedPlayer);
     }
     this.fetchMyPlayers();
