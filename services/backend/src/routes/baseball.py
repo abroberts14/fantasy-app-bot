@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 import concurrent.futures
 
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, timezone
 from tortoise.exceptions import DoesNotExist
 from src.auth.jwthandler import get_current_user
 from src.schemas.users import UserOutSchema
@@ -113,7 +113,7 @@ def get_missing_dates(player_id: int, start_date: str = None, end_date: str = No
         start_date = end_date - timedelta(days=30)
     else:
         start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')- timedelta(days=1)
 
     print(f"Fetching data for player ID {player_id} between {start_date} and {end_date}")
     # Generate all dates within the specified range
@@ -125,7 +125,9 @@ def get_missing_dates(player_id: int, start_date: str = None, end_date: str = No
         # Fetch data for the given player ID within the specified date range
         data = statcast_batter(start_dt=start_date.strftime('%Y-%m-%d'), end_dt=end_date.strftime('%Y-%m-%d'), player_id=player_id)
         if data.empty:
-            return all_date_strings  # Return all dates if no data is fetched
+            # Convert all dates to noon timestamps
+            noon_timestamps = [int((datetime.strptime(date_str, '%Y-%m-%d') + timedelta(hours=12)).timestamp()) for date_str in all_date_strings]
+            return noon_timestamps  # Return all dates as noon timestamps if no data is fetched
         
         # Find all unique dates where data is available
         valid_dates_strings = data['game_date'].dropna().unique().tolist()
@@ -133,12 +135,34 @@ def get_missing_dates(player_id: int, start_date: str = None, end_date: str = No
 
         # Find missing dates by comparing sets
         valid_dates_set = set(valid_dates_strings)
-        missing_dates = [date for date in all_date_strings if date not in valid_dates_set]
+        missing_dates = []
+        try:
+            for date_str in all_date_strings:
+                if date_str not in valid_dates_set:
+                    print(f"Date {date_str} is missing.")
+                    # Convert the date string to a datetime object
+                    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                    print(f"Date object: {date_obj}")
+                    # Check if the date is >= today
+                    noon_date_obj = date_obj + timedelta(hours=12)
+                    print(f"Noon date object: {noon_date_obj}")
+                    # Convert the datetime object to a Unix timestamp (seconds since epoch)
+                    timestamp = int(noon_date_obj.timestamp())
+                    missing_dates.append(timestamp)
+                    print(f"Missing dates: {missing_dates}")
 
-        return missing_dates
+
+                else:
+                    print(f"Date {date_str} is valid.")
+                    # Uncomment below to see the data for the valid dates
+                    # print(f"Data for {date_str}:")
+                    # print(date_data)
+            return missing_dates
+        except Exception as e: 
+            print(f"Error occurred while processing data: {e}")
+            return all_date_strings
     except Exception as e:
         raise ValueError(f"Failed to fetch or process data for player ID {player_id}: {str(e)}")
-    
 
 router = APIRouter()
 

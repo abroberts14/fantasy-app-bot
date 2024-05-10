@@ -95,7 +95,8 @@ export default defineComponent({
     const videoPlayerLoading = ref(false);
     const calendarValue = ref(getYesterdayDate());
     const calendarLoading = ref(false);
-    const disabledDates = ref([new Date()]);
+
+    const disabledDates = ref();
     const todayValue = ref(getYesterdayDate(false));
     const paOnly = ref(true);
     const batters = ref([]);
@@ -106,6 +107,19 @@ export default defineComponent({
     const currentQuery = ref({ player_id: 0, date: '', name: '', current_pitch: 0});
     const isLoggedIn = computed(() => usersStore.isAuthenticated);
     const isPageLoading = computed(() => videoPlayerLoading.value || calendarLoading.value);
+
+    // const disabledDates = computed(() => {
+    //     if (Array.isArray(disabledDates.value)) {
+
+    //       return disabledDates.value.map(dateStr => {
+    //         // Ensure the date string includes time part 'T00:00:00Z' to parse as UTC
+    //         const dateTimeStr = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00Z`;
+    //         return new Date(dateTimeStr);
+    //       });
+    //     } else {
+    //       return [];
+    //     }
+    // });
     const formattedCalendarValue = computed(() => {
       
       // Ensure calendarValue is a Date object before calling toISOString
@@ -145,9 +159,9 @@ export default defineComponent({
         // Format dates as 'YYYY-MM-DD'
         const startDate = thirtyDaysAgo.toISOString().slice(0, 10);
         const endDate = today.toISOString().slice(0, 10);
-
-        console.log(`Fetching valid dates for ${startDate} to ${endDate}`);
-        fetchValidDates(selectedPlayer.value.id, thirtyDaysAgo, today);
+        const yesterday = getYesterdayDate(false);
+        console.log(`Fetching valid dates for ${startDate} to ${yesterday}`);
+        fetchValidDates(selectedPlayer.value.id, thirtyDaysAgo, getYesterdayDate(false));  
       }
     }
     async function syncMyPlayers() {
@@ -210,8 +224,11 @@ export default defineComponent({
         console.log('Updated selected date to:', calendarValue.value);
       } else {
         console.log('No valid dates available in the selected month.');
+        calendarValue.value = null; // or set to a default value
+
       }
     }
+
     function onMonthChange(date) {
       console.log('Month changed:', date);
       fetchValidDates(selectedPlayer.value.id, new Date(date.year, date.month - 1, 1), new Date(date.year, date.month, 0));
@@ -220,7 +237,7 @@ export default defineComponent({
     function fetchValidDates(playerId, startDate, endDate) {
       if (!startDate || !endDate) {
         console.error('fetchValidDates requires both startDate and endDate.');
-        this.disabledDates = [];
+        disabledDates.value = [];
         return;
       }
 
@@ -232,10 +249,17 @@ export default defineComponent({
       axios.get(`/baseball/player-valid-dates/${playerId}?${params}`)
         .then(response => {
           if (response.data) {
-            // Assume response.data contains the disabled dates
-            disabledDates.value = response.data.map(date => new Date(date));
-            disabledDates.value.push(new Date());
-            // Find the latest date that is not disabled
+            console.log('Disabled dates str before fetch:', disabledDates.value);
+            console.log('Response data:', response.data);
+            disabledDates.value = response.data.map(timestamp => {
+              // Create a new Date object from the timestamp
+              const date = new Date(timestamp * 1000);
+              // Construct a UTC date string
+              const utcDateString = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+              // Return the date object created from the UTC date string
+              return new Date(date)
+            });
+            console.log('Disabled dates str in UTC after fetch:', disabledDates.value);
             updateSelectedDate(startDate, endDate);
           } else {
             disabledDates.value = [];
@@ -246,7 +270,7 @@ export default defineComponent({
           disabledDates.value = [];
         })
         .finally(() => {
-          console.log('Disabled dates:', disabledDates.value);
+          console.log('Disabled dates str:', disabledDates.value);
           calendarLoading.value = false;
         });
     }
@@ -310,6 +334,7 @@ export default defineComponent({
       calendarValue,
       calendarLoading,
       disabledDates,
+      disabledDates,
       todayValue,
       paOnly,
       batters,
@@ -333,7 +358,6 @@ export default defineComponent({
   mounted() {
     this.fetchUserTokens();
     this.calendarValue = this.getYesterdayDate(false);
-    this.disabledDates.push(new Date())
 
     if (this.$route.query.date) {
       this.calendarValue = this.$route.query.date;
