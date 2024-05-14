@@ -135,7 +135,7 @@ async def get_pitches_by_id(player_id: int, date: str):
         return {"error": "No date provided"}
     
     try:
-        date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
     except:
         print('Failed to convert date, using original date', date)
 
@@ -295,81 +295,50 @@ def split_request(start_dt: str, end_dt: str, player_id: int, url: str) -> pd.Da
 
 
 
-def get_missing_dates(player_id: int, start_date: str = None, end_date: str = None):
+def get_player_dates(player_id: int, start_date: str = None, end_date: str = None, debug=True):
     # Determine the date range
-    if not start_date or not end_date:
-        end_date = datetime.today()
-        start_date = end_date - timedelta(days=30)
-    else:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
     # Generate all dates within the specified range
     num_days = (end_date - start_date).days + 1
-    if player_id == 621043 or player_id == 682829:
-        print('searching player id: ', player_id)
-        print('start date: ', start_date)
-        print('end date: ', end_date)
-        print('num days: ', num_days)
+    if debug:
+        # one print statement to output all parameters in one line for debugging    
+        print(f'player id: {player_id}, start date: {start_date}, end date: {end_date}, num days: {num_days}')
+
+ 
     all_dates = {start_date + timedelta(days=x): x for x in range(num_days)}
+    all_date_strings = [date.strftime('%Y-%m-%d') for date in all_dates] 
+    all_date_strings.sort()
+
     try:
         # Fetch data for the given player ID within the specified date range
         data = statcast_batter(start_dt=start_date.strftime('%Y-%m-%d'), end_dt=end_date.strftime('%Y-%m-%d'), player_id=player_id)
         if data.empty:
-            # Return all dates as noon timestamps if no data is fetched
-            return [int((date).timestamp()) for date in all_dates]
+            return {'disabled_dates': all_date_strings, 'latest_valid_date': None, 'valid_dates': [], 'latest_disabled_date': None}
 
         valid_dates_strings = data['game_date'].dropna().unique().tolist()
         valid_dates_strings.sort()
-       # print(valid_dates_strings)
-        # Find missing dates by comparing sets
-        all_date_strings = [date.strftime('%Y-%m-%d') for date in all_dates] 
-        all_date_strings.sort()
+
+
         all_date_set = set(all_date_strings)
         valid_dates_set = set(valid_dates_strings)
         invalid_dates_set = all_date_set - valid_dates_set
-
-
-        if player_id == 621043 or player_id == 682829 :
-            print('alldates')
-            print(all_date_strings)
-            print('valid dates')
-            print(valid_dates_set)
-            print('invalid dates')
-            print(invalid_dates_set)
-            #generate the difference between all_date and valid dates and print it 
-
-       # print(valid_dates_set)
-        # Ensure game_date is a datetime type and normalize
-        missing_dates = []
-        try:
-            for date_str in all_date_strings:
-                if date_str not in valid_dates_set:
-                    # Convert the date string to a datetime object
-                    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-                    noon_date_obj = date_obj + timedelta(hours=12)
-                    # Convert the datetime object to a Unix timestamp (seconds since epoch)
-                    #print(f"Adding date: {date_str}")
-                    timestamp = int(noon_date_obj.timestamp())
-                    missing_dates.append(timestamp)
-                    #Append missing dates
-            return missing_dates
-        except Exception as e: 
-            print(f"Error occurred while processing data: {e}")
-            return all_date_strings
+        latest_valid_date = max(valid_dates_set)
+        latest_disabled_date = max(invalid_dates_set)
+        return {'disabled_dates': invalid_dates_set, 'latest_valid_date': latest_valid_date, 'valid_dates': valid_dates_set, 'latest_disabled_date': latest_disabled_date}
 
     except Exception as e:
-        raise ValueError(f"Failed to fetch or process data for player ID {player_id}: {str(e)}")
+        return {'disabled_dates': all_date_strings, 'latest_valid_date': None, 'valid_dates': [], 'latest_disabled_date': None, 'error': str(e)}
 
 
-@router.get("/baseball/player-valid-dates/{player_id}")
+
+@router.get("/baseball/get-player-dates/{player_id}")
 async def fetch_valid_dates(player_id: int, start_date: str = Query(None), end_date: str = Query(None)):
     try:
         # Call get_missing_dates with optional start and end date parameters
-        missing_dates = get_missing_dates(player_id, start_date, end_date)
-        if not missing_dates:
-            return []
-        return missing_dates
+        return get_player_dates(player_id, start_date, end_date)
     except ValueError as ve:
         return {"error": str(ve)}
     except Exception as e:

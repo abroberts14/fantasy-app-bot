@@ -85,7 +85,10 @@ export default defineComponent({
     const calendarValue = ref(getYesterdayDate());
     const calendarLoading = ref(false);
 
-    const disabledDates = ref();
+    const validDates = ref([]);
+    const disabledDates = ref([]);
+    const latestDisabledDate = ref(null);
+    const latestValidDate = ref(null);
     const todayValue = ref(getYesterdayDate(false));
     const paOnly = ref(true);
     const batters = ref([]);
@@ -185,39 +188,12 @@ export default defineComponent({
       }
     }
 
-    function updateSelectedDate(startDate, endDate, player) {
-      console.log('Start date:', startDate.toISOString(), 'End date:', endDate.toISOString());
 
-      let latestValidDate = null;
-      let d = new Date(endDate);
-
-      // Loop from end date to start date
-      while (d >= startDate) {
-
-        let comparisonDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0));
-        if (!disabledDates.value.some(validDate => validDate.toISOString() === comparisonDate.toISOString())) {
-          latestValidDate = new Date(comparisonDate);  // Use the comparison date as the latest valid date
-          //console.log("Valid date found:", latestValidDate.toISOString());
-          break;  // Exit the loop since the most recent valid date is found
-        }
-
-        // Decrement the day by one
-        d.setDate(d.getDate() - 1);
-      }
-      if (latestValidDate) {
-        // If a valid date is found, update your calendar's selected date
-        calendarValue.value = latestValidDate;
-        console.log('Updated selected date to:', calendarValue.value);
-      } else {
-        console.log('No valid dates available in the selected month.');
-        calendarValue.value = null; // or set to a default value
-
-      }
-    }
     function onMonthChange(date) {
       console.log('Month changed:', date);
       fetchValidDates(selectedPlayer.value.id, new Date(date.year, date.month - 1, 1), new Date(date.year, date.month, 0));
     }
+
 
     function fetchValidDates(playerId, startDate, endDate) {
       if (!startDate || !endDate) {
@@ -231,28 +207,23 @@ export default defineComponent({
         end_date: endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
       }).toString();
       calendarLoading.value = true;
-      axios.get(`/baseball/player-valid-dates/${playerId}?${params}`)
+      axios.get(`/baseball/get-player-dates/${playerId}?${params}`)
         .then(response => {
           if (response.data) {
-            console.log('Disabled dates str before fetch:', disabledDates.value);
-            console.log('Response data:', response.data);
-            disabledDates.value = response.data.map(timestamp => {
-              // Create a new Date object from the timestamp
-              const date = new Date(timestamp * 1000);
-              // Construct a UTC date string
-              const utcDateString = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
-              // Return the date object created from the UTC date string
-              return new Date(date)
-            });
-            console.log('Disabled dates str in UTC after fetch:', disabledDates.value);
+            validDates.value = response.data.valid_dates;
+            latestDisabledDate.value = response.data.latest_disabled_date;
+            latestValidDate.value = response.data.latest_valid_date;
+            disabledDates.value = response.data.disabled_dates.map(dateStr => {
+                        let date = new Date(dateStr);
+                        date.setUTCHours(12, 0, 0, 0); // Set time to noon UTC
+                        return date;
+                    });
 
-            const lastDisabledDate = disabledDates.value[0];
-            const yesterdayDate = getYesterdayDate(false);
-                
-            updateSelectedDate(lastDisabledDate, yesterdayDate );    
-                  
+            calendarValue.value = latestValidDate.value;
+
           } else {
             disabledDates.value = [];
+      
           }
         })
         .catch(error => {
@@ -271,13 +242,10 @@ export default defineComponent({
       return formatted ? yesterday.toISOString().slice(0, 10) : yesterday;
     }
     async function fetchPitches() {
-      console.log("current query", currentQuery.value)
+      console.log("current query from fetchpithces", currentQuery.value)
       videoPlayerLoading.value = true;
 
         try {
-          // id like to convert formattedCalendarValue.value to this format below 
-          
-        
             const response = await axios.get('/baseball/pitches', { 
                 params: { player_id: selectedPlayer.value.id, date: formattedCalendarValue.value } 
             });
@@ -346,28 +314,29 @@ export default defineComponent({
       onPlayerSelect,
       getYesterdayDate,
       fetchUserTokens,
-      syncMyPlayers
+      syncMyPlayers,
+      validDates,
+      disabledDates,
+      latestDisabledDate,
+      latestValidDate,
       };
   },
   mounted() {
     this.fetchUserTokens();
     this.calendarValue = this.getYesterdayDate(false);
+    let autoApplyFilter = false;
 
-    if (this.$route.query.date) {
-      this.calendarValue = this.$route.query.date;
-      console.log("Setting from route query:", this.calendarValue);
-    }
     if (this.$route.query.playerId) {
+      this.calendarValue = this.$route.query.date;
+
       this.selectedPlayer = { name: decodeURIComponent(this.$route.query.name), id: this.$route.query.playerId };      
-      if (this.$route.query.current_pitch) {
-        console.log("Setting current pitch from route query:", this.$route.query.current_pitch);
-        this.currentPitch = parseInt(this.$route.query.current_pitch);        
-        this.currentQuery = { player_id: this.$route.query.playerId, date: this.$route.query.date, name: this.$route.query.name, current_pitch: this.currentPitch };
-      } else {
-        this.currentQuery = { player_id: this.$route.query.playerId, date: this.$route.query.date, name: this.$route.query.name, current_pitch: 0 };
-      }
+      // set current pitch to 0 if its null 
+      this.currentPitch = parseInt(this.$route.query.current_pitch) || 0 
+      this.currentQuery = { player_id: this.$route.query.playerId, date: this.$route.query.date, name: decodeURIComponent(this.$route.query.name), current_pitch: parseInt(this.$route.query.current_pitch) || 0 };
+      
 
       console.log("Setting from route query:", this.selectedPlayer);
+      console.log("current query from route:", this.currentQuery);
     }
     this.fetchMyPlayers();
     if (this.selectedPlayer && this.selectedPlayer.id) {

@@ -223,34 +223,7 @@ export default defineComponent({
       fetchValidDatesForAllPlayers(new Date('2024-04-01'), getYesterdayDate(false));
      
     }
-    function updateSelectedDate(startDate, endDate, player) {
-      console.log('Start date:', startDate.toISOString(), 'End date:', endDate.toISOString());
-
-      let latestValidDate = null;
-      let d = new Date(endDate);
-      console.log('Player', player.key_mlbam)
-      // Loop from end date to start date
-      while (d >= startDate) {
-        console.log('Current date:', d.toISOString());
-        let comparisonDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0));
-        if (!player.disabledDates.some(validDate => validDate.toISOString() === comparisonDate.toISOString())) {
-          latestValidDate = new Date(comparisonDate);  // Use the comparison date as the latest valid date
-          console.log("Valid date found:", latestValidDate.toISOString());
-          break;  // Exit the loop since the most recent valid date is found
-        }
-
-        // Decrement the day by one
-        d.setDate(d.getDate() - 1);
-      }
-
-      if (latestValidDate) {
-        console.log('Updated selected date to:', latestValidDate.toISOString().slice(0, 10));
-        player.latestValidDate = latestValidDate;
-      } else {
-        console.log('No valid date found for player:', player.key_mlbam);
-        player.latestValidDate = null;
-      }
-    }
+    
     function onMonthChange(date) {
       debugLog('Month changed:', date);
       fetchValidDates(selectedPlayer.value.id, new Date(date.year, date.month - 1, 1), new Date(date.year, date.month, 0));
@@ -268,22 +241,24 @@ export default defineComponent({
               end_date: endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
           }).toString();
           debugLog('params', params)
-          return axios.get(`/baseball/player-valid-dates/${player.key_mlbam}?${params}`)
+          return axios.get(`/baseball/get-player-dates/${player.key_mlbam}?${params}`)
               .then(response => {
                   if (response.data) {
-                      player.disabledDates = response.data.map(timestamp => {
-                          const date = new Date(timestamp * 1000);
-                          return new Date(date);
-                      });
+                    player.validDates = response.data.valid_dates
+                    player.disabledDates = response.data.disabled_dates.map(dateStr => {
+                        let date = new Date(dateStr);
+                        date.setUTCHours(12, 0, 0, 0); // Set time to noon UTC
+                        return date;
+                    });
+                    player.latestValidDate = response.data.latest_valid_date
+                    player.latestDisabledDate = response.data.latest_disabled_date
                   } else {
                       player.disabledDates = [];
+                      player.latestValidDate = null;
+                      player.validDates = [];
                   }
                   player.isLoading = false;  // Loading done
-                  const lastDisabledDate = player.disabledDates[0];
-                  const yesterdayDate = getYesterdayDate(false);
-                  // console.log('Last disabled date:', lastDisabledDate);
-                  // console.log('Yesterday date:', yesterdayDate);
-                  updateSelectedDate(lastDisabledDate, yesterdayDate, player);    
+                
                   return { player, status: 'fulfilled' };
               })
               .catch(error => {
@@ -293,26 +268,18 @@ export default defineComponent({
               });
       });
 
-      // calendarLoading.value = true;
-      // videoPlayerLoading.value = true;
 
-      // Process all promises and handle them as they settle
       const results = await Promise.allSettled(fetchPromises);
 
       results.forEach(result => {
           if (result.status === 'fulfilled') {
-             // debugLog(`Data fetched successfully for player ${result.value.player.key_mlbam}`);
-              // Use getYesterdayDate(false) as the endDate
- 
-              // updateSelectedDate(startDate, endDate, result.value.player);
-
+            console.log('Data fetched successfully for player', result.value.player.key_mlbam);
           } else {
               console.error(`Failed to fetch data for player ${result.reason.player.key_mlbam}:`, result.reason);
           }
       });
 
-      // calendarLoading.value = false;
-      // videoPlayerLoading.value = false;
+
     }
     
 
