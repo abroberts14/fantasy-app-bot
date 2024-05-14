@@ -1,6 +1,16 @@
 
 
 <template>
+  
+  <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
+      <h3>No Yahoo Account Detected</h3>
+      <p>
+        To search for your players most recent plate appearances, you must connect and authorize a Yahoo account.
+      </p>
+      <p>
+        Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
+      </p>
+  </ModalOverlay> 
   <section class="video-section">
     <div v-if="currentPitches.length > 0">
     </div>
@@ -57,12 +67,15 @@ import useUsersStore from '@/store/users';
 import MediaPlayer from '@/components/MediaPlayer.vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import axios from 'axios';
+import ModalOverlay from '@/components/ModalOverlay.vue';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'TeamVideosView',
   components: {
     MediaPlayer,
     LoadingSpinner,
+    ModalOverlay
   },
   setup() {
     const usersStore = useUsersStore();
@@ -73,6 +86,7 @@ export default defineComponent({
     const videoPlayerLoading = ref(false);
     const calendarValue = ref(getYesterdayDate());
     const calendarLoading = ref(false);
+    const router = useRouter();
 
     const disabledDates = ref();
     const todayValue = ref(getYesterdayDate(false));
@@ -85,7 +99,13 @@ export default defineComponent({
     const isLoggedIn = computed(() => usersStore.isAuthenticated);
     const isPageLoading = computed(() => videoPlayerLoading.value || calendarLoading.value);
     const expandedRow = ref([])
-
+    const isDialogVisible = ref(false);
+    const handleModalVisibilityChange = (newValue) => {
+      isDialogVisible.value = newValue;
+      if (!newValue) { // if newValue is false, indicating the modal is closed
+        router.push('/profile'); // navigate to /profile
+      }
+    }
     const dynamicScrollHeight = ref('900px'); // Default value
     const debugConsole = true;
     function updateScrollHeight() {
@@ -183,6 +203,8 @@ export default defineComponent({
       }
       finally {
         userTokenPresent.value = this.oauth_response;
+        isDialogVisible.value = !userTokenPresent.value 
+        console.log("isDialogVisible: ", isDialogVisible.value);
       }
     }
 
@@ -442,11 +464,15 @@ export default defineComponent({
       dynamicScrollHeight,
       updateScrollHeight,
       trackPlayer,
+      isDialogVisible,
+      handleModalVisibilityChange,
       };
   },
   mounted() {
     this.fetchUserTokens();
-    this.fetchMyPlayers();
+    if (!this.isDialogVisible.value) {
+      this.fetchMyPlayers();
+    }
 
   },
   
