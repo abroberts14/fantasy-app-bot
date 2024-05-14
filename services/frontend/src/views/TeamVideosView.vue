@@ -11,9 +11,10 @@
         Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
       </p>
   </ModalOverlay> 
+  <LoadingSpinner v-if="loadingPlayers"/>
   <section class="video-section">
-    <div v-if="currentPitches.length > 0">
-    </div>
+    <Message severity="info" :sticky="false" :life="5000">Resync your players on your <router-link to="/profile">profile</router-link> page</Message>
+
     <DataTable 
         @row-expand="setExpandedRow" 
         @row-collapse="setCollapsedRow" 
@@ -87,7 +88,7 @@ export default defineComponent({
     const calendarValue = ref(getYesterdayDate());
     const calendarLoading = ref(false);
     const router = useRouter();
-
+    const loadingPlayers = ref(false);
     const disabledDates = ref();
     const todayValue = ref(getYesterdayDate(false));
     const paOnly = ref(true);
@@ -349,7 +350,7 @@ export default defineComponent({
         console.error('User is not logged in or token is not available');
         return;
       }
-      this.loading = true;
+      loadingPlayers.value = true;
       try {
         const response = await axios.get('/baseball/players/my-players');
         this.batters = response.data.players.batters || [];
@@ -358,7 +359,7 @@ export default defineComponent({
         this.batters = [];
       } finally {
         this.fetchAndSetPlayerData()
-        this.loading = false;
+        loadingPlayers.value = false;
       }
     }
 
@@ -466,6 +467,7 @@ export default defineComponent({
       trackPlayer,
       isDialogVisible,
       handleModalVisibilityChange,
+      loadingPlayers,
       };
   },
   mounted() {

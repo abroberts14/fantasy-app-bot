@@ -92,7 +92,7 @@ class Apps(models.Model):
 class Player(models.Model):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField('models.Users', related_name='players')
-    full_name = fields.CharField(max_length=100, unique=True)
+    full_name = fields.CharField(max_length=100)
     first_name = fields.CharField(max_length=50)
     last_name = fields.CharField(max_length=50)
     mlb_id = fields.IntField() # MLB ID as a string if it's alphanumeric, otherwise use IntField
@@ -102,4 +102,3 @@ class Player(models.Model):
 
     def __str__(self):
         return f"{self.full_name} ({self.mlb_id}) - {self.user.username}"
-

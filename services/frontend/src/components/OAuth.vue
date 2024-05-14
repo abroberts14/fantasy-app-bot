@@ -15,6 +15,9 @@
           <div class="text-900  md:w-8 md:flex-order-0 flex-order-1">{{ formatDate(oauthTokens.modified_at) }}</div>
         </li>
       </ul>
+      <LoadingSpinner v-if="pageLoading"/>
+      <Button @click="syncMyPlayers()" style="margin-right: 10px;">Resync Players</Button>
+
       <ConfirmDialog></ConfirmDialog>
       <Button label="Delete Integration" severity="danger" @click="confirmDelete(oauthTokens.id)" />
     </div>
@@ -23,7 +26,12 @@
       <p> After integrating your yahoo account, you might need to refresh the page.</p>
 
     </div>
-
+    <div v-if="batters.length > 0">
+      <h3>My Players</h3>
+      <ul>
+        <li v-for="batter in batters" :key="batter.id">{{ batter.name }}</li>
+      </ul>
+    </div>
 
   </div>
 </template>
@@ -33,22 +41,26 @@ import { defineComponent, ref, computed, onMounted } from 'vue';
 import useUsersStore from '@/store/users'; 
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import LoadingSpinner from './LoadingSpinner.vue';
 
 export default defineComponent({
   name: 'OAuth',
-  
+  components: {
+    LoadingSpinner
+  },
 
   setup() {
     const usersStore = useUsersStore();
     const oauthTokens = ref(null);
     const toast = useToast();
-
+    const pageLoading = ref(false);
     onMounted( () => {
-      fetchData();
+       fetchData();
+
     });
 
     const user = computed(() => usersStore.stateUser);
-
+    const batters = ref([]);
 
     const fetchData = async () => {
       try {
@@ -58,6 +70,9 @@ export default defineComponent({
           }
         });
         oauthTokens.value = response.data;
+        if (oauthTokens.value) {
+          fetchMyPlayers();
+        }
       } catch (error) {
         console.error('Failed to fetch Yahoo integration:', error);
       }
@@ -72,6 +87,42 @@ export default defineComponent({
       } catch (error) {
         console.error('Failed to remove integration:', error);
         toast.error('Failed to remove integration');
+      }
+    }
+    async function syncMyPlayers() {
+      const usersStore = useUsersStore();
+      if (!usersStore.isAuthenticated) {
+        console.error('User is not logged in or token is not available');
+        return;
+      }
+      try {
+        pageLoading.value = true;
+        const response = await axios.get('/baseball/players/sync_players');
+        console.log('API Response:', response.data);
+        if (response.data.players.batters) {
+          toast.success('Players synced successfully');
+        } else {
+          toast.error('Failed to sync players');
+        }
+      } catch (error) {
+        console.error('Failed to fetch players:', error);
+      } finally {
+        pageLoading.value = false;
+      }
+    }
+
+    async function fetchMyPlayers() {
+
+      pageLoading.value = true;
+      try {
+        const response = await axios.get('/baseball/players/my-players');
+        batters.value = response.data.players.batters || [];
+      } catch (error) {
+        console.error('Failed to fetch players:', error);
+        toast.error('Failed to fetch players');
+        batters.value = [];
+      } finally {
+        pageLoading.value = false;
       }
     }
     function confirmDelete(tokenId) {
@@ -132,9 +183,11 @@ export default defineComponent({
       const options = { year: 'numeric', month: 'long', day: 'numeric' };
       return new Date(dateString).toLocaleDateString(undefined, options);
     }
+
     return {
-      user, oauthTokens, connectToYahoo, removeIntegration, confirmDelete, formatDate
+      user, fetchMyPlayers, oauthTokens, connectToYahoo, removeIntegration, batters, confirmDelete, formatDate, pageLoading, syncMyPlayers
     }
+;
   }
 });
 </script>

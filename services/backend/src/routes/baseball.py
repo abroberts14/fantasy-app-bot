@@ -522,8 +522,8 @@ async def get_my_players(current_user: UserOutSchema = Depends(get_current_user)
         batters = []
         players = await Player.filter(user_id=current_user.id).all()
         if len(players) == 0:
-            await sync_players(current_user)
-            players = await Player.filter(user_id=current_user.id).all()
+            return await sync_players(current_user)
+            #players = await Player.filter(user_id=current_user.id).all()
         for player in players:
             try:
                 print(f"Searching for player ID for {player.last_name} {player.first_name}")
@@ -544,7 +544,6 @@ async def sync_players(current_user: UserOutSchema = Depends(get_current_user)):
         print('Syncing yahoo batters for user:', current_user.username)
         players = await get_user_batters(current_user.id)
         
-        # Fetch all current players from the database for the user
         existing_players = await Player.filter(user_id=current_user.id).all()
         existing_player_names = {player.full_name for player in existing_players}
         
@@ -557,7 +556,6 @@ async def sync_players(current_user: UserOutSchema = Depends(get_current_user)):
         # Update existing players' status to inactive if they are not in the fetched players list
         if players_to_deactivate:
             await Player.filter(user_id=current_user.id, full_name__in=players_to_deactivate).delete()
-        # Get player IDs for each batter
         batters = []
         for name in players['batters']:
             try:
@@ -584,7 +582,7 @@ async def sync_players(current_user: UserOutSchema = Depends(get_current_user)):
                 await player.save()
             except Exception as e:
                 print(f"Error occurred while searching for player ID: {e}")
-                batters.append({'name': name, 'user_id': -1, 'error': str(e)})
+                #batters.append({'name': name, 'user_id': -1, 'error': str(e)})
     except Exception as e:
         print(f"Error syncing players: {e}")
         return {"players": [], "error": str(e)}
@@ -640,7 +638,6 @@ def yf_get_team_players(query, team = None, date=None, formatted = True):
         for player in players:
             print(player.name.first, player.name.last, player.position_type)
             if player.position_type == 'B':
-                print(player)
                 players_list.append( f"{ player.name.first} {player.name.last}")
         return players_list
        
@@ -688,7 +685,6 @@ async def setup_yahoo_oauth(user_id: int):
             "consumer_key": keys["consumer_key"],
             "consumer_secret": keys["consumer_secret"]
         }
-        print('token data', token_data)
         file_path = 'token.json'
         with open(file_path, 'w') as f:
             json.dump(token_data, f)

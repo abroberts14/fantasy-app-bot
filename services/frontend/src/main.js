@@ -40,6 +40,7 @@ import FloatLabel from 'primevue/floatlabel';
 import Menubar from 'primevue/menubar';
 import AnimateOnScroll from 'primevue/animateonscroll';
 import InlineMessage from 'primevue/inlinemessage';
+import Message from 'primevue/message';
 const app = createApp(App)
 app.use(PrimeVue, {
   rippling: true,
@@ -80,6 +81,7 @@ app.component('Menubar', Menubar);
 app.directive('tooltip', Tooltip);
 app.directive('animateonscroll', AnimateOnScroll);
 app.component('InlineMessage', InlineMessage);
+app.component('Message', Message);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
