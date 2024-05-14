@@ -305,24 +305,42 @@ def get_missing_dates(player_id: int, start_date: str = None, end_date: str = No
         end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
     # Generate all dates within the specified range
-    num_days = (end_date - start_date).days
+    num_days = (end_date - start_date).days + 1
+    if player_id == 621043 or player_id == 682829:
+        print('searching player id: ', player_id)
+        print('start date: ', start_date)
+        print('end date: ', end_date)
+        print('num days: ', num_days)
     all_dates = {start_date + timedelta(days=x): x for x in range(num_days)}
     try:
         # Fetch data for the given player ID within the specified date range
         data = statcast_batter(start_dt=start_date.strftime('%Y-%m-%d'), end_dt=end_date.strftime('%Y-%m-%d'), player_id=player_id)
         if data.empty:
             # Return all dates as noon timestamps if no data is fetched
-            return [int((date + timedelta(hours=12)).timestamp()) for date in all_dates]
+            return [int((date).timestamp()) for date in all_dates]
 
         valid_dates_strings = data['game_date'].dropna().unique().tolist()
         valid_dates_strings.sort()
-
+       # print(valid_dates_strings)
         # Find missing dates by comparing sets
+        all_date_strings = [date.strftime('%Y-%m-%d') for date in all_dates] 
+        all_date_strings.sort()
+        all_date_set = set(all_date_strings)
         valid_dates_set = set(valid_dates_strings)
-        print(valid_dates_set)
-        # Ensure game_date is a datetime type and normalize
-        all_date_strings = [date.strftime('%Y-%m-%d') for date in all_dates]
+        invalid_dates_set = all_date_set - valid_dates_set
 
+
+        if player_id == 621043 or player_id == 682829 :
+            print('alldates')
+            print(all_date_strings)
+            print('valid dates')
+            print(valid_dates_set)
+            print('invalid dates')
+            print(invalid_dates_set)
+            #generate the difference between all_date and valid dates and print it 
+
+       # print(valid_dates_set)
+        # Ensure game_date is a datetime type and normalize
         missing_dates = []
         try:
             for date_str in all_date_strings:

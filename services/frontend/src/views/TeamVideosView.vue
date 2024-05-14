@@ -45,13 +45,18 @@
             <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Loading data" />
           </span> 
           <div v-if="!slotProps.data.latestValidDate">
-            <InlineMessage severity="warn">No players loaded</InlineMessage>
+            <InlineMessage severity="warn">No plays loaded</InlineMessage>
           </div>
           <div v-if="currentPitches.length > 0 && !videoPlayerLoading" >
 
             <MediaPlayer :videos="currentPitches" :reset="videoPlayerLoading" :currentQuery="currentQuery" autoplay="false" />
             </div>
-           
+           <!-- Output the latestValidDate -->
+           <!-- <p>Latest valid date: {{ slotProps.data.latestValidDate }}</p> -->
+           <!-- Loop through and output the disableddates in a list -->
+           <!-- <ul>
+             <li v-for="date in slotProps.data.disabledDates" :key="date">{{ date }}</li>
+           </ul> -->
           </div>
       </template>
     </DataTable>
@@ -223,14 +228,14 @@ export default defineComponent({
 
       let latestValidDate = null;
       let d = new Date(endDate);
-
+      console.log('Player', player.key_mlbam)
       // Loop from end date to start date
       while (d >= startDate) {
-
+        console.log('Current date:', d.toISOString());
         let comparisonDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0));
         if (!player.disabledDates.some(validDate => validDate.toISOString() === comparisonDate.toISOString())) {
           latestValidDate = new Date(comparisonDate);  // Use the comparison date as the latest valid date
-          //console.log("Valid date found:", latestValidDate.toISOString());
+          console.log("Valid date found:", latestValidDate.toISOString());
           break;  // Exit the loop since the most recent valid date is found
         }
 
