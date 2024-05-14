@@ -32,7 +32,8 @@ export default defineComponent({
         { label: 'Dashboard', to: '/dashboard', command: () => { router.push('/dashboard'); } },
         { label: 'My Profile', to: '/profile', command: () => { router.push('/profile'); } },
         { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } },
-        { label: 'Pitch Replays', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } }
+        { label: 'Search Video Replays', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
+        { label: 'My Team Videos', to: '/team-videos', command: () => { router.push('/team-videos'); } }
       ];
       if (usersStore.isAdmin) {
         baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });

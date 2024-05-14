@@ -57,18 +57,7 @@
     </div>
     <div v-else>
       <p>No pitches found.</p>
-      <div v-if="userTokenPresent">
-        <Button @click="syncMyPlayers">Sync My Players From Yahoo</Button>
-        <div v-if="batters.length > 0">
-          <p>My Players:</p>
-          <ul>
-            <li v-for="(batter, index) in batters" :key="index">{{ batter.name }}</li>
-          </ul>
-        </div>
-        <div v-else>
-          <p>No players loaded.</p>
-        </div>
-      </div>
+
     </div>
   </section>
 </template>
@@ -81,7 +70,7 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import axios from 'axios';
 
 export default defineComponent({
-  name: 'HomeView',
+  name: 'PitchReplaysView',
   components: {
     MediaPlayer,
     LoadingSpinner,
@@ -108,27 +97,17 @@ export default defineComponent({
     const isLoggedIn = computed(() => usersStore.isAuthenticated);
     const isPageLoading = computed(() => videoPlayerLoading.value || calendarLoading.value);
 
-    // const disabledDates = computed(() => {
-    //     if (Array.isArray(disabledDates.value)) {
 
-    //       return disabledDates.value.map(dateStr => {
-    //         // Ensure the date string includes time part 'T00:00:00Z' to parse as UTC
-    //         const dateTimeStr = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00Z`;
-    //         return new Date(dateTimeStr);
-    //       });
-    //     } else {
-    //       return [];
-    //     }
-    // });
     const formattedCalendarValue = computed(() => {
-      
-      // Ensure calendarValue is a Date object before calling toISOString
       if (calendarValue.value instanceof Date) {
-        return calendarValue.value.toISOString().slice(0, 10);
-      } else {
-        return calendarValue.value
+        return new Date(Date.UTC(
+          calendarValue.value.getFullYear(),
+          calendarValue.value.getMonth(),
+          calendarValue.value.getDate(),
+          12, 0, 0
+        ))
       }
-      c
+      return calendarValue.value;
     });
     function searchPlayers(event) {
       if (!event.query.trim()) {
@@ -205,18 +184,25 @@ export default defineComponent({
         userTokenPresent.value = this.oauth_response;
       }
     }
-    function updateSelectedDate(startDate, endDate) {
-      let latestValidDate = null;
 
-      // Create a loop from end of month to start of month
-      for (let d = endDate; d >= startDate; d.setDate(d.getDate() - 1)) {
-        if (!disabledDates.value.some(disabledDate => 
-          disabledDate.getDate() === d.getDate() && 
-          disabledDate.getMonth() === d.getMonth() && 
-          disabledDate.getFullYear() === d.getFullYear())) {
-          latestValidDate = new Date(d);
-          break;
+    function updateSelectedDate(startDate, endDate, player) {
+      console.log('Start date:', startDate.toISOString(), 'End date:', endDate.toISOString());
+
+      let latestValidDate = null;
+      let d = new Date(endDate);
+
+      // Loop from end date to start date
+      while (d >= startDate) {
+
+        let comparisonDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0));
+        if (!disabledDates.value.some(validDate => validDate.toISOString() === comparisonDate.toISOString())) {
+          latestValidDate = new Date(comparisonDate);  // Use the comparison date as the latest valid date
+          //console.log("Valid date found:", latestValidDate.toISOString());
+          break;  // Exit the loop since the most recent valid date is found
         }
+
+        // Decrement the day by one
+        d.setDate(d.getDate() - 1);
       }
       if (latestValidDate) {
         // If a valid date is found, update your calendar's selected date
@@ -228,7 +214,6 @@ export default defineComponent({
 
       }
     }
-
     function onMonthChange(date) {
       console.log('Month changed:', date);
       fetchValidDates(selectedPlayer.value.id, new Date(date.year, date.month - 1, 1), new Date(date.year, date.month, 0));
@@ -260,7 +245,12 @@ export default defineComponent({
               return new Date(date)
             });
             console.log('Disabled dates str in UTC after fetch:', disabledDates.value);
-            updateSelectedDate(startDate, endDate);
+
+            const lastDisabledDate = disabledDates.value[0];
+            const yesterdayDate = getYesterdayDate(false);
+                
+            updateSelectedDate(lastDisabledDate, yesterdayDate );    
+                  
           } else {
             disabledDates.value = [];
           }
@@ -283,7 +273,11 @@ export default defineComponent({
     async function fetchPitches() {
       console.log("current query", currentQuery.value)
       videoPlayerLoading.value = true;
+
         try {
+          // id like to convert formattedCalendarValue.value to this format below 
+          
+        
             const response = await axios.get('/baseball/pitches', { 
                 params: { player_id: selectedPlayer.value.id, date: formattedCalendarValue.value } 
             });

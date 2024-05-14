@@ -166,29 +166,71 @@ body {
 
 /* Mobile Styles */
 @media (max-width: 768px) {
+  /* Shared base styles for all positions */
   .video-overlay-text {
     position: absolute;
     color: white;
-
     font-size: 11px; /* Smaller font size for mobile devices */
     font-weight: bolder;
     text-shadow: 2px 2px 4px #000000;
     background-color: rgba(0, 0, 0, 0.13);
     padding: 5px; /* Smaller padding to reduce overlay size */
-    top: 1%; /* Adjusted position to avoid blocking video controls */
-    right: 1%; /* Slightly off the edge for better visibility */
     max-width: 90%; /* Ensures it doesn't span the full width of the screen */
     border-radius: 3px; /* Smaller border-radius for a subtler appearance */
-    text-align: right; /* Centers the text within the overlay */
+    pointer-events: none;
+    -webkit-text-stroke: .25px red; /* width and color of stroke */
+  }
+
+  /* Top left */
+  .video-overlay-text-top-left {
+    top: 1%;
+    left: 1%;
+    text-align: left;
+  }
+
+  /* Bottom left */
+  .video-overlay-text-bottom-left {
+    bottom: 1%;
+    left: 1%;
+    text-align: left;
+  }
+
+  /* Top center */
+  .video-overlay-text-top-center {
+    top: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  /* Bottom center */
+  .video-overlay-text-bottom-center {
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  /* Top right */
+  .video-overlay-text-top-right {
+    top: 1%;
+    right: 1%;
+    text-align: right;
+  }
+
+  /* Bottom right */
+  .video-overlay-text-bottom-right {
+    bottom: 1%;
+    right: 1%;
+    text-align: right;
   }
 }
 
 /* Desktop Styles */
 @media (min-width: 769px) {
+  /* Shared base styles for all positions */
   .video-overlay-text {
     position: absolute;
-    top: 2%;
-    left: 2%;
     color: white;
     font-size: 20px;
     font-weight: bolder;
@@ -198,7 +240,46 @@ body {
     border-radius: 5px;
     pointer-events: none;
   }
+
+  /* Top left */
+  .video-overlay-text-top-left {
+    top: 2%;
+    left: 2%;
+  }
+
+  /* Bottom left */
+  .video-overlay-text-bottom-left {
+    bottom: 2%;
+    left: 2%;
+  }
+
+  /* Top center */
+  .video-overlay-text-top-center {
+    top: 2%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Bottom center */
+  .video-overlay-text-bottom-center {
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Top right */
+  .video-overlay-text-top-right {
+    top: 2%;
+    right: 2%;
+  }
+
+  /* Bottom right */
+  .video-overlay-text-bottom-right {
+    bottom: 2%;
+    right: 2%;
+  }
 }
+
 .calendar-container {
   position: relative; /* This makes it a reference for absolutely positioned children */
 }

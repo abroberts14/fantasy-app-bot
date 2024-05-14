@@ -10,19 +10,25 @@
     >
       <source :src="currentVideoUrl" type="video/mp4" />
     </video>
-    <div class="video-overlay-text" >
-          <span v-if="currentVideoStats.batter_name" class="underline">
-          {{ currentVideoStats.batter_name }} ( {{ currentIndex + 1}}/{{ videos.length }} )
-          </span><br v-if="currentVideoStats.hit_speed">
 
+    <div class="video-overlay-text video-overlay-text-top-left" v-if="(!currentVideoStats.hit_speed || !isPlaying)">
+          <span v-if="currentVideoStats.batter_name" class="bold-outline">
+          {{ currentVideoStats.batter_name }} ( {{ currentIndex + 1}}/{{ videos.length }} )
+          </span><br v-if="currentVideoStats.batter_name">
+          <span v-if="currentVideoData.date" >
+          {{ currentVideoData.formattedDate  }} 
+          </span><br v-if="currentVideoData.date">
           <span v-if="currentVideoStats.pitch_name || currentVideoStats.start_speed">
             {{ currentVideoStats.pitch_name }} {{ currentVideoStats.start_speed }} MPH
           </span><br v-if="currentVideoStats.pitch_name || currentVideoStats.start_speed">
+         
+    </div>
+    <div class="video-overlay-text video-overlay-text-top-right" >
           
+
           <span v-if="currentVideoStats.hit_speed">
-            Exit: {{ currentVideoStats.hit_speed }} MPH @ {{ currentVideoStats.hit_angle }}°
+          Exit: {{ currentVideoStats.hit_speed }} MPH @ {{ currentVideoStats.hit_angle }}°
           </span><br v-if="currentVideoStats.hit_speed">
-          
           <span v-if="currentVideoStats.hit_distance">
             Distance: {{ currentVideoStats.hit_distance }} ft
           </span><br v-if="currentVideoStats.hit_distance">
@@ -30,15 +36,22 @@
           <span v-if="currentVideoStats.xba">
             xBA: {{ currentVideoStats.xba }}
           </span><br v-if="currentVideoStats.xba">
-          
-          <span v-if="currentVideoStats.hr_cat !== undefined" style="color: red;">
-            Home Run: {{ currentVideoStats.hr_cat }}
-          </span><br v-if="currentVideoStats.hr_cat !== undefined">
-          
-          <span v-if="currentVideoStats.hr_ct !== undefined" style="color: red;">
-            Home Run Parks: {{ currentVideoStats.hr_ct }} / 30
-          </span><br v-if="currentVideoStats.hr_ct !== undefined">
+          <div v-if="!isPlaying">
+            <span v-if="currentVideoStats.bat_speed">
+              Bat Speed: {{ currentVideoStats.bat_speed }} MPH
+            </span><br v-if="currentVideoStats.bat_speed">
+            <span v-if="currentVideoStats.swing_length">
+              Swing Length: {{ currentVideoStats.swing_length }} ft
+            </span><br v-if="currentVideoStats.swing_length">
+          </div>
     </div>
+    <div class="video-overlay-text video-overlay-text-bottom-center" v-if="!isPlaying" >
+          <span v-if="currentVideoStats.hr_ct !== undefined && currentVideoStats.hr_cat !== undefined" style="color: red;">
+            HR Parks: {{ currentVideoStats.hr_ct }} / 30 ->  {{ currentVideoStats.hr_cat }}
+          </span><br v-if="currentVideoStats.hr_ct !== undefined && currentVideoStats.hr_cat !== undefined">
+    </div>
+
+
     <Button @click="prevVideo" :disabled="currentIndex === 0" style="margin-right: 10px;">Previous Video</Button>
      <Button @click="nextVideo" :disabled="currentIndex === videos.length - 1" style="margin-right: 10px;">Next Video</Button>
      <Button @click="copyLinkToClipboard" icon="pi pi-copy" severity="info" rounded  aria-label="Copy Link To Video" />
@@ -63,7 +76,7 @@ const currentIndex = ref(0);
 const videoPlayer = ref(null);
 const screenWidth = ref(window.innerWidth);
 const router = useRouter();
-
+const formattedDate = ref(null);
 const options = {
   controls: true,
   autoplay: false,
@@ -74,12 +87,50 @@ const options = {
   volume: 0.6,
   playbackRates: [0.7, 1.0, 1.5, 2.0]
 };
+const isPlaying = ref(false);
 
 const currentVideoUrl = computed(() => props.videos[currentIndex.value].mp4 + '#t=0.5' );
 const currentPitch = computed(() => props.currentQuery.current_pitch);
 
-const currentVideoStats = computed(() => props.videos[currentIndex.value]);
-const currentVideoData = computed(() => props.currentQuery);
+const currentVideoStats = computed(() => {
+  let stats = {...props.videos[currentIndex.value]};
+  if (stats.bat_speed) {
+    stats.bat_speed = parseFloat(stats.bat_speed).toFixed(0);
+  }
+  if (stats.swing_length) {
+    stats.swing_length = parseFloat(stats.swing_length).toFixed(2);
+  }
+  return stats;
+});
+const currentVideoData = computed(() => {
+  const videoData = props.currentQuery;
+  // Check if the date exists and is a valid date string or Date object
+  if (videoData.date) {
+    let parsedDate;
+
+    // Check if date is already a Date object or a string
+    if (videoData.date instanceof Date) {
+      // If it's a Date object, use it directly
+      parsedDate = videoData.date;
+    } else if (typeof videoData.date === 'string') {
+      // If it's a string, parse it to avoid timezone issues
+      const parts = videoData.date.split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in JavaScript Date
+      const day = parseInt(parts[2], 10);
+      parsedDate = new Date(year, month, day);
+    }
+
+    // Format the date as mm/dd/yyyy
+    videoData.formattedDate = parsedDate.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  return videoData;
+});
 
 const toast = useToast();
 onMounted(() => {
@@ -104,12 +155,26 @@ onMounted(() => {
     player.on(event, () => {
       if (event === 'timeupdate') {
         console.log(`Event: ${event}, Current Time: ${player.currentTime()}`);
-      } else {
-        console.log(`Event: ${event}`);
+      } 
+      if (event === 'play') {
+        console.log('playing');
+        isPlaying.value = true;
+      } 
+      if (event === 'pause') {
+        console.log('paused');
+        isPlaying.value = false;
+      }
+      if (event === 'ended') {
+        console.log('ended');
+        isPlaying.value = false;
+      } else  {
+        console.log(event);
       }
     });
   });
   currentIndex.value = currentPitch.value;
+        
+ 
   watch(currentVideoUrl, (newVal) => {
     console.log('Changing video to', newVal);
     player.src({ type: 'video/mp4', src: newVal });
@@ -163,12 +228,14 @@ async function copyLinkToClipboard() {
 function nextVideo() {
   if (currentIndex.value < props.videos.length - 1) {
     currentIndex.value += 1;
+    isPlaying.value = false;
   }
 }
 
 function prevVideo() {
   if (currentIndex.value > 0) {
     currentIndex.value -= 1;
+    isPlaying.value = false;
   }
 }
 </script>
@@ -178,5 +245,8 @@ function prevVideo() {
   margin-bottom: 5px;
 }
 
-
+.bold-outline {
+  font-weight: bold;
+  -webkit-text-stroke: .25px red; /* width and color of stroke */
+}
 </style>

@@ -1,3 +1,4 @@
+import io
 import os
 import requests
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Depends
@@ -5,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 
 import concurrent.futures
 
-from typing import Optional
+from typing import Optional, Tuple
 from datetime import datetime, timedelta, date, timezone
 from tortoise.exceptions import DoesNotExist
 from src.auth.jwthandler import get_current_user
@@ -23,148 +24,325 @@ import numpy as np
 from src.routes import oauth
 from src.crud import bots
 import json
-from yfpy.query import YahooFantasySportsQuery
+import logging
 
+from yfpy.query import YahooFantasySportsQuery
+from typing import List
+from time import sleep
 os.environ['SDL_AUDIODRIVER'] = 'dummy'
 # id = playerid_lookup('trout', 'mike')['key_mlbam'][0]
 # print(id)
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+
+# Create a requests session for connection pooling
+session = requests.Session()
+
+def fetch_url(url, params=None):
+    """ Utility function to fetch data from the given URL. """
+    try:
+        response = session.get(url, params=params)
+        response.raise_for_status()
+        return response
+    except requests.RequestException as e:
+        logger.error(f"Request failed for {url}: {e}")
+        return None
+
+def get_video_file(play_id):
+    """ Fetch video file URL from a play ID. """
+    url = f'https://baseballsavant.mlb.com/sporty-videos?playId={play_id}'
+    response = fetch_url(url)
+    if response:
+        soup = bs4.BeautifulSoup(response.text, 'lxml')
+        video_obj = soup.find("video", id="sporty")
+        if video_obj and video_obj.find('source'):
+            return video_obj.find('source')['src']
+    return None
+
+def get_all_event_videos(game_id, batter, player_id, extra_data = {}):
+    """ Retrieve all event videos for a game, filtering by the batter. """
+    url = f"https://baseballsavant.mlb.com/gf?game_pk={game_id}"
+    response = fetch_url(url)
+    at_bat_pitches = {}
+    if response:
+        data = response.json()
+        for event in data.get('team_home', []) + data.get('team_away', []):
+            if event['batter'] != batter:
+                continue
+            play_id = event['play_id']
+            ab_number = event['ab_number']
+            pitches = at_bat_pitches.setdefault(batter, {}).setdefault(str(ab_number), [])
+            mp4 = get_video_file(play_id)
+            pitch_info = event
+            pitch_info['mp4'] = mp4
+            if event['result'] == 'Home Run':
+                homerun_details = fetch_homerun_details(play_id, player_id)
+                if homerun_details:
+                    pitch_info.update(homerun_details)
+            if extra_data:
+                pitch_info.update(extra_data)
+            pitches.append(pitch_info)
+    return at_bat_pitches
+
+def fetch_homerun_details(play_id, player_id):
+    """ Fetch details for homeruns. """
+    url = f"https://baseballsavant.mlb.com/leaderboard/home-runs"
+    params = {'type': 'details', 'player_id': player_id}
+    response = fetch_url(url, params=params)
+    if response:
+        data = response.json()
+        for record in data:
+            if record['play_id'] == play_id:
+                return {'hr_cat': record['hr_cat'], 'hr_ct': record['ct']}
+    return {}
 
 def get_mp4s(player_id, date):
-    data = statcast_batter(date, date, player_id)
+    """ Fetch MP4 URLs for a player on a specific date. """
+    data = custom_statcast_batter(date, date, player_id)
     # Get the first row
     if data.empty:
         return []
-    print(data)
     first_row = data.iloc[0]
     print(first_row)
-    print(data.columns)
-
-    # i need to use the game id from this row and batters name to give to the next function
+    #drop any nan columns
+    first_row.dropna(inplace=True)
     game_id = first_row['game_pk']
     batter = first_row['batter']
-    print(game_id, batter)
+
     # Call the get_all_event_videos function with the game id and batter's name
-    at_bat_pitches = get_all_event_videos(game_id, batter, player_id)
+    try:
+        extra_data = {
+            'bat_speed': first_row['bat_speed'],
+            'swing_length': first_row['swing_length']
+        }
+    except:
+        extra_data = {}
+    at_bat_pitches = get_all_event_videos(game_id, batter, player_id, extra_data)
 
     return at_bat_pitches[batter]
 
-def get_video_file(play_id):
-    site = requests.get('https://baseballsavant.mlb.com/sporty-videos?playId='+ play_id)
-    soup = bs4.BeautifulSoup(site.text, features="lxml")
-    video_obj = soup.find("video", id="sporty")
-    clip_url = video_obj.find('source').get('src')
-    return clip_url
-
-def get_all_event_videos(game_id, batter, player_id):
-
-    statcast_content = requests.get("https://baseballsavant.mlb.com/gf?game_pk="+str(game_id), timeout=None).json()
-    home = statcast_content['team_home']
-    away = statcast_content['team_away']
-    home.extend(away)
-    results = {}
-    #plays = []
-    at_bat_pitches = {}
-    for i in home:
-        if i['batter'] != batter:
-            continue
-
-        play_id = i['play_id']
-        ab_number = i['ab_number']
-        if at_bat_pitches.get(i['batter']) is None:
-            at_bat_pitches[i['batter']] = {}
-        if at_bat_pitches.get(i['batter']).get(str(ab_number)) is None:
-            at_bat_pitches[i['batter']][str(ab_number)] = []
-        #print(at_bat_pitches)
-        # at_bat_pitches[i['batter']] = {str(ab_number): []}
-       # print(i)
-        hr = i['result'] == 'Home Run'
-        homerun_type = None 
-        homerun_count = None 
-        if (hr):
-            print('Home Run')
-            hr_content = requests.get(f"https://baseballsavant.mlb.com/leaderboard/home-runs?type=details&player_id={player_id}", timeout=None).json()
-            for x in hr_content:
-                if (x['play_id'] == play_id):
-                    print(x)
-                    homerun_type = x['hr_cat']
-                    homerun_count = x['ct']
-                    break
-
-
-        mp4 = get_video_file(play_id)
-       # print(mp4)
-        pitch_info = i
-        pitch_info['mp4'] = mp4 
-        if homerun_count != None:
-            pitch_info['hr_cat'] = homerun_type
-            pitch_info['hr_ct'] = homerun_count
-        at_bat_pitches[i['batter']][str(ab_number)].append(pitch_info)
+@router.get("/baseball/pitches")
+async def get_pitches_by_id(player_id: int, date: str):
+    """ Endpoint to retrieve pitches by player ID and date. """
+    if not player_id:
+        logger.error("No player_id provided")
+        return {"error": "No player_id provided"} 
+    if not date:
+        logger.error("No date provided")
+        return {"error": "No date provided"}
     
-    return at_bat_pitches
+    try:
+        date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
+    except:
+        print('Failed to convert date, using original date', date)
+
+    date_str = date_obj.strftime("%Y-%m-%d")
+    pitches = get_mp4s(player_id, date_str)
+    return {"id": player_id, 'pitches': pitches}
+
+def custom_statcast_batter(start_dt: Optional[str] = None, end_dt: Optional[str] = None, player_id: Optional[int] = None) -> pd.DataFrame:
+    """
+    Pulls statcast pitch-level data from Baseball Savant for a given batter.
+
+    ARGUMENTS
+        start_dt : YYYY-MM-DD : the first date for which you want a player's statcast data
+        end_dt : YYYY-MM-DD : the final date for which you want data
+        player_id : INT : the player's MLBAM ID. Find this by calling pybaseball.playerid_lookup(last_name, first_name), 
+            finding the correct player, and selecting their key_mlbam.
+    """
+    
+    new_url = 'https://baseballsavant.mlb.com/statcast_search/csv?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&stadium=&hfBBL=&hfNewZones=&hfGT=R%7CPO%7CS%7C=&hfSea=&hfSit=&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt={}&game_date_lt={}&batters_lookup%5B%5D={}&team=&position=&hfRO=&home_road=&hfFlag=&metric_1=&hfInn=&min_pitches=0&min_results=0&group_by=name&sort_col=pitches&player_event_sort=h_launch_speed&sort_order=desc&min_abs=0&chk_stats_sweetspot_speed_mph=on&chk_stats_swing_length=on&type=details&'
+    df = split_request(start_dt, end_dt, player_id, new_url)
+    return df
+
+
+
+def split_request(start_dt: str, end_dt: str, player_id: int, url: str) -> pd.DataFrame:
+	"""
+	Splits Statcast queries to avoid request timeouts
+	"""
+	current_dt = datetime.strptime(start_dt, '%Y-%m-%d')
+	end_dt_datetime = datetime.strptime(end_dt, '%Y-%m-%d')
+	results = []  # list to hold data as it is returned
+	player_id_str = str(player_id)
+	print('Gathering Player Data')
+	# break query into multiple requests
+	while current_dt <= end_dt_datetime:
+		remaining = end_dt_datetime - current_dt
+		# increment date ranges by at most 60 days
+		delta = min(remaining, timedelta(days=2190))
+		next_dt = current_dt + delta
+		start_str = current_dt.strftime('%Y-%m-%d')
+		end_str = next_dt.strftime('%Y-%m-%d')
+		# retrieve data
+		data = requests.get(url.format(start_str, end_str, player_id_str))
+		df = pd.read_csv(io.StringIO(data.text))
+		# add data to list and increment current dates
+		results.append(df)
+		current_dt = next_dt + timedelta(days=1)
+	return pd.concat(results)
+
+
+# def get_mp4s(player_id, date):
+#     data = statcast_batter(date, date, player_id)
+#     # Get the first row
+#     if data.empty:
+#         return []
+#     print(data)
+#     first_row = data.iloc[0]
+#     print(first_row)
+#     print(data.columns)
+
+#     # i need to use the game id from this row and batters name to give to the next function
+#     game_id = first_row['game_pk']
+#     batter = first_row['batter']
+#     print(game_id, batter)
+#     # Call the get_all_event_videos function with the game id and batter's name
+#     at_bat_pitches = get_all_event_videos(game_id, batter, player_id)
+
+#     return at_bat_pitches[batter]
+
+# def get_video_file(play_id):
+#     site = requests.get('https://baseballsavant.mlb.com/sporty-videos?playId='+ play_id)
+#     soup = bs4.BeautifulSoup(site.text, features="lxml")
+#     video_obj = soup.find("video", id="sporty")
+#     clip_url = video_obj.find('source').get('src')
+#     return clip_url
+
+# def get_all_event_videos(game_id, batter, player_id):
+
+#     statcast_content = requests.get("https://baseballsavant.mlb.com/gf?game_pk="+str(game_id), timeout=None).json()
+#     home = statcast_content['team_home']
+#     away = statcast_content['team_away']
+#     home.extend(away)
+#     results = {}
+#     #plays = []
+#     at_bat_pitches = {}
+#     for i in home:
+#         if i['batter'] != batter:
+#             continue
+
+#         play_id = i['play_id']
+#         ab_number = i['ab_number']
+#         if at_bat_pitches.get(i['batter']) is None:
+#             at_bat_pitches[i['batter']] = {}
+#         if at_bat_pitches.get(i['batter']).get(str(ab_number)) is None:
+#             at_bat_pitches[i['batter']][str(ab_number)] = []
+#         #print(at_bat_pitches)
+#         # at_bat_pitches[i['batter']] = {str(ab_number): []}
+#        # print(i)
+#         hr = i['result'] == 'Home Run'
+#         homerun_type = None 
+#         homerun_count = None 
+#         if (hr):
+#             print('Home Run')
+#             hr_content = requests.get(f"https://baseballsavant.mlb.com/leaderboard/home-runs?type=details&player_id={player_id}", timeout=None).json()
+#             for x in hr_content:
+#                 if (x['play_id'] == play_id):
+#                     print(x)
+#                     homerun_type = x['hr_cat']
+#                     homerun_count = x['ct']
+#                     break
+
+
+#         mp4 = get_video_file(play_id)
+#        # print(mp4)
+#         pitch_info = i
+#         pitch_info['mp4'] = mp4 
+#         if homerun_count != None:
+#             pitch_info['hr_cat'] = homerun_type
+#             pitch_info['hr_ct'] = homerun_count
+#         at_bat_pitches[i['batter']][str(ab_number)].append(pitch_info)
+    
+#     return at_bat_pitches
+
+
+
+
+
+# @router.get("/baseball/pitches")
+# async def get_pitches_by_id(player_id: int, date: str ):
+#     print(f"Received player_id: {player_id}")
+#     print(f"Received date: {date}")
+#     if not player_id:
+#         print("No player_id provided")
+#         return {"error": "No id provided"} 
+#     if not date:
+#         print("No date provided")
+#         return {"error": "No date provided"}
+    
+#     try:
+#         date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d")
+#         print(f"Converted date: {date}")
+#     except:
+#         print('Failed to convert date, using original date', date)
+#     try:
+#         print(f"Fetching mp4s for player_id: {player_id} and date: {date}")
+#         token_data = {
+#             "id": player_id,
+#             'pitches': get_mp4s(player_id, date)
+#         }
+#         print(f"Returning token_data")
+#         return token_data
+#     except DoesNotExist:
+#         print("No player found with that id")
+#         raise HTTPException(status_code=200, detail="No player found with that id")
+
+
 
 
 
 def get_missing_dates(player_id: int, start_date: str = None, end_date: str = None):
-    print(f"Fetching data for player ID {player_id} between {start_date} and {end_date}")
-
     # Determine the date range
     if not start_date or not end_date:
         end_date = datetime.today()
         start_date = end_date - timedelta(days=30)
     else:
         start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')- timedelta(days=1)
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-    print(f"Fetching data for player ID {player_id} between {start_date} and {end_date}")
     # Generate all dates within the specified range
     num_days = (end_date - start_date).days
-    all_dates = [start_date + timedelta(days=x) for x in range(num_days + 1)]
-    all_date_strings = [date.strftime('%Y-%m-%d') for date in all_dates]
-
+    all_dates = {start_date + timedelta(days=x): x for x in range(num_days)}
     try:
         # Fetch data for the given player ID within the specified date range
         data = statcast_batter(start_dt=start_date.strftime('%Y-%m-%d'), end_dt=end_date.strftime('%Y-%m-%d'), player_id=player_id)
         if data.empty:
-            # Convert all dates to noon timestamps
-            noon_timestamps = [int((datetime.strptime(date_str, '%Y-%m-%d') + timedelta(hours=12)).timestamp()) for date_str in all_date_strings]
-            return noon_timestamps  # Return all dates as noon timestamps if no data is fetched
-        
-        # Find all unique dates where data is available
+            # Return all dates as noon timestamps if no data is fetched
+            return [int((date + timedelta(hours=12)).timestamp()) for date in all_dates]
+
         valid_dates_strings = data['game_date'].dropna().unique().tolist()
         valid_dates_strings.sort()
 
         # Find missing dates by comparing sets
         valid_dates_set = set(valid_dates_strings)
+        print(valid_dates_set)
+        # Ensure game_date is a datetime type and normalize
+        all_date_strings = [date.strftime('%Y-%m-%d') for date in all_dates]
+
         missing_dates = []
         try:
             for date_str in all_date_strings:
                 if date_str not in valid_dates_set:
-                    print(f"Date {date_str} is missing.")
                     # Convert the date string to a datetime object
                     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-                    print(f"Date object: {date_obj}")
-                    # Check if the date is >= today
                     noon_date_obj = date_obj + timedelta(hours=12)
-                    print(f"Noon date object: {noon_date_obj}")
                     # Convert the datetime object to a Unix timestamp (seconds since epoch)
+                    #print(f"Adding date: {date_str}")
                     timestamp = int(noon_date_obj.timestamp())
                     missing_dates.append(timestamp)
-                    print(f"Missing dates: {missing_dates}")
-
-
-                else:
-                    print(f"Date {date_str} is valid.")
-                    # Uncomment below to see the data for the valid dates
-                    # print(f"Data for {date_str}:")
-                    # print(date_data)
+                    #Append missing dates
             return missing_dates
         except Exception as e: 
             print(f"Error occurred while processing data: {e}")
             return all_date_strings
+
     except Exception as e:
         raise ValueError(f"Failed to fetch or process data for player ID {player_id}: {str(e)}")
 
-router = APIRouter()
 
 @router.get("/baseball/player-valid-dates/{player_id}")
 async def fetch_valid_dates(player_id: int, start_date: str = Query(None), end_date: str = Query(None)):
@@ -178,35 +356,6 @@ async def fetch_valid_dates(player_id: int, start_date: str = Query(None), end_d
         return {"error": str(ve)}
     except Exception as e:
         return {"error": f"An unexpected error occurred: {str(e)}"}
-
-
-@router.get("/baseball/pitches")
-async def get_pitches_by_id(player_id: int, date: str ):
-    print(f"Received player_id: {player_id}")
-    print(f"Received date: {date}")
-    if not player_id:
-        print("No player_id provided")
-        return {"error": "No id provided"} 
-    if not date:
-        print("No date provided")
-        return {"error": "No date provided"}
-    
-    try:
-        date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d")
-        print(f"Converted date: {date}")
-    except:
-        print('Failed to convert date, using original date', date)
-    try:
-        print(f"Fetching mp4s for player_id: {player_id} and date: {date}")
-        token_data = {
-            "id": player_id,
-            'pitches': get_mp4s(player_id, date)
-        }
-        print(f"Returning token_data")
-        return token_data
-    except DoesNotExist:
-        print("No player found with that id")
-        raise HTTPException(status_code=200, detail="No player found with that id")
 
 def sync_lookup_player(last_name: str, first_name: Optional[str] = None):
     try:
@@ -364,16 +513,6 @@ def find_player_id(last: str, first: str = None, fuzzy: bool = False) -> pd.Data
 
 
 
-# @router.get("/baseball/players/my-players", dependencies=[Depends(get_current_user)])
-# async def get_my_players(current_user: UserOutSchema = Depends(get_current_user)):
-#     try:
-#         print('looking for yahooo batters')
-#         batters = await get_user_batters(current_user.id)
-
-#     except Exception as e:
-#         print(f"Error retrieving batters: {e}")
-#         return {"batters": [], "error": str(e)}
-#     return {"batters": batters}
 
 @router.get("/baseball/players/my-players", dependencies=[Depends(get_current_user)])
 async def get_my_players(current_user: UserOutSchema = Depends(get_current_user)):
@@ -391,7 +530,7 @@ async def get_my_players(current_user: UserOutSchema = Depends(get_current_user)
                 batters.append({'name': player.full_name, 'key_mlbam': player.mlb_id})
             except Exception as e:
                 print(f"Error occurred while searching for player ID: {e}")
-                batters.append({'name': '', 'key_mlbam': -1, 'error': str(e)})
+                batters.append({'name': '', 'user_id': -1, 'error': str(e)})
     except Exception as e:
         print(f"Error retrieving batters: {e}")
         return {'players': {"batters": [], "pitchers": [], "error": str(e)}}
@@ -404,12 +543,20 @@ async def sync_players(current_user: UserOutSchema = Depends(get_current_user)):
     try:
         print('Syncing yahoo batters for user:', current_user.username)
         players = await get_user_batters(current_user.id)
-        print(players)
         
-        # Update existing players' status to inactive if any players are found
-        if players['batters']:
-            await Player.filter(user_id=current_user.id).update(mlb_id='-1')
+        # Fetch all current players from the database for the user
+        existing_players = await Player.filter(user_id=current_user.id).all()
+        existing_player_names = {player.full_name for player in existing_players}
+        
+        # Set of names from the fetched batters
+        fetched_player_names = set(players['batters'])
 
+        # Determine players not in the fetched list
+        players_to_deactivate = existing_player_names - fetched_player_names
+
+        # Update existing players' status to inactive if they are not in the fetched players list
+        if players_to_deactivate:
+            await Player.filter(user_id=current_user.id, full_name__in=players_to_deactivate).delete()
         # Get player IDs for each batter
         batters = []
         for name in players['batters']:
@@ -437,7 +584,7 @@ async def sync_players(current_user: UserOutSchema = Depends(get_current_user)):
                 await player.save()
             except Exception as e:
                 print(f"Error occurred while searching for player ID: {e}")
-                batters.append({'name': name, 'key_mlbam': -1, 'error': str(e)})
+                batters.append({'name': name, 'user_id': -1, 'error': str(e)})
     except Exception as e:
         print(f"Error syncing players: {e}")
         return {"players": [], "error": str(e)}

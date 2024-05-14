@@ -12,6 +12,7 @@ import useUsersStore from '@/store/users';
 import OAuthSuccessView from '@/views/OAuthSuccessView.vue'
 import OAuthErrorView from '@/views/OAuthErrorView.vue'
 import PitchReplaysView from '@/views/PitchReplaysView.vue'
+import TeamVideosView from '@/views/TeamVideosView.vue'
 
 const routes = [
   {
@@ -85,6 +86,11 @@ const routes = [
     path: '/pitch-replays',
     name: 'PitchReplays',
     component: PitchReplaysView,
+  },
+  {
+    path: '/team-videos',
+    name: 'TeamVideos',
+    component: TeamVideosView,
   },
 ]
 
