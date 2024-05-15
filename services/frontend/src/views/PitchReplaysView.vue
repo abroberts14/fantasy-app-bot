@@ -237,6 +237,7 @@ export default defineComponent({
       const yesterday = new Date(today.setDate(today.getDate() - 1));
       return formatted ? yesterday.toISOString().slice(0, 10) : yesterday;
     }
+
     async function fetchPitches() {
       console.log("calendar value", calendarValue.value)
       console.log("current query from fetchpithces", currentQuery.value)
@@ -337,7 +338,10 @@ export default defineComponent({
     }
     this.fetchMyPlayers();
     if (this.selectedPlayer && this.selectedPlayer.id) {
-      this.fetchPitches();
+      this.fetchPitches().then(() => {
+        // After fetching the pitches, replace the URL to remove the query parameters
+        this.$router.replace({ query: {} });
+      });
     }
   },
 });

@@ -172,29 +172,26 @@ onMounted(() => {
       }
     });
   });
-  currentIndex.value = currentPitch.value;
-        
- 
-  watch(currentVideoUrl, (newVal) => {
-    console.log('Changing video to', newVal);
-    player.src({ type: 'video/mp4', src: newVal });
-  });
-  watch(currentPitch, (newVal) => {
-    console.log('Changing pitch to', newVal);
-    currentIndex.value = newVal;
-  });
-  watch(() => props.reset, (newVal) => {
-    console.log('Resetting video');
-    console.log('Resetting video to', newVal);
-    if (newVal) {
+
+    // Initial video setup
+    currentIndex.value = props.currentQuery.current_pitch || 0;
+    player.src({ type: 'video/mp4', src: currentVideoUrl.value });
+
+    watch(currentIndex, (newVal) => {
+      player.src({ type: 'video/mp4', src: props.videos[newVal].mp4 + '#t=0.5' });
       player.pause();
-    }
+    });
+
+    watch(() => props.reset, (newVal) => {
+      if (newVal) {
+        player.pause();
+      }
+    });
+
+    watch(() => props.videos, (newVal) => {
+      player.src({ type: 'video/mp4', src: newVal[0].mp4 + '#t=0.5' });
+    });
   });
-  watch(() => props.videos, (newVal) => {
-    console.log('Changing videos to', newVal);
-    player.src({ type: 'video/mp4', src: newVal[0].mp4 });
-  });
-});
 async function copyLinkToClipboard() {
       // Construct the route object with query parameters
       const route = router.resolve({
