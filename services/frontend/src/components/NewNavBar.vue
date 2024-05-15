@@ -45,8 +45,7 @@ export default defineComponent({
             { label: 'Search', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
           ]
         }
-        // { label: 'Search Video Replays', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
-        // { label: 'My Team Videos', to: '/team-videos', command: () => { router.push('/team-videos'); } }
+     
       ];
       if (usersStore.isAdmin) {
         baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });
