@@ -102,15 +102,11 @@ export default defineComponent({
 
 
     const formattedCalendarValue = computed(() => {
-      if (calendarValue.value instanceof Date) {
-        return new Date(Date.UTC(
-          calendarValue.value.getFullYear(),
-          calendarValue.value.getMonth(),
-          calendarValue.value.getDate(),
-          12, 0, 0
-        ))
+      try {
+        return calendarValue.value.toISOString().slice(0, 10);
+      } catch (error) {
+        return calendarValue.value;
       }
-      return calendarValue.value;
     });
     function searchPlayers(event) {
       if (!event.query.trim()) {
@@ -242,6 +238,7 @@ export default defineComponent({
       return formatted ? yesterday.toISOString().slice(0, 10) : yesterday;
     }
     async function fetchPitches() {
+      console.log("calendar value", calendarValue.value)
       console.log("current query from fetchpithces", currentQuery.value)
       videoPlayerLoading.value = true;
 
