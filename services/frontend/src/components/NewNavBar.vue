@@ -8,7 +8,8 @@
 </router-link>
         </template>
         <template #end v-if="isLoggedIn">
-          <Button class="p-button-sm" severity="secondary" @click="logout">Log Out</Button>
+          
+          <Button class="p-button-sm no-wrap" severity="secondary" @click="logout">Log Out</Button>
         </template>
       </Menubar>
     </div>
@@ -29,11 +30,23 @@ export default defineComponent({
     const items = computed(() => {
       const baseItems = [
         { label: 'Home', to: '/', command: () => { router.push('/'); } },
-        { label: 'Dashboard', to: '/dashboard', command: () => { router.push('/dashboard'); } },
         { label: 'My Profile', to: '/profile', command: () => { router.push('/profile'); } },
-        { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } },
-        { label: 'Search Video Replays', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
-        { label: 'My Team Videos', to: '/team-videos', command: () => { router.push('/team-videos'); } }
+        {
+          label: 'Chat Bots', // Main menu item for replays
+          items: [
+             { label: 'My Bots', to: '/dashboard', command: () => { router.push('/dashboard'); } },
+            { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } },
+          ]
+        },
+        {
+          label: 'Video Replays', // Main menu item for replays
+          items: [
+            { label: 'My Team', to: '/team-videos', command: () => { router.push('/team-videos'); } },
+            { label: 'Search', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
+          ]
+        }
+        // { label: 'Search Video Replays', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
+        // { label: 'My Team Videos', to: '/team-videos', command: () => { router.push('/team-videos'); } }
       ];
       if (usersStore.isAdmin) {
         baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });

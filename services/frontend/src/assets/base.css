@@ -79,6 +79,7 @@ body {
     left: 0;
     width: 100%;
     z-index: 1000;
+
   }
 
   .p-menubar-button svg {
@@ -103,7 +104,7 @@ body {
 }
  
 /* Desktop Styles */
-@media (min-width: 769px) {
+@media (min-width: 768px)  {
   .p-menubar {
     display: flex;
     justify-content: center;
@@ -111,6 +112,7 @@ body {
     margin: auto; /* Centering content horizontally */
   
     width: 100%;
+    
   }
 }
 .data-table-center th,
@@ -142,27 +144,36 @@ body {
 /* Medium screens (e.g., tablets) */
 @media (min-width: 768px) and (max-width: 1200px) {
   body {
-    width: 90%; /* Keep 100% width on medium screens */
+    width: 95%; /* Keep 100% width on medium screens */
 
   }
 }
 /* Medium screens (e.g., tablets) */
 @media (min-width: 1200px) and (max-width: 1600px) {
   body {
-    width: 75%; /* Keep 100% width on medium screens */
+    width: 90%; /* Keep 100% width on medium screens */
 
   }
 }
 
 /* Large screens */
-@media (min-width: 1600px) {
+@media (min-width: 1600px) and (max-width: 2100px){
   body {
-    width: 60%; /* Reduce to 60% width on larger screens */
+    width: 75%; /* Reduce to 60% width on larger screens */
+
+  }
+}
+/* X Large screens */
+@media (min-width: 2100px) {
+  body {
+    width: 65%; /* Reduce to 60% width on larger screens */
 
   }
 }
 
-
+.no-wrap {
+  white-space: nowrap; /* Prevents text from wrapping */
+}
 
 /* Mobile Styles */
 @media (max-width: 768px) {
