@@ -360,7 +360,7 @@ body {
 }
 
 .progress-panel {
-  width: 75%; /* Adjust the width as needed for compactness */
+  width: 95%; /* Adjust the width as needed for compactness */
   background-color: #f9f9f9; /* Light background for the panel */
   padding: 10px;
   border: 1px solid #ccc; /* Optional border */
