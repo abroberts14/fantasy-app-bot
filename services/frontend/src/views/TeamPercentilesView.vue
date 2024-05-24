@@ -92,6 +92,8 @@ export default defineComponent({
     const debugConsole = true;
     function updateScrollHeight() {
       const width = window.innerWidth;
+      const height = window.innerHeight;
+
     }
 
 
@@ -191,12 +193,25 @@ export default defineComponent({
 
     function setExpandedRow($event) {
       console.log('rowData', $event.data);
-      
+     
       if (typeof expandedRow.value !== 'object' || expandedRow.value === null) {
         console.log('expandedRow.value is not an object');
         expandedRow.value = {};
       }
-     
+      nextTick(() => {
+        const progressPanel = document.querySelector('.p-datatable-row-expansion');
+
+        if (progressPanel) {
+          const topPos = progressPanel.offsetTop;
+          console.log('topPos', topPos);
+          window.scrollTo({
+              top: topPos - 100, // Adjust this value to position the scroll appropriately
+              behavior: 'smooth'
+          });
+        } else {
+          console.error('progressPanel player element not found');
+        }
+      });
       Object.keys(expandedRow.value).forEach(key => {
         if (key !== $event.data.key_mlbam) {
           delete expandedRow.value[key];
@@ -206,7 +221,7 @@ export default defineComponent({
       const playerKey = $event.data.key_mlbam;
      
       expandedRow.value[playerKey] = true;
-      
+
     }
     function setCollapsedRow($event) {
       console.log('rowData collapse', $event.data);
