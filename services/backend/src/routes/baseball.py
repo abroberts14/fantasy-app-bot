@@ -12,7 +12,7 @@ from tortoise.exceptions import DoesNotExist
 from src.auth.jwthandler import get_current_user
 from src.schemas.users import UserOutSchema
 from src.database.models import Player
-from pybaseball import statcast_batter 
+from pybaseball import statcast_batter, statcast_batter_percentile_ranks
 from pybaseball import playerid_lookup
 import pandas as pd
 import requests
@@ -158,6 +158,40 @@ def custom_statcast_batter(start_dt: Optional[str] = None, end_dt: Optional[str]
     df = split_request(start_dt, end_dt, player_id, new_url)
     return df
 
+
+@router.get("/baseball/get-player-percentiles/{player_id}")  
+async def get_percentiles_by_player_id(player_id: int):
+    try:
+        data = statcast_batter_percentile_ranks('2024')
+        print("Total records found:", len(data))
+        
+        # Convert player_id to int if it's passed as string
+        player_id = int(player_id)
+        
+        # Filter the DataFrame for the specific player ID
+        player_data = data[data['player_id'] == player_id]
+
+        # Check if the player_data DataFrame is not empty (i.e., the player was found)
+        if not player_data.empty:
+            # Convert DataFrame row to dictionary for JSON response
+            player_info = player_data.iloc[0].to_dict()
+            # replace all nan values with none 
+            player_info = {k: v if pd.notnull(v) else None for k, v in player_info.items()}
+            print(f"Player info: {player_info}")
+            return player_info
+        else:
+            print(f"No data found for player ID: {player_id}")
+
+            return {}
+          #  raise HTTPException(status_code=404, detail=f"No data found for player ID: {player_id}")
+    except ValueError as e:
+        # Handle the case where the conversion of player_id to int fails
+        raise HTTPException(status_code=400, detail="Invalid player ID provided. Player ID must be an integer.")
+    except Exception as e:
+        return {}
+
+        # General exception handling (e.g., data fetching issues, parsing issues)
+       # raise HTTPException(status_code=500, detail=str(e))
 
 
 def split_request(start_dt: str, end_dt: str, player_id: int, url: str) -> pd.DataFrame:

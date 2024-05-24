@@ -44,6 +44,12 @@ export default defineComponent({
             { label: 'My Team', to: '/team-videos', command: () => { router.push('/team-videos'); } },
             { label: 'Search', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
           ]
+        },
+        {
+          label: 'Stats', // Main menu item for replays
+          items: [
+            { label: 'My Team Percentiles', to: '/team-percentiles', command: () => { router.push('/team-percentiles'); } },
+          ]
         }
      
       ];

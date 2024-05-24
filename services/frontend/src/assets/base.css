@@ -302,3 +302,71 @@ body {
 
 
 }
+
+.p-progressbar {
+  flex: 1;
+  margin-left: 10px;
+  overflow: visible; /* Ensure overflow content is visible */
+
+}
+
+
+
+.p-progressbar-label {
+  z-index: 10000;
+  color: #ffffff; /* Ensuring high contrast */
+  font-weight: bolder;
+  font-size: 14px; /* Smaller font size for better fit */
+  padding: 0 15px; /* Ensuring text is padded to prevent cutting */
+  white-space: nowrap;
+  overflow: visible; /* Prevent overflow */
+  text-overflow: ellipsis; /* Use ellipsis for overflow text */
+}
+.p-progressbar.darker-blue .p-progressbar-value {
+  position: relative; /* For proper stacking context of the label */
+
+  background-color: rgba(70, 68, 243, 0.95); /* Very dark blue with low transparency */
+  
+}
+.p-progressbar.dark-blue .p-progressbar-value {
+  background-color: rgba(90, 88, 245, 0.8); /* Dark blue */
+}
+.p-progressbar.mid-dark-blue .p-progressbar-value {
+  background-color: rgba(110, 108, 247, 0.65); /* Mid dark blue */
+}
+.p-progressbar.light-blue .p-progressbar-value {
+  background-color: rgba(130, 138, 250, 0.5); /* Lighter blue with higher transparency */
+}
+.p-progressbar.very-light-blue .p-progressbar-value {
+  background-color: rgba(152, 162, 255, 0.35); /* Very light blue with higher transparency */
+}
+.p-progressbar.light-red .p-progressbar-value {
+  background-color: rgba(255, 150, 150, 0.35); /* Very light red */
+}
+.p-progressbar.less-light-red .p-progressbar-value {
+  background-color: rgba(255, 100, 100, 0.45); /* Less light red */
+}
+.p-progressbar.mid-red .p-progressbar-value {
+  background-color: rgba(255, 50, 50, 0.6); /* Mid red */
+}
+.p-progressbar.red .p-progressbar-value {
+  background-color: rgba(255, 0, 0, 0.75); /* Red with medium transparency */
+}
+.p-progressbar.dark-red .p-progressbar-value {
+  background-color: rgba(180, 0, 0, 0.85); /* Dark red with medium transparency */
+}
+.p-progressbar.darker-red .p-progressbar-value {
+  background-color: rgba(139, 0, 0, 0.95); /* Very dark red with low transparency */
+}
+
+.progress-panel {
+  width: 75%; /* Adjust the width as needed for compactness */
+  background-color: #f9f9f9; /* Light background for the panel */
+  padding: 10px;
+  border: 1px solid #ccc; /* Optional border */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Soft shadow for depth */
+  border-radius: 8px; /* Rounded corners */
+  margin: auto; /* Centering content horizontally */
+  position: relative; /* Essential for positioning the label absolutely */
+
+}

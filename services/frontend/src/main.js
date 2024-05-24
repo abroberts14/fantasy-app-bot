@@ -41,6 +41,7 @@ import Menubar from 'primevue/menubar';
 import AnimateOnScroll from 'primevue/animateonscroll';
 import InlineMessage from 'primevue/inlinemessage';
 import Message from 'primevue/message';
+import ProgressBar from 'primevue/progressbar';
 const app = createApp(App)
 app.use(PrimeVue, {
   rippling: true,
@@ -82,6 +83,7 @@ app.directive('tooltip', Tooltip);
 app.directive('animateonscroll', AnimateOnScroll);
 app.component('InlineMessage', InlineMessage);
 app.component('Message', Message);
+app.component('ProgressBar', ProgressBar);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

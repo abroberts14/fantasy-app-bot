@@ -13,6 +13,7 @@ import OAuthSuccessView from '@/views/OAuthSuccessView.vue'
 import OAuthErrorView from '@/views/OAuthErrorView.vue'
 import PitchReplaysView from '@/views/PitchReplaysView.vue'
 import TeamVideosView from '@/views/TeamVideosView.vue'
+import TeamPercentilesView from '@/views/TeamPercentilesView.vue'
 
 const routes = [
   {
@@ -91,6 +92,11 @@ const routes = [
     path: '/team-videos',
     name: 'TeamVideos',
     component: TeamVideosView,
+  },
+  {
+    path: '/team-percentiles',
+    name: 'TeamPercentiles',
+    component: TeamPercentilesView,
   },
 ]
 
