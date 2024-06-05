@@ -67,8 +67,8 @@ async def get_oauth_tokens(current_user: UserOutSchema = Depends(get_current_use
             "modified_at": oauth_token.modified_at
         }
         return token_data
-    except DoesNotExist:
-        raise HTTPException(status_code=200, detail="OAuth token not found for the current user")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="OAuth token not found for the current user")
 
 async def get_oauth_token_by_id(user_id: int):
     try:

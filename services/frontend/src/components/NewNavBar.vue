@@ -1,6 +1,5 @@
 <template>
   <header>
-    <div class="fixed-menubar">
 
       <Menubar :model="items" class="">
         <template #start>
@@ -12,7 +11,6 @@
           <Button class="p-button-sm no-wrap" severity="secondary" @click="logout">Log Out</Button>
         </template>
       </Menubar>
-    </div>
   </header>
 </template>
 
@@ -49,12 +47,16 @@ export default defineComponent({
           label: 'Stats', // Main menu item for replays
           items: [
             { label: 'My Team Percentiles', to: '/team-percentiles', command: () => { router.push('/team-percentiles'); } },
+            // { label: 'My Team Stats', to: '/team-stats', command: () => { router.push('/team-stats'); } },
+            // { label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } },
           ]
         }
      
       ];
       if (usersStore.isAdmin) {
         baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });
+        baseItems.push({ label: 'My Team Stats', to: '/team-stats', command: () => { router.push('/team-stats'); } });
+        baseItems.push({ label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } });
       }
       if (!usersStore.isAuthenticated) {
         baseItems.push({ label: 'Log In', to: '/login', command: () => { router.push('/login'); } });

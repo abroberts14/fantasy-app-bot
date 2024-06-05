@@ -1,19 +1,9 @@
 
 
 <template>
-  
-  <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
-      <h3>No Yahoo Account Detected</h3>
-      <p>
-        To search for your players most recent plate appearances, you must connect and authorize a Yahoo account.
-      </p>
-      <p>
-        Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
-      </p>
-  </ModalOverlay> 
-  <LoadingSpinner v-if="loadingPlayers"/>
+
   <section class="video-section">
-    <Message severity="info" :sticky="false" :life="5000">Resync your players on your <router-link to="/profile">profile</router-link> page</Message>
+    <LoadingSpinner v-if="loadingPlayers" />
 
     <DataTable 
         @row-expand="setExpandedRow" 
@@ -45,10 +35,7 @@
           </div>
       </template>
     </DataTable>
-    <div v-if="batters.length === 0">
-      <p>No players loaded.</p>
-      <Button @click="syncMyPlayers">Sync My Players From Yahoo</Button>
-    </div>
+
   </section>
 </template>
 
@@ -58,7 +45,6 @@ import useUsersStore from '@/store/users';
 import MediaPlayer from '@/components/MediaPlayer.vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import axios from 'axios';
-import ModalOverlay from '@/components/ModalOverlay.vue';
 import { useRouter } from 'vue-router';
 import PercentileBars from '@/components/PercentileBars.vue';
 
@@ -67,74 +53,24 @@ export default defineComponent({
   components: {
     MediaPlayer,
     LoadingSpinner,
-    ModalOverlay,
     PercentileBars
   },
   setup() {
     const usersStore = useUsersStore();
     const selectedPlayer = ref({ name: '', id: 0 });
     const players = ref([]);
-    const router = useRouter();
     const loadingPlayers = ref(false);
     const batters = ref([]);
-    const userTokenPresent = ref(null);
     const user = computed(() => usersStore.user);
     const isLoggedIn = computed(() => usersStore.isAuthenticated);
     const expandedRow = ref([])
-    const isDialogVisible = ref(false);
-    const handleModalVisibilityChange = (newValue) => {
-      isDialogVisible.value = newValue;
-      if (!newValue) { // if newValue is false, indicating the modal is closed
-        router.push('/profile'); // navigate to /profile
-      }
-    };
+
     const dynamicScrollHeight = ref('900px'); // Default value
     const debugConsole = true;
     function updateScrollHeight() {
       const width = window.innerWidth;
       const height = window.innerHeight;
 
-    }
-
-
-    async function syncMyPlayers() {
-      const usersStore = useUsersStore();
-      if (!usersStore.isAuthenticated) {
-        console.error('User is not logged in or token is not available');
-        return;
-      }
-      try {
-        const response = await axios.get('/baseball/players/sync_players');
-        console.log('API Response:', response.data);
-        if (response.data.players.batters) {
-          batters.value = response.data.players.batters;
-        
-        } else {
-          console.error('Batters data is not in expected format:', response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch players:', error);
-        batters.value = []; // Reset batters on error
-      } finally {
-      }
-    }
-    async function fetchUserTokens() {
-      try {
-        const response = await axios.get(`/oauth/yahoo/tokens`, {
-          params: {
-            user_id: user.value.id
-          }
-        });        
-        console.log('API Response:', response.data);
-        this.oauth_response = response.data;
-      } catch (error) {
-        console.error('Failed to fetch Yahoo integration:', error);
-      }
-      finally {
-        userTokenPresent.value = this.oauth_response;
-        isDialogVisible.value = !userTokenPresent.value 
-        console.log("isDialogVisible: ", isDialogVisible.value);
-      }
     }
     
     async function fetchPercentilesAllPlayers() {
@@ -178,6 +114,7 @@ export default defineComponent({
         return;
       }
       loadingPlayers.value = true;
+
       try {
         const response = await axios.get('/baseball/players/my-players');
         this.batters = response.data.players.batters || [];
@@ -185,8 +122,9 @@ export default defineComponent({
         console.error('Failed to fetch players:', error);
         this.batters = [];
       } finally {
-        this.fetchPercentilesAllPlayers()
         loadingPlayers.value = false;
+
+        this.fetchPercentilesAllPlayers()
       }
     }
 
@@ -250,29 +188,20 @@ export default defineComponent({
       selectedPlayer,
       players,
       batters,
-      userTokenPresent,
       isLoggedIn,
       fetchMyPlayers,
-      fetchUserTokens,
-      syncMyPlayers, 
       expandedRow,
       setExpandedRow,
       setCollapsedRow,
       dynamicScrollHeight,
       updateScrollHeight,
-      isDialogVisible,
-      handleModalVisibilityChange,
-      loadingPlayers,
       fetchPercentilesAllPlayers,
       getGradientColor,
+      loadingPlayers,
       };
   },
   mounted() {
-    this.fetchUserTokens();
-    if (!this.isDialogVisible.value) {
-      this.fetchMyPlayers();
-    }
-
+    this.fetchMyPlayers();
   },
   
   

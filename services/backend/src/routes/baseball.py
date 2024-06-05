@@ -13,7 +13,9 @@ from src.auth.jwthandler import get_current_user
 from src.schemas.users import UserOutSchema
 from src.database.models import Player
 from pybaseball import statcast_batter, statcast_batter_percentile_ranks
-from pybaseball import playerid_lookup
+from pybaseball import playerid_lookup, batting_stats_range, batting_stats, playerid_reverse_lookup
+from pybaseball import cache
+
 import pandas as pd
 import requests
 import bs4
@@ -36,6 +38,7 @@ os.environ['SDL_AUDIODRIVER'] = 'dummy'
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 router = APIRouter()
+#cache.enable()
 
 
 # Create a requests session for connection pooling
@@ -190,10 +193,67 @@ async def get_percentiles_by_player_id(player_id: int):
     except Exception as e:
         return {}
 
+
+def get_batting_data(year: str = '2024'):
+    # This function fetches batting data and caches it
+    return batting_stats(year)
+
+async def batting_data_dependency(year: str = '2024'):
+    return get_batting_data(year)
+
+def fetch_player_stats(player_id: int):
+    try:
+        data = playerid_reverse_lookup([player_id], key_type='mlbam')
+        player_fg_id = data[data['key_mlbam'] == player_id]['key_fangraphs'].values[0]
+        # if batting_data is None:
+        #     batting_data = batting_stats('2024')
+        player_id_fangraphs = int(player_fg_id)
+        batting_data = get_batting_data('2024')
+        player_data = batting_data[batting_data['IDfg'] == player_id_fangraphs]
+        if not player_data.empty:
+            player_info = player_data.iloc[0].to_dict()
+            # Remove null or nan values
+            player_info = {k: v for k, v in player_info.items() if pd.notnull(v)}
+            return player_info
+        else:
+            print(f"No data found for player ID: {player_id}")
+            return {}
+    except ValueError as e:
+        raise ValueError("Invalid player ID provided. Player ID must be an integer.")
+    except Exception as e:
+        return {}
+
+def fetch_multiple_player_stats(player_ids: List[int]):
+    results = {}
+    data = batting_stats('2024')
+    for player_id in player_ids:
+        try:
+            player_stats = fetch_player_stats(player_id)
+            results[player_id] = player_stats
+        except Exception as e:
+            results[player_id] = {"error": str(e)}
+    return results
+
+@router.post("/baseball/get-multiple-player-stats")
+async def get_multiple_player_stats(player_ids: List[int]):
+    try:
+        player_stats = fetch_multiple_player_stats(player_ids)
+        return player_stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/baseball/get-player-stats/{player_id}")  
+async def get_player_stats_by_id(player_id: int):
+    try:
+        return fetch_player_stats(player_id)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
         # General exception handling (e.g., data fetching issues, parsing issues)
        # raise HTTPException(status_code=500, detail=str(e))
 
-
+# retrieve all players' batting stats for the month of May, 2017 
 def split_request(start_dt: str, end_dt: str, player_id: int, url: str) -> pd.DataFrame:
 	"""
 	Splits Statcast queries to avoid request timeouts

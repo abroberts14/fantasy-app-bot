@@ -14,7 +14,8 @@ import OAuthErrorView from '@/views/OAuthErrorView.vue'
 import PitchReplaysView from '@/views/PitchReplaysView.vue'
 import TeamVideosView from '@/views/TeamVideosView.vue'
 import TeamPercentilesView from '@/views/TeamPercentilesView.vue'
-
+import TeamStatsView from '@/views/TeamStatsView.vue'
+import MyTeamView from '@/views/MyTeamView.vue'
 const routes = [
   {
     path: '/',
@@ -91,12 +92,26 @@ const routes = [
   {
     path: '/team-videos',
     name: 'TeamVideos',
+    meta: { checkToken: true },
     component: TeamVideosView,
   },
   {
     path: '/team-percentiles',
     name: 'TeamPercentiles',
+    meta: { checkToken: true },
     component: TeamPercentilesView,
+  },
+  {
+    path: '/team-stats',
+    name: 'TeamStats',
+    meta: { checkToken: true , development: true},
+    component: TeamStatsView,
+  },
+  {
+    path: '/my-team',
+    name: 'MyTeam',
+    meta: { checkToken: true, development: true },
+    component: MyTeamView,
   },
 ]
 

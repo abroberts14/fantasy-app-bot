@@ -2,19 +2,9 @@
 
 <template>
   
-  <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
-      <h3>No Yahoo Account Detected</h3>
-      <p>
-        To search for your players most recent plate appearances, you must connect and authorize a Yahoo account.
-      </p>
-      <p>
-        Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
-      </p>
-  </ModalOverlay> 
-  <LoadingSpinner v-if="loadingPlayers"/>
-  <section class="video-section">
-    <Message severity="info" :sticky="false" :life="5000">Resync your players on your <router-link to="/profile">profile</router-link> page</Message>
 
+  <section class="video-section">
+    <LoadingSpinner v-if="loadingPlayers" />
     <DataTable 
         @row-expand="setExpandedRow" 
         @row-collapse="setCollapsedRow" 
@@ -60,10 +50,7 @@
           </div>
       </template>
     </DataTable>
-    <div v-if="batters.length === 0">
-      <p>No players loaded.</p>
-      <Button @click="syncMyPlayers">Sync My Players From Yahoo</Button>
-    </div>
+
   </section>
 </template>
 
@@ -98,20 +85,13 @@ export default defineComponent({
     const todayValue = ref(getYesterdayDate(false));
     const paOnly = ref(true);
     const batters = ref([]);
-    const userTokenPresent = ref(null);
     const user = computed(() => usersStore.user);
     const currentPitch = ref(0);
     const currentQuery = ref({ player_id: 0, date: '', name: '', current_pitch: 0});
     const isLoggedIn = computed(() => usersStore.isAuthenticated);
     const isPageLoading = computed(() => videoPlayerLoading.value || calendarLoading.value);
     const expandedRow = ref([])
-    const isDialogVisible = ref(false);
-    const handleModalVisibilityChange = (newValue) => {
-      isDialogVisible.value = newValue;
-      if (!newValue) { // if newValue is false, indicating the modal is closed
-        router.push('/profile'); // navigate to /profile
-      }
-    }
+
     const dynamicScrollHeight = ref('900px'); // Default value
     const debugConsole = true;
     function updateScrollHeight() {
@@ -170,52 +150,7 @@ export default defineComponent({
         debugLog("Current query", currentQuery.value);
       }
     }
-    async function syncMyPlayers() {
-      const usersStore = useUsersStore();
-      if (!usersStore.isAuthenticated) {
-        console.error('User is not logged in or token is not available');
-        return;
-      }
-      try {
-        videoPlayerLoading.value = true;
-        const response = await axios.get('/baseball/players/sync_players');
-        debugLog('API Response:', response.data);
-        if (response.data.players.batters) {
-          batters.value = response.data.players.batters;
-          // debugLog('response assigned:', response.data.players.batters);
-
-          // debugLog('Batters assigned:', this.batters);
-        } else {
-          console.error('Batters data is not in expected format:', response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch players:', error);
-        batters.value = []; // Reset batters on error
-      } finally {
-        videoPlayerLoading.value = false;
-      }
-    }
-    async function fetchUserTokens() {
-      try {
-        const response = await axios.get(`/oauth/yahoo/tokens`, {
-          params: {
-            user_id: user.value.id
-          }
-        });        
-        debugLog('API Response:', response.data);
-        this.oauth_response = response.data;
-      } catch (error) {
-        console.error('Failed to fetch Yahoo integration:', error);
-      }
-      finally {
-        userTokenPresent.value = this.oauth_response;
-        isDialogVisible.value = !userTokenPresent.value 
-        console.log("isDialogVisible: ", isDialogVisible.value);
-      }
-    }
-
-
-
+    
     async function fetchAndSetPlayerData() {
       // Assume batters are already filled with player data
       debugLog('batters', batters.value)
@@ -330,8 +265,9 @@ export default defineComponent({
         console.error('Failed to fetch players:', error);
         this.batters = [];
       } finally {
-        this.fetchAndSetPlayerData()
         loadingPlayers.value = false;
+
+        this.fetchAndSetPlayerData()
       }
     }
 
@@ -418,7 +354,6 @@ export default defineComponent({
       todayValue,
       paOnly,
       batters,
-      userTokenPresent,
       isLoggedIn,
       isPageLoading,
       formattedCalendarValue,
@@ -428,8 +363,6 @@ export default defineComponent({
       fetchPitches,
       fetchMyPlayers,
       getYesterdayDate,
-      fetchUserTokens,
-      syncMyPlayers, 
       expandedRow,
       setExpandedRow,
       setCollapsedRow,
@@ -437,16 +370,12 @@ export default defineComponent({
       dynamicScrollHeight,
       updateScrollHeight,
       trackPlayer,
-      isDialogVisible,
-      handleModalVisibilityChange,
       loadingPlayers,
       };
   },
   mounted() {
-    this.fetchUserTokens();
-    if (!this.isDialogVisible.value) {
-      this.fetchMyPlayers();
-    }
+    this.fetchMyPlayers();
+    
 
   },
   

@@ -86,13 +86,11 @@ export default {
   display: flex;
   align-items: center;
   min-width: 100px;
-  position: relative; /* Essential for positioning the label absolutely */
 }
 
 .percentile-container strong {
   min-width: 100px; /* Ensure labels have enough space */
   font-size: 0.85em; /* Smaller font size for compactness */
-  position: relative; /* For proper stacking context of the label */
 
 }
 </style>

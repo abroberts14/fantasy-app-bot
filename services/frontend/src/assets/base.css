@@ -110,7 +110,7 @@ body {
     justify-content: center;
     align-items: center;
     margin: auto; /* Centering content horizontally */
-  
+    z-index: 1002;
     width: 100%;
     
   }
