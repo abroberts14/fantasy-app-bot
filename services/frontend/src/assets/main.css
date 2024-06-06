@@ -34,6 +34,30 @@
   }
 } */
 
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+  
+  .main {
+    padding-top: 2em;
+  }
+}
+
+/* desktops */
+@media (min-width: 769px) {
+  .main {
+    padding-top: 2em;
+  }
+}
+
+
+
 
 .modal {
   position: fixed;

@@ -39,24 +39,16 @@ export default defineComponent({
         {
           label: 'Video Replays', // Main menu item for replays
           items: [
-            { label: 'My Team', to: '/team-videos', command: () => { router.push('/team-videos'); } },
             { label: 'Search', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
           ]
         },
-        {
-          label: 'Stats', // Main menu item for replays
-          items: [
-            { label: 'My Team Percentiles', to: '/team-percentiles', command: () => { router.push('/team-percentiles'); } },
-            // { label: 'My Team Stats', to: '/team-stats', command: () => { router.push('/team-stats'); } },
-            // { label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } },
-          ]
-        }
+        { label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } },
+
      
       ];
       if (usersStore.isAdmin) {
         baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });
-        baseItems.push({ label: 'My Team Stats', to: '/team-stats', command: () => { router.push('/team-stats'); } });
-        baseItems.push({ label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } });
+
       }
       if (!usersStore.isAuthenticated) {
         baseItems.push({ label: 'Log In', to: '/login', command: () => { router.push('/login'); } });

@@ -1,28 +1,45 @@
 <template>
+  <div class="card">
+    <TabView lazy>
+      <TabPanel header="Stat Percentiles">
+        <TeamPercentiles  />
+      </TabPanel>
+      <TabPanel header="Recent Video Replays">
+        <TeamVideos  />
+      </TabPanel>
+      <TabPanel header="Statistics" ">
+        <TeamStats  />
+      </TabPanel>
+    </TabView>
+  </div>
+</template>
 
-    <p>My Team</p>
-  </template>
-  
-  <script>
-  import { ref } from 'vue';
-  import useUsersStore from '@/store/users';
-  import OauthMissingModal from '@/components/OAuthMissingModal.vue';
-  import { onMounted, computed } from 'vue';
-  import axios from 'axios';
+<script>
+import { ref } from 'vue';
+import TeamPercentiles from '@/components/TeamPercentiles.vue';
+import TeamVideos from '@/components/TeamVideos.vue';
+import TeamStats from '@/components/TeamStats.vue';
 
-  export default {
-    name: 'MyTeam',
-    setup() {
-      const usersStore = useUsersStore();
-      const user = computed(() => usersStore.user);
+export default {
+  name: 'MyTeam',
+  components: {
+    TeamPercentiles,
+    TeamVideos,
+    TeamStats
+  },
+  setup() {
+    const activeTab = ref('percentiles'); // Default active tab
 
-      return {
-          user
-      };
+    // Function to change tab
+    function changeTab(tab) {
+      console.log("Change tab", tab);
+      activeTab.value = tab;
     }
+
+    return {
+      activeTab,
+      changeTab
+    };
   }
-  </script>
-  
-  <style scoped>
-  /* Your component-specific styles go here */
-  </style>
+}
+</script>

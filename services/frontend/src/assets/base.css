@@ -79,6 +79,7 @@ body {
     left: 0;
     width: 100%;
     z-index: 1000;
+    height: 72px;
 
   }
 
@@ -101,10 +102,13 @@ body {
     width: 50px; /* Increase the width of the SVG */
     height:  50px; /* Increase the height of the SVG */
   }
+  .p-tabview .p-tabview-panels {
+    padding: 0;
+  }
 }
  
 /* Desktop Styles */
-@media (min-width: 768px)  {
+@media (min-width: 769px)  {
   .p-menubar {
     display: flex;
     justify-content: center;
@@ -120,7 +124,7 @@ body {
   text-align: left;
 
 }
-@media (max-width: 769px) {
+@media (max-width: 768px) {
   .col-league-id, .col-platform, .col-platform-id, .col-private {
     display: none;
   }
@@ -142,13 +146,13 @@ body {
   border: 1px solid green; /* You can change the color to make it stand out */
 }
 /* Medium screens (e.g., tablets) */
-@media (min-width: 768px) and (max-width: 1200px) {
+@media (min-width: 769px) and (max-width: 1200px) {
   body {
     width: 95%; /* Keep 100% width on medium screens */
 
   }
 }
-/* Medium screens (e.g., tablets) */
+/* Medium screens (e.g., laptops) */
 @media (min-width: 1200px) and (max-width: 1600px) {
   body {
     width: 90%; /* Keep 100% width on medium screens */
@@ -171,12 +175,12 @@ body {
   }
 }
 
-.no-wrap {
-  white-space: nowrap; /* Prevents text from wrapping */
-}
-
 /* Mobile Styles */
 @media (max-width: 768px) {
+  body {
+    padding-top: 5em; /* So content doesnt go behind nav bar  */
+
+  }
   /* Shared base styles for all positions */
   .video-overlay-text {
     position: absolute;
@@ -239,6 +243,7 @@ body {
 
 /* Desktop Styles */
 @media (min-width: 769px) {
+
   /* Shared base styles for all positions */
   .video-overlay-text {
     position: absolute;

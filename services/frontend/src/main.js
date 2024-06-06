@@ -42,6 +42,8 @@ import AnimateOnScroll from 'primevue/animateonscroll';
 import InlineMessage from 'primevue/inlinemessage';
 import Message from 'primevue/message';
 import ProgressBar from 'primevue/progressbar';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
 const app = createApp(App)
 app.use(PrimeVue, {
   rippling: true,
@@ -84,6 +86,8 @@ app.directive('animateonscroll', AnimateOnScroll);
 app.component('InlineMessage', InlineMessage);
 app.component('Message', Message);
 app.component('ProgressBar', ProgressBar);
+app.component('TabView', TabView);
+app.component('TabPanel', TabPanel);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
