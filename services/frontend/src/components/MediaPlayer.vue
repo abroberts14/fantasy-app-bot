@@ -208,7 +208,8 @@ async function copyLinkToClipboard() {
       const fullUrl = window.location.origin + route.href;
       console.log('Full URL:', fullUrl);
 
-      const videoSrc = videoPlayer.value.src;
+      //const videoSrc = videoPlayer.value.src;
+      const videoSrc =  currentVideoUrl.value;
       console.log('Video Source URL:', videoSrc);
 
       if (navigator.clipboard) {
