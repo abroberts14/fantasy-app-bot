@@ -46,7 +46,7 @@ const useUsersStore = defineStore('users', {
     },
   },
   persist: {
-    storage: sessionStorage,
+    storage: localStorage,
   },
 });
 

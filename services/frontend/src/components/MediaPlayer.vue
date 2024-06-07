@@ -207,11 +207,17 @@ async function copyLinkToClipboard() {
       // Generate the full URL
       const fullUrl = window.location.origin + route.href;
       console.log('Full URL:', fullUrl);
+
+      const videoSrc = videoPlayer.value.src;
+      console.log('Video Source URL:', videoSrc);
+
       if (navigator.clipboard) {
 
         try {
           // Use the Clipboard API to copy the URL
-          await navigator.clipboard.writeText(fullUrl);
+          await navigator.clipboard.writeText(videoSrc);
+
+          //await navigator.clipboard.writeText(fullUrl);
           console.log('Link copied to clipboard:', fullUrl);
           toast.info('Sharable link copied to clipboard!');
           // Optionally, show a notification to the user that the link has been copied

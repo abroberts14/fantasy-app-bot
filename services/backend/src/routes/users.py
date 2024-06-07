@@ -109,8 +109,8 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
         "Authorization",
         value=f"Bearer {token}",
         httponly=True,
-        max_age=604000,
-        expires=604000,
+        max_age=1209600,
+        expires=1209600,
         samesite="Lax" if is_local else "None",
         secure=not is_local,
         domain=".draftwarroom.com" if not is_local else "192.168.1.170"
