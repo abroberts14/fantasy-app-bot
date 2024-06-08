@@ -69,8 +69,31 @@ body {
 }
 
 
+.compact-table .p-datatable-header,
+.compact-table .p-datatable-thead > tr > th,
+.compact-table .p-datatable-tbody > tr > td {
+  padding: 0.75rem; /* Reduce padding */
+  font-size: 0.875rem; /* Smaller font size */
+}
+
+.compact-column {
+  padding: 0.55rem; /* Reduce padding */
+  font-size: 0.875rem; /* Smaller font size */
+}
+
+
+
+/* Adjust size for smaller screens */
+
 /* Mobile Styles */
 @media (max-width: 768px) {
+  .img-headshot {
+    width: 2rem;
+    border-radius: 50%;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+
   .p-menubar {
     position: fixed;
     justify-content: start;
@@ -109,6 +132,12 @@ body {
  
 /* Desktop Styles */
 @media (min-width: 769px)  {
+  .img-headshot {
+    width: 5rem;
+    border-radius: 50%;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
   .p-menubar {
     display: flex;
     justify-content: center;
