@@ -216,9 +216,7 @@ def fetch_player_stats(player_id: int, batting_data: pd.DataFrame):
         #print our the row that has the name of sean murphy 
         player_data = batting_data[batting_data['IDfg'] == player_id_fangraphs]
         #loop through the entire data frame and look for the name Marcus Semien and print the row 
-        for index, row in batting_data.iterrows():
-            if row['Name'] == 'Marcus Semien':
-                print(row)
+
         if not player_data.empty:
             player_info = player_data.iloc[0].to_dict()
             # Remove null or nan values

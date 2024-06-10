@@ -44,6 +44,8 @@ import Message from 'primevue/message';
 import ProgressBar from 'primevue/progressbar';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
+import Image from 'primevue/image';
+import Chart from 'primevue/chart';
 const app = createApp(App)
 app.use(PrimeVue, {
   rippling: true,
@@ -88,6 +90,8 @@ app.component('Message', Message);
 app.component('ProgressBar', ProgressBar);
 app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
+app.component('Image', Image);
+app.component('Chart', Chart);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
