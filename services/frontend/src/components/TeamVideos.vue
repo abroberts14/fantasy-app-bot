@@ -121,79 +121,13 @@
           console.log(message);
         }
       }
-      
-      async function fetchAndSetPlayerData() {
-        // Assume batters are already filled with player data
-        debugLog('batters', batters.value)
-        
-        fetchValidDatesForAllPlayers(new Date('2024-04-01'), getYesterdayDate(false));
-       
-      }
+    
       
       function onMonthChange(date) {
         debugLog('Month changed:', date);
         fetchValidDates(selectedPlayer.value.id, new Date(date.year, date.month - 1, 1), new Date(date.year, date.month, 0));
       }
-      async function fetchValidDatesForAllPlayers(startDate, endDate) {
-        if (!startDate || !endDate) {
-            console.error('fetchValidDates requires both startDate and endDate.');
-            return;
-        }
-  
-        const fetchPromises = batters.value.map(player => {
-          player.isLoading = true;  // Set loading to true initially
-            const params = new URLSearchParams({
-                start_date: startDate.toISOString().slice(0, 10), // format as 'YYYY-MM-DD'
-                end_date: endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
-            }).toString();
-            debugLog('params', params)
-            return axios.get(`/baseball/get-player-dates/${player.key_mlbam}?${params}`)
-                .then(response => {
-                    if (response.data) {
-                      player.validDates = response.data.valid_dates
-                      player.disabledDates = response.data.disabled_dates.map(dateStr => {
-                          let date = new Date(dateStr);
-                          date.setUTCHours(12, 0, 0, 0); // Set time to noon UTC
-                          return date;
-                      });
-                      player.latestValidDate = response.data.latest_valid_date
-                      player.latestDisabledDate = response.data.latest_disabled_date
-                    } else {
-                        player.disabledDates = [];
-                        player.latestValidDate = null;
-                        player.validDates = [];
-                    }
-                    if (player.latestValidDate) {
-                      fetchPitches(player.key_mlbam, player.latestValidDate)
-                    } else {
-                      debugLog("No latest valid date for player ID:", player.key_mlbam);
-                      player.isLoading = false;
-                      
-                    }
-                  
-                    return { player, status: 'fulfilled' };
-                })
-                .catch(error => {
-                    console.error(`Error fetching valid dates for player ${player.key_mlbam}:`, error);
-                    player.disabledDates = [];
-                    return { player, status: 'rejected', reason: error };
-                });
-        });
-  
-  
-        const results = await Promise.allSettled(fetchPromises);
-  
-        results.forEach(result => {
-            if (result.status === 'fulfilled') {
-              console.log('Data fetched successfully for player', result.value.player.key_mlbam);
-            } else {
-                console.error(`Failed to fetch data for player ${result.reason.player.key_mlbam}:`, result.reason);
-            }
-        });
-  
-  
-      }
-      
+
   
       function getYesterdayDate(formatted = true) {
         const today = new Date();
@@ -204,7 +138,8 @@
       async function fetchPitches(playerId, date) {
         debugLog("Fetching pitches for player ID:", playerId, "on date:", date);
         const player = batters.value.find(p => p.key_mlbam === playerId);
-
+        console.log('player', player)
+        
         // Check if the player already has pitches loaded for this date
         if (player && player.pitches && player.pitches[date]) {
             debugLog("Using cached pitches for player ID:", playerId, "on date:", date);
@@ -264,51 +199,87 @@
         } finally {
           loadingPlayers.value = false;
   
-          this.fetchAndSetPlayerData()
+          //this.fetchAndSetPlayerData()
         }
       }
-  
-  
-      function setExpandedRow($event) {
+      async function fetchPlayerData(player) {
+        if (!player) {
+          console.error('fetchPlayerData requires a player object.');
+          return;
+        }
+
+        player.isLoading = true;  // Set loading to true initially
+        const startDate = getYesterdayDate(false); // Assuming getYesterdayDate function exists and returns Date object
+        const endDate = new Date(); // Today's date
+
+        const params = new URLSearchParams({
+          start_date: startDate.toISOString().slice(0, 10), // format as 'YYYY-MM-DD'
+          end_date: endDate.toISOString().slice(0, 10)     // format as 'YYYY-MM-DD'
+        }).toString();
+
+        debugLog('params', params);
+
+        try {
+          const response = await axios.get(`/baseball/get-player-dates/${player.key_mlbam}?${params}`);
+          if (response.data) {
+            player.validDates = response.data.valid_dates;
+            player.disabledDates = response.data.disabled_dates.map(dateStr => {
+              let date = new Date(dateStr);
+              date.setUTCHours(12, 0, 0, 0); // Set time to noon UTC
+              return date;
+            });
+            player.latestValidDate = response.data.latest_valid_date;
+            player.latestDisabledDate = response.data.latest_disabled_date;
+          } else {
+            player.disabledDates = [];
+            player.latestValidDate = null;
+            player.validDates = [];
+          }
+          if (player.latestValidDate) {
+            await fetchPitches(player.key_mlbam, player.latestValidDate);
+          } else {
+            debugLog("No latest valid date for player ID:", player.key_mlbam);
+          }
+        } catch (error) {
+          console.error(`Error fetching valid dates for player ${player.key_mlbam}:`, error);
+          player.disabledDates = [];
+        } finally {
+          player.isLoading = false;
+        }
+      }
+        
+      async function setExpandedRow($event) {
         console.log('rowData', $event.data);
         
         currentPitches.value = [];
+
+        // Reset expanded rows to ensure only one can be open at a time
+        if (expandedRow.value !== $event.data.key_mlbam) {
+          expandedRow.value = {};
+        }
+
+        await fetchPlayerData($event.data);
+
         nextTick(() => {
           const rowData = $event.data;
-          // Attempt to find the video player element within the expanded row
           const videoPlayerElement = document.querySelector('.p-datatable-row-expansion');
-  
           if (videoPlayerElement) {
               const topPos = videoPlayerElement.offsetTop;
               window.scrollTo({
-                  top: topPos - 100, // Adjust this value to position the scroll appropriately
+                  top: topPos - 100,
                   behavior: 'smooth'
               });
           } else {
               console.log('Video player element not found:', '#row-' + rowData.key_mlbam + ' .video-player-class');
           }
         });
-        if (typeof expandedRow.value !== 'object' || expandedRow.value === null) {
-          console.log('expandedRow.value is not an object');
-          expandedRow.value = {};
-        }
-        debugLog('expandedRow.value PRE', expandedRow.value)
-        //Check if ANY other object exists, if it is, delete all the other objects
-        //if any object that does not have the id that is in rowData exists delete that item from the dict
-        Object.keys(expandedRow.value).forEach(key => {
-          if (key !== $event.data.key_mlbam) {
-            delete expandedRow.value[key];
-          }
-        });
-        
-        const playerKey = $event.data.key_mlbam;
-       
-        expandedRow.value[playerKey] = true;
-        
-  
+
+        // Set the current row as the expanded row
+        expandedRow.value = { [ $event.data.key_mlbam ]: true };
+
         debugLog('expandedRow POST', expandedRow.value);
         if ($event.data.latestValidDate) {
-          trackPlayer(playerKey, $event.data.latestValidDate)
+          await trackPlayer($event.data.key_mlbam, $event.data.latestValidDate);
         }
       }
       function setCollapsedRow($event) {
@@ -317,12 +288,12 @@
         debugLog('collapsed POST', expandedRow.value);
   
       }
-      function trackPlayer(playerId, date) {
+      async function trackPlayer(playerId, date) {
         // Logic to track the selected player ID and date
         debugLog(`Tracking player ${playerId} with date ${date}`);
         currentQuery.value = { player_id: playerId, date: date, name: selectedPlayer.value.name, current_pitch: 0 };
         debugLog("Current query", currentQuery.value);
-        fetchPitches(playerId, date);
+        await fetchPitches(playerId, date);
   
         // Store this information or perform additional actions
       }
@@ -363,7 +334,6 @@
         expandedRow,
         setExpandedRow,
         setCollapsedRow,
-        fetchAndSetPlayerData,
         dynamicScrollHeight,
         updateScrollHeight,
         trackPlayer,

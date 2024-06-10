@@ -15,7 +15,7 @@ from src.database.models import Player
 from pybaseball import statcast_batter, statcast_batter_percentile_ranks
 from pybaseball import playerid_lookup, batting_stats_range, batting_stats, playerid_reverse_lookup
 from pybaseball import cache
-
+from pytz import timezone
 import pandas as pd
 import requests
 import bs4
@@ -105,12 +105,12 @@ def fetch_homerun_details(play_id, player_id):
 
 def get_mp4s(player_id, date):
     """ Fetch MP4 URLs for a player on a specific date. """
+    print(f'fetching mp4s for player {player_id} on date {date}')
     data = custom_statcast_batter(date, date, player_id)
     # Get the first row
     if data.empty:
         return []
     first_row = data.iloc[0]
-    print(first_row)
     #drop any nan columns
     first_row.dropna(inplace=True)
     game_id = first_row['game_pk']
@@ -159,7 +159,9 @@ def custom_statcast_batter(start_dt: Optional[str] = None, end_dt: Optional[str]
     """
     
     new_url = 'https://baseballsavant.mlb.com/statcast_search/csv?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&stadium=&hfBBL=&hfNewZones=&hfGT=R%7CPO%7CS%7C=&hfSea=&hfSit=&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt={}&game_date_lt={}&batters_lookup%5B%5D={}&team=&position=&hfRO=&home_road=&hfFlag=&metric_1=&hfInn=&min_pitches=0&min_results=0&group_by=name&sort_col=pitches&player_event_sort=h_launch_speed&sort_order=desc&min_abs=0&chk_stats_sweetspot_speed_mph=on&chk_stats_swing_length=on&type=details&'
+    print(f'fetching custom statcast batter for player {player_id} from {start_dt} to {end_dt}')
     df = split_request(start_dt, end_dt, player_id, new_url)
+    print(f'returning custom statcast batter for player {player_id} from {start_dt} to {end_dt}')
     return df
 
 
@@ -303,12 +305,16 @@ def get_player_dates(player_id: int, start_date: str = None, end_date: str = Non
         gamelog = statsapi.get('people', {'personIds': player_id, 'hydrate': f'stats(group=[hitting],type=[gameLog])'})
         try:
             # Filter splits where plateAppearances is greater than 0
-            valid_dates = [
-                split['date'] for split in gamelog['people'][0]['stats'][0]['splits']
-                if split['stat']['plateAppearances'] > 0
-            ]
+            est = timezone('US/Eastern')
+            today = datetime.now(est).date()
+            valid_dates = []
+            for split in gamelog['people'][0]['stats'][0]['splits']:
+                split_date = datetime.strptime(split['date'], '%Y-%m-%d').date()
+                #print(f"Date: {split['date']}, Plate Appearances: {split['stat']['plateAppearances']}")
+                if split['stat']['plateAppearances'] > 0 and split_date != today:
+                    valid_dates.append(split['date'])
             valid_dates.sort(reverse=True)  # Sort dates in descending order
-        except Exception as e   :
+        except Exception as e:
             print("error getting any valid dates", e)
             valid_dates = []
         if start_date != None and end_date != None:
