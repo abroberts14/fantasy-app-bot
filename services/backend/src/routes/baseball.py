@@ -207,20 +207,24 @@ async def batting_data_dependency(year: str = '2024'):
 def fetch_player_stats(player_id: int, batting_data: pd.DataFrame):
     try:
         data = playerid_reverse_lookup([player_id], key_type='mlbam')
+        print(f'fetch_player_stats: reverse id data lookup: {data}')
         player_fg_id = data[data['key_mlbam'] == player_id]['key_fangraphs'].values[0]
 
-        print(f'player_id: {player_id}, player_fg_id: {player_fg_id}')
+        print(f'fetch_player_stats: player_id: {player_id}, player_fg_id: {player_fg_id}')
         # if batting_data is None:
         #     batting_data = batting_stats('2024')
         player_id_fangraphs = int(player_fg_id)
         #print our the row that has the name of sean murphy 
         player_data = batting_data[batting_data['IDfg'] == player_id_fangraphs]
         #loop through the entire data frame and look for the name Marcus Semien and print the row 
+        print(f'fetch_player_stats: batting_data length: {len(player_data)}')
 
         if not player_data.empty:
             player_info = player_data.iloc[0].to_dict()
+            print(f'fetch_player_stats: player_info: {player_info}')
             # Remove null or nan values
             player_info = {k: round(v, 3) if isinstance(v, float) else v for k, v in player_info.items() if pd.notnull(v)}
+            print(f'fetch_player_stats: player_info: {player_info}')
             return player_info
         else:
             print(f"No data found for player ID: {player_id}")
@@ -233,8 +237,9 @@ def fetch_player_stats(player_id: int, batting_data: pd.DataFrame):
 
 def fetch_multiple_player_stats(player_ids: List[int]):
     results = {}
+    print(f'fetch_multiple_player_stats: player_ids: {player_ids}')
     data = batting_stats('2024', qual=5)
-
+    print(f'fetch_multiple_player_stats: batting_data length: {len(data)}')
     for player_id in player_ids:
         try:
             player_stats = fetch_player_stats(player_id, data)
