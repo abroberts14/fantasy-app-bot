@@ -1,17 +1,16 @@
 <template>
   <LoadingSpinner v-if="loadingPlayers"/>
-  <section class="video-section">
+  <section >
     <div>
       <TabView>
         <TabPanel header="Basic Stats">
           <DataTable v-if="filteredDataBasic.length > 0" :value="filteredDataBasic" class="compact-table" stripedRows scrollable  >
-            <span v-if="filteredDataBasic.isLoading" class="loading-spinner">
-              <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Loading data" />
-            </span>
-            <Column field="name" header="Name"  class="compact-column" frozen />
-            <Column class="compact-column" frozen >
+            <Column field="name" header="Name"  class="compact-column" frozen >
               <template #body="slotProps">
-                <img  :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
+                <div class="name-image-container">
+                  <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
+                  <span>{{ slotProps.data.name }}</span>
+                </div>
               </template>
             </Column>
             <Column v-for="field in fields.basic" :key="field.key" :field="'stats.' + field.key" :header="field.label"  class="compact-column" />
@@ -19,24 +18,21 @@
         </TabPanel>
         <TabPanel header="Advanced Stats">
           <DataTable v-if="filteredDataCustom.length > 0" :value="filteredDataCustom" class="compact-table" stripedRows  scrollable  >
-            <span v-if="filteredDataCustom.isLoading" class="loading-spinner">
-              <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Loading data" />
-            </span>
-
-            <Column field="name" header="Name"  class="compact-column" frozen />
-            <Column class="compact-column" frozen >
+            <!-- <Column class="compact-column" frozen >
               <template #body="slotProps">
                 <img  :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
               </template>
-            </Column>
-            <!-- <Column frozen >
-              <template #body="slotProps">
-
-
-
-                  <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
-              </template>
             </Column> -->
+
+            <Column field="name" header="Name"  class="compact-column" frozen >
+              <template #body="slotProps">
+                <div class="name-image-container">
+                  <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
+                  <span>{{ slotProps.data.name }}</span>
+                </div>
+              </template>
+            </Column>
+
             <Column v-for="field in fields.custom" :key="field.key" :field="'stats.' + field.key" :header="field.label"  class="compact-column" />
           </DataTable>
         </TabPanel>
@@ -158,7 +154,7 @@ export default defineComponent({
     watch(activeStatTab, () => {
       if (activeStatTab.value === 'Basic Stats') {
         filteredData.value = filteredDataBasic.value;
-      } else if (activeStatTab.value === 'Custom Stats') {
+      } else if (activeStatTab.value === 'Advanced Stats') {
         filteredData.value = filteredDataCustom.value;
       }
     }, { immediate: true });

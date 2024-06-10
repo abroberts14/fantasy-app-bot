@@ -148,11 +148,7 @@ body {
     
   }
 }
-.data-table-center th,
-.data-table-center td {
-  text-align: left;
 
-}
 @media (max-width: 768px) {
   .col-league-id, .col-platform, .col-platform-id, .col-private {
     display: none;
@@ -204,11 +200,20 @@ body {
   }
 }
 
+
+
 /* Mobile Styles */
 @media (max-width: 768px) {
   body {
     padding-top: 5em; /* So content doesnt go behind nav bar  */
 
+  }
+  .name-image-container span {
+    white-space: nowrap; /* Prevents the text from wrapping */
+    overflow: hidden;    /* Hides text that goes beyond the width */
+    text-overflow: ellipsis; /* Adds ellipsis to the hidden overflow text */
+    max-width: 100px;    /* Adjust the width as needed */
+    display: inline-block; /* Ensures the overflow properties work */
   }
   /* Shared base styles for all positions */
   .video-overlay-text {
