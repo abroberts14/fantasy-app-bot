@@ -206,13 +206,10 @@ async def batting_data_dependency(year: str = '2024'):
 
 def fetch_player_stats(player_id: int, batting_data: pd.DataFrame):
     try:
-        data = playerid_reverse_lookup([player_id], key_type='mlbam')
-        print(f'fetch_player_stats: reverse id data lookup: {data}')
-        player_fg_id = data[data['key_mlbam'] == player_id]['key_fangraphs'].values[0]
-
+        print(f'fetch_player_stats: player_id for reverse lookup: {player_id}')
+        player_fg_id = find_player_fangraphs_id(player_id)
         print(f'fetch_player_stats: player_id: {player_id}, player_fg_id: {player_fg_id}')
-        # if batting_data is None:
-        #     batting_data = batting_stats('2024')
+
         player_id_fangraphs = int(player_fg_id)
         #print our the row that has the name of sean murphy 
         player_data = batting_data[batting_data['IDfg'] == player_id_fangraphs]
@@ -221,10 +218,10 @@ def fetch_player_stats(player_id: int, batting_data: pd.DataFrame):
 
         if not player_data.empty:
             player_info = player_data.iloc[0].to_dict()
-            print(f'fetch_player_stats: player_info: {player_info}')
+            print(f'fetch_player_stats: player_info dict saved')
             # Remove null or nan values
             player_info = {k: round(v, 3) if isinstance(v, float) else v for k, v in player_info.items() if pd.notnull(v)}
-            print(f'fetch_player_stats: player_info: {player_info}')
+            print(f'fetch_player_stats: player_info converted df ')
             return player_info
         else:
             print(f"No data found for player ID: {player_id}")
@@ -380,20 +377,6 @@ async def fetch_valid_dates(player_id: int, start_date: str = Query(None), end_d
     except Exception as e:
         return {"error": f"An unexpected error occurred: {str(e)}"}
 
-
-def sync_lookup_player(last_name: str, first_name: Optional[str] = None):
-    try:
-        print(f"Initiating lookup for {first_name} {last_name}")
-        # Correctly use the playerid_lookup function from pybaseball library
-        s = playerid_lookup(last_name, first_name, fuzzy=True)
-        print(f"Lookup successful: {s}")
-        cleaned_df = s.dropna()
-        cleaned_df = cleaned_df.sort_values(by='mlb_played_last', ascending=False)
-        return cleaned_df.to_dict('records')
-    except Exception as e:
-        print(f"An error occurred during lookup: {e}")
-        return {"error": str(e)}
-
     
 @router.get("/baseball/players/")
 async def get_players(name: Optional[str] = None):
@@ -517,6 +500,48 @@ async def sync_players(current_user: UserOutSchema = Depends(get_current_user)):
 
     print(f"Returning synced players for {current_user.username}: {batters}")
     return {'players': {"batters": batters, "pitchers": []}}
+
+
+def get_register_file():
+    # Get the directory of the current file
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+    # Join this directory with the filename
+    return os.path.join(current_file_dir, 'chadwick-register.csv')
+
+def clean_data(player_table):
+    """Cleans the player table by removing rows considered 'bad data'."""
+    # Convert to string and ensure trimming
+    player_table['name_first'] = player_table['name_first'].astype(str).str.strip()
+    player_table['name_last'] = player_table['name_last'].astype(str).str.strip()
+
+    # Remove rows with empty first or last names
+    player_table = player_table[(player_table['name_first'] != '') & (player_table['name_last'] != '')]
+
+    # Additional checks can be added here, e.g., negative identifiers or implausible years
+    return player_table
+
+def find_player_fangraphs_id(player_id: int) -> pd.DataFrame:
+    """Lookup playerIDs for a given player"""
+    print(f'find_player_fangraphs_id: looking for {player_id}')
+    table = pd.read_csv(get_register_file())
+    table = clean_data(table)
+
+
+    print("table columns", table.columns)
+    results = table[table['key_mlbam'] == player_id]
+
+    results = results.reset_index(drop=True)
+
+
+    print("found ", len(results), " players")
+    if len(results) > 0:
+        res = results.iloc[0]['key_fangraphs']
+        print(f"find_player_fangraphs_id: {res}")
+    else:
+        res = None
+        print(f"find_player_fangraphs_id: no results found for {player_id}")
+    #return the first items value at key_fangraphs
+    return res
 
 
 def del_token():   
