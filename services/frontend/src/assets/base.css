@@ -72,13 +72,44 @@ body {
 .compact-table .p-datatable-header,
 .compact-table .p-datatable-thead > tr > th,
 .compact-table .p-datatable-tbody > tr > td {
-  padding: 0.75rem; /* Reduce padding */
+  padding: 0.2rem; /* Reduce padding */
   font-size: 0.875rem; /* Smaller font size */
+  text-align: right;
+  
+
 }
 
+.p-datatable  .right-aligned-header  .p-column-header-content   {
+  display: block; /* Makes span behave like a block element */
+  text-align: right; /* Ensures text within the span also aligns to the right */
+}
+
+
+.compact-table .p-datatable-tbody > tr > td.compact-column.p-frozen-column {
+  padding: 0.1rem; /* Remove padding to reduce extra space */
+  min-width: 0; /* Ensure there's no minimum width forcing extra space */
+  width: 0;
+  border-right: 1px solid var(--color-border); /* Add a border to the right of the column */
+  white-space: nowrap; /* Prevent text from wrapping to ensure everything stays on one line */
+  text-align: left;
+
+}
+
+
 .compact-column {
-  padding: 0.55rem; /* Reduce padding */
+  padding: 0.2rem; /* Reduce padding */
   font-size: 0.875rem; /* Smaller font size */
+  
+}
+
+
+.name-image-container {
+  display: inline-flex; /* Uses inline-flex to align items in a row and allow the container to grow with content */
+  align-items: center;
+}
+
+.name-image-container img {
+  display: block; /* Removes extra space below the image which is default for inline elements like img */
 }
 
 
@@ -87,6 +118,17 @@ body {
 
 /* Mobile Styles */
 @media (max-width: 768px) {
+  .p-datatable   .p-column-header-content   {
+    font-size: 0.75rem; /* Smaller font size */
+
+  }
+  .name-image-container span {
+    white-space: nowrap; /* Prevents the text from wrapping */
+    overflow: hidden;    /* Hides text that goes beyond the width */
+    text-overflow: ellipsis; /* Adds ellipsis to the hidden overflow text */
+    max-width: 7em;    /* Adjust the width as needed */
+    display: inline-block; /* Ensures the overflow properties work */
+  }
   .img-headshot {
     width: 2rem;
     border-radius: 50%;
@@ -129,9 +171,16 @@ body {
     padding: 0;
   }
 }
- 
+
 /* Desktop Styles */
 @media (min-width: 769px)  {
+  .name-image-container span {
+    white-space: nowrap; /* Prevents the text from wrapping */
+    overflow: hidden;    /* Hides text that goes beyond the width */
+    text-overflow: ellipsis; /* Adds ellipsis to the hidden overflow text */
+    width: 9em;    /* Adjust the width as needed */
+    display: inline-block; /* Ensures the overflow properties work */
+  }
   .img-headshot {
     width: 5rem;
     border-radius: 50%;
@@ -208,13 +257,7 @@ body {
     padding-top: 5em; /* So content doesnt go behind nav bar  */
 
   }
-  .name-image-container span {
-    white-space: nowrap; /* Prevents the text from wrapping */
-    overflow: hidden;    /* Hides text that goes beyond the width */
-    text-overflow: ellipsis; /* Adds ellipsis to the hidden overflow text */
-    max-width: 100px;    /* Adjust the width as needed */
-    display: inline-block; /* Ensures the overflow properties work */
-  }
+
   /* Shared base styles for all positions */
   .video-overlay-text {
     position: absolute;

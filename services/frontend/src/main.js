@@ -46,6 +46,7 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Image from 'primevue/image';
 import Chart from 'primevue/chart';
+import Skeleton from 'primevue/skeleton';
 const app = createApp(App)
 app.use(PrimeVue, {
   rippling: true,
@@ -92,6 +93,7 @@ app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
 app.component('Image', Image);
 app.component('Chart', Chart);
+app.component('Skeleton', Skeleton);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

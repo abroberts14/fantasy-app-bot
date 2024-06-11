@@ -4,36 +4,42 @@
     <div>
       <TabView>
         <TabPanel header="Basic Stats">
-          <DataTable v-if="filteredDataBasic.length > 0" :value="filteredDataBasic" class="compact-table" stripedRows scrollable  >
-            <Column field="name" header="Name"  class="compact-column" frozen >
+          <DataTable   v-if="filteredDataBasic.length > 0" :value="filteredDataBasic" showGridlines  class="compact-table" stripedRows scrollable  >
+            <Column field="name" header="Name"  class="compact-column " frozen >
               <template #body="slotProps">
+
                 <div class="name-image-container">
                   <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
                   <span>{{ slotProps.data.name }}</span>
                 </div>
               </template>
             </Column>
-            <Column v-for="field in fields.basic" :key="field.key" :field="'stats.' + field.key" :header="field.label"  class="compact-column" />
+            <Column v-for="field in fields.basic" :key="field.key" :field="'stats.' + field.key" :header="field.label" class="compact-column right-aligned-header">
+              <template #body="slotProps">
+                <Skeleton v-if="loadingData" animation="wave"   width="2rem" class="mb-2"/>
+                <span v-else>{{ slotProps.data.stats[field.key] }}</span>
+              </template>
+            </Column>          
           </DataTable>
         </TabPanel>
         <TabPanel header="Advanced Stats">
-          <DataTable v-if="filteredDataCustom.length > 0" :value="filteredDataCustom" class="compact-table" stripedRows  scrollable  >
-            <!-- <Column class="compact-column" frozen >
-              <template #body="slotProps">
-                <img  :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
-              </template>
-            </Column> -->
+          <DataTable v-if="filteredDataCustom.length > 0" :value="filteredDataCustom" showGridlines class="compact-table" stripedRows  scrollable  >
 
             <Column field="name" header="Name"  class="compact-column" frozen >
               <template #body="slotProps">
+
                 <div class="name-image-container">
                   <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
                   <span>{{ slotProps.data.name }}</span>
                 </div>
               </template>
             </Column>
-
-            <Column v-for="field in fields.custom" :key="field.key" :field="'stats.' + field.key" :header="field.label"  class="compact-column" />
+            <Column v-for="field in fields.custom" :key="field.key" :field="'stats.' + field.key" :header="field.label" class="compact-column right-aligned-header">
+              <template #body="slotProps">
+                <Skeleton v-if="loadingData" animation="wave"   width="2rem" class="mb-2"/>
+                <span v-else>{{ slotProps.data.stats[field.key] }}</span>
+              </template>
+            </Column>          
           </DataTable>
         </TabPanel>
       </TabView>
@@ -64,6 +70,7 @@ export default defineComponent({
     const selectedPlayer = ref({ name: '', id: 0 });
     const players = ref([]);
     const router = useRouter();
+    const loadingData = ref(false);
     const loadingPlayers = ref(false);
     const batters = ref([]);
     const user = computed(() => usersStore.user);
@@ -128,6 +135,9 @@ export default defineComponent({
               if (key.includes('%')) {
                 // Assuming the value is a decimal that needs to be converted to a percentage
                 value = `${(value * 100).toFixed(1)}%`;
+              } else if (typeof value === 'number' && !Number.isInteger(value)) {
+                // Format float numbers to three decimal places
+                value = value.toFixed(3);
               }
               return [key, value];
             })
@@ -140,13 +150,16 @@ export default defineComponent({
       ...player,
       stats: Object.fromEntries(
         Object.entries(player.stats || {}).filter(([key]) => fields.value.custom.some(field => field.key === key))
-          .map(([key, value]) => {
-            if (key.includes('%')) {
-              // Assuming the value is a decimal that needs to be converted to a percentage
-              value = `${(value * 100).toFixed(1)}%`;
-            }
-            return [key, value];
-          })
+            .map(([key, value]) => {
+              if (key.includes('%')) {
+                // Assuming the value is a decimal that needs to be converted to a percentage
+                value = `${(value * 100).toFixed(1)}%`;
+              } else if (typeof value === 'number' && !Number.isInteger(value)) {
+                // Format float numbers to three decimal places
+                value = value.toFixed(3);
+              }
+              return [key, value];
+            })
       )
     }));
   });
@@ -174,10 +187,13 @@ export default defineComponent({
     });
 
     async function fetchStatsAllPlayers() {
+      loadingData.value = true;
       const playerIds = batters.value.map(player => player.key_mlbam);
       try {
+
         const response = await axios.post('/baseball/get-multiple-player-stats', playerIds);
         const stats = response.data;
+        loadingData.value = false;
         batters.value.forEach(player => {
           if (stats[player.key_mlbam]) {
             player.stats = stats[player.key_mlbam];
@@ -192,6 +208,8 @@ export default defineComponent({
         batters.value.forEach(player => {
           player.stats = {}; // Reset stats on error
         });
+      } finally {
+        loadingData.value = false;
       }
     }
 
@@ -234,7 +252,8 @@ export default defineComponent({
       activeStatTab,
       filteredData,
       filteredDataBasic,
-      filteredDataCustom
+      filteredDataCustom,
+      loadingData
     };
   }
 });
@@ -243,11 +262,7 @@ export default defineComponent({
 
   
   <style scoped>
-  .name-image-container {
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-  }
+
   .card-settings {
     width: auto;;
     overflow:auto;

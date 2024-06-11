@@ -19,35 +19,50 @@
         <Column field="name" header="Batter">
           <template #body="slotProps">
             {{ slotProps.data.name }}
-            <span v-if="slotProps.data.isLoading" class="loading-spinner">
+            <!-- <span v-if="slotProps.data.isLoading" class="loading-spinner">
               <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Loading data" />
-            </span>
+            </span> -->
+
           </template>
         </Column>
         <template #expansion="slotProps">
   
-            <div v-if="slotProps.data.isLoading">
-              <InlineMessage severity="info">Loading...</InlineMessage>
-            </div>
-            <div v-else>
-              
-            <span v-if="videoPlayerLoading " class="loading-spinner">
-              <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Loading data" />
-            </span> 
-            <div v-if="!slotProps.data.latestValidDate">
-              <InlineMessage severity="warn">No plays loaded</InlineMessage>
-            </div>
+          
+
             <div v-if="currentPitches.length > 0 && !videoPlayerLoading" >
   
               <MediaPlayer :videos="currentPitches" :reset="videoPlayerLoading" :currentQuery="currentQuery" autoplay="false" />
+            </div> 
+            <div v-else>
+              <div v-if="!currentPitches.length > 0 && !videoPlayerLoading">
+                <InlineMessage severity="info">No plays loaded</InlineMessage>
               </div>
+              <div v-else>
+              <div  class="border-round  surface-border p-4 surface-card">
+                <div class="flex mb-3">
+                    <Skeleton animation="wave" shape="rectangle" size="4rem" class="mr-2"></Skeleton>
+                    <div>
+                        <Skeleton animation="wave" width="10rem" class="mb-2"></Skeleton>
+                        <Skeleton animation="wave" width="10rem" height=".5rem" class="mb-2"></Skeleton>
+                        
+                        <Skeleton animation="wave" width="10rem"  height=".5rem"></Skeleton>
+                    </div>
+                </div>
+                <Skeleton width="100%" height="150px"></Skeleton>
+                <div class="flex  ml-auto mt-3">
+                    <Skeleton animation="wave" width="4rem" height="2rem" class="mr-2"></Skeleton>
+                    <Skeleton animation="wave" width="4rem" height="2rem" class="mr-2"></Skeleton>
+                    <Skeleton animation="wave" shape="circle" size="2rem" height="2rem"></Skeleton>
+                </div>
+                </div>
+            </div>
+            </div>
              <!-- Output the latestValidDate -->
              <!-- <p>Latest valid date: {{ slotProps.data.latestValidDate }}</p> -->
              <!-- Loop through and output the disableddates in a list -->
              <!-- <ul>
                <li v-for="date in slotProps.data.disabledDates" :key="date">{{ date }}</li>
              </ul> -->
-            </div>
         </template>
       </DataTable>
   
@@ -207,6 +222,7 @@
           console.error('fetchPlayerData requires a player object.');
           return;
         }
+        videoPlayerLoading.value = true;
 
         player.isLoading = true;  // Set loading to true initially
         const startDate = getYesterdayDate(false); // Assuming getYesterdayDate function exists and returns Date object
@@ -245,6 +261,7 @@
           player.disabledDates = [];
         } finally {
           player.isLoading = false;
+          videoPlayerLoading.value = false;
         }
       }
         
@@ -257,9 +274,7 @@
         if (expandedRow.value !== $event.data.key_mlbam) {
           expandedRow.value = {};
         }
-
-        await fetchPlayerData($event.data);
-
+        expandedRow.value = { [ $event.data.key_mlbam ]: true };
         nextTick(() => {
           const rowData = $event.data;
           const videoPlayerElement = document.querySelector('.p-datatable-row-expansion');
@@ -273,9 +288,11 @@
               console.log('Video player element not found:', '#row-' + rowData.key_mlbam + ' .video-player-class');
           }
         });
+        await fetchPlayerData($event.data);
+
+        
 
         // Set the current row as the expanded row
-        expandedRow.value = { [ $event.data.key_mlbam ]: true };
 
         debugLog('expandedRow POST', expandedRow.value);
         if ($event.data.latestValidDate) {
@@ -285,6 +302,8 @@
       function setCollapsedRow($event) {
         debugLog('rowData collapse', $event.data);
         expandedRow.value = {};
+        videoPlayerLoading.value = false;
+
         debugLog('collapsed POST', expandedRow.value);
   
       }
