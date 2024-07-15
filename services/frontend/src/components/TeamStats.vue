@@ -1,48 +1,51 @@
+
+
 <template>
   <LoadingSpinner v-if="loadingPlayers"/>
-  <section >
-    <div>
-      <TabView>
-        <TabPanel header="Basic Stats">
-          <DataTable   v-if="filteredDataBasic.length > 0" :value="filteredDataBasic" showGridlines  class="compact-table" stripedRows scrollable  >
-            <Column field="name" header="Name"  class="compact-column " frozen >
-              <template #body="slotProps">
+  <section>
+    <div >
+      <div class="flex justify-content-center mt-2 mb-4">
+        <Checkbox v-model="advanced" :binary="true" inputId="advanced" name="advanced" :disabled="loadingData"/>
+        <label for="advanced" class="ml-2"> Advanced Stats </label>
 
-                <div class="name-image-container">
-                  <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
-                  <span>{{ slotProps.data.name }}</span>
-                </div>
-              </template>
-            </Column>
-            <Column v-for="field in fields.basic" :key="field.key" :field="'stats.' + field.key" :header="field.label" class="compact-column right-aligned-header">
-              <template #body="slotProps">
-                <Skeleton v-if="loadingData" animation="wave"   width="2rem" class="mb-2"/>
-                <span v-else>{{ slotProps.data.stats[field.key] }}</span>
-              </template>
-            </Column>          
-          </DataTable>
-        </TabPanel>
-        <TabPanel header="Advanced Stats">
-          <DataTable v-if="filteredDataCustom.length > 0" :value="filteredDataCustom" showGridlines class="compact-table" stripedRows  scrollable  >
+      </div>
+      
+      <DataTable v-show="filteredData.length > 0 && !advanced" :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
+        <Column field="name" header="Name" class="compact-column" frozen>
+          <template #body="slotProps">
+            <div class="name-image-container">
+              <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.name" class="img-headshot" />
+              <span>{{ slotProps.data.name }}</span>
+            </div>
+          </template>
+        </Column>
+        <!-- Dynamic Stats Fields Access -->
+        <Column v-for="field in fields.basic" :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
+          <template #body="slotProps">
+            <Skeleton v-if="loadingData" animation="wave" width="2rem" class="mb-2"/>
+            <span v-else>{{ slotProps.data.stats[activeStatPeriod][field.key] }}</span>
+          </template>
+        </Column>
+      </DataTable>
+      <DataTable v-show="filteredData.length > 0 && advanced" :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
+        <Column field="name" header="Name" class="compact-column" frozen>
+          <template #body="slotProps">
+            <div class="name-image-container">
+              <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.name" class="img-headshot" />
+              <span>{{ slotProps.data.name }}</span>
+            </div>
+          </template>
+        </Column>
+        <Column v-for="field in fields.custom"  :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
+          <template #body="slotProps">
 
-            <Column field="name" header="Name"  class="compact-column" frozen >
-              <template #body="slotProps">
+            <Skeleton v-if="loadingData" animation="wave" width="2rem" class="mb-2"/>
+            <span v-else>{{ slotProps.data.stats[activeStatPeriod][field.key] }}</span>
 
-                <div class="name-image-container">
-                  <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.image" class="img-headshot" />
-                  <span>{{ slotProps.data.name }}</span>
-                </div>
-              </template>
-            </Column>
-            <Column v-for="field in fields.custom" :key="field.key" :field="'stats.' + field.key" :header="field.label" class="compact-column right-aligned-header">
-              <template #body="slotProps">
-                <Skeleton v-if="loadingData" animation="wave"   width="2rem" class="mb-2"/>
-                <span v-else>{{ slotProps.data.stats[field.key] }}</span>
-              </template>
-            </Column>          
-          </DataTable>
-        </TabPanel>
-      </TabView>
+          </template>
+        </Column>
+      </DataTable>
+        
     </div>
   </section>
 </template>
@@ -79,9 +82,26 @@ export default defineComponent({
     const activeStatTab = ref('Basic Stats');
     const dynamicScrollHeight = ref('900px'); // Default value
     const selectedStatGroup = ref(null);
+    const activeStatPeriod = ref('all');  // Default to all time stats
+    const op = ref(null);
+    const advanced = ref(false);
 
+    const toggle = (event) => {
+      console.log('Cell clicked:', event);
+
+      console.log(op.value);
+      if (op.value && typeof op.value.toggle === 'function') {
+        op.value.toggle(event);
+      } else {
+        console.error('Popover toggle method is not available');
+      }
+    };
+    const setStatPeriod = (period) => {
+      activeStatPeriod.value = period;
+    };
     const fields = ref({
       basic: [
+
         { key: 'G', label: 'G' },
         { key: 'AB', label: 'AB' },
         { key: 'PA', label: 'PA' },
@@ -124,53 +144,13 @@ export default defineComponent({
       ]
     });
 
-    const filteredData = ref([]);
-
-    const filteredDataBasic = computed(() => {
+    const filteredData = computed(() => {
       return batters.value.map(player => ({
         ...player,
-        stats: Object.fromEntries(
-          Object.entries(player.stats || {}).filter(([key]) => fields.value.basic.some(field => field.key === key))
-            .map(([key, value]) => {
-              if (key.includes('%')) {
-                // Assuming the value is a decimal that needs to be converted to a percentage
-                value = `${(value * 100).toFixed(1)}%`;
-              } else if (typeof value === 'number' && !Number.isInteger(value)) {
-                // Format float numbers to three decimal places
-                value = value.toFixed(3);
-              }
-              return [key, value];
-            })
-        )
+        stats: player.stats? player.stats : {}
       }));
     });
 
-  const filteredDataCustom = computed(() => {
-    return batters.value.map(player => ({
-      ...player,
-      stats: Object.fromEntries(
-        Object.entries(player.stats || {}).filter(([key]) => fields.value.custom.some(field => field.key === key))
-            .map(([key, value]) => {
-              if (key.includes('%')) {
-                // Assuming the value is a decimal that needs to be converted to a percentage
-                value = `${(value * 100).toFixed(1)}%`;
-              } else if (typeof value === 'number' && !Number.isInteger(value)) {
-                // Format float numbers to three decimal places
-                value = value.toFixed(3);
-              }
-              return [key, value];
-            })
-      )
-    }));
-  });
-
-    watch(activeStatTab, () => {
-      if (activeStatTab.value === 'Basic Stats') {
-        filteredData.value = filteredDataBasic.value;
-      } else if (activeStatTab.value === 'Advanced Stats') {
-        filteredData.value = filteredDataCustom.value;
-      }
-    }, { immediate: true });
 
     onMounted(() => {
       fetchMyPlayers();
@@ -190,29 +170,51 @@ export default defineComponent({
       loadingData.value = true;
       const playerIds = batters.value.map(player => player.key_mlbam);
       try {
-
         const response = await axios.post('/baseball/get-multiple-player-stats', playerIds);
         const stats = response.data;
         loadingData.value = false;
         batters.value.forEach(player => {
           if (stats[player.key_mlbam]) {
-            player.stats = stats[player.key_mlbam];
+            // player.stats = {
+            //   all: stats[player.key_mlbam].all || {},
+            //   days7: stats[player.key_mlbam]['7'] || {},
+            //   days14: stats[player.key_mlbam]['14'] || {},
+            //   days30: stats[player.key_mlbam]['30'] || {}
+            // };
+            const processedStats = {
+              all: {
+                ...processStats(stats[player.key_mlbam].all || {}, fields.value.basic),
+                ...processStats(stats[player.key_mlbam].all || {}, fields.value.custom)
+              },
+              days7: {
+                ...processStats(stats[player.key_mlbam]['7'] || {}, fields.value.basic),
+                ...processStats(stats[player.key_mlbam]['7'] || {}, fields.value.custom)
+              },
+              days14: {
+                ...processStats(stats[player.key_mlbam]['14'] || {}, fields.value.basic),
+                ...processStats(stats[player.key_mlbam]['14'] || {}, fields.value.custom)
+              },
+              days30: {
+                ...processStats(stats[player.key_mlbam]['30'] || {}, fields.value.basic),
+                ...processStats(stats[player.key_mlbam]['30'] || {}, fields.value.custom)
+              }
+            };
+            player.stats = processedStats;  
             player.isLoading = false; // Loading done
           } else {
             console.error(`No stats found for player ${player.key_mlbam}`);
-            player.stats = {};
+            player.stats = { all: {}, days7: {}, days14: {}, days30: {} };
           }
         });
       } catch (error) {
         console.error('Error fetching stats for players:', error);
         batters.value.forEach(player => {
-          player.stats = {}; // Reset stats on error
+          player.stats = { all: {}, days7: {}, days14: {}, days30: {} }; // Reset stats on error
         });
       } finally {
         loadingData.value = false;
       }
     }
-
     async function fetchMyPlayers() {
       if (!isLoggedIn) {
         console.error('User is not logged in or token is not available');
@@ -230,7 +232,19 @@ export default defineComponent({
         fetchStatsAllPlayers();
       }
     }
-
+    function processStats(stats, fields) {
+      return Object.fromEntries(
+        Object.entries(stats).filter(([key]) => 
+          fields.some(field => field.key === key)).map(([key, value]) => {
+          if (key.includes('%')) {
+            value = `${(value * 100).toFixed(1)}%`;
+          } else if (typeof value === 'number' && !Number.isInteger(value)) {
+            value = value
+          }
+          return [key, value];
+        })
+      );
+    }
     function updateScrollHeight() {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -251,9 +265,12 @@ export default defineComponent({
       selectedStatGroup,
       activeStatTab,
       filteredData,
-      filteredDataBasic,
-      filteredDataCustom,
-      loadingData
+      advanced,
+      activeStatPeriod,
+      loadingData,
+      setStatPeriod,
+      toggle,
+      op
     };
   }
 });

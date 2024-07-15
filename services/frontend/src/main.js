@@ -14,7 +14,6 @@ import PrimeVue from 'primevue/config';
 import 'primeflex/primeflex.css';
 import '@/assets/main.css'
 import '@/assets/styles.scss';
-import 'primevue/resources/themes/lara-light-green/theme.css';
 import { useToast } from 'vue-toastification'
 
 import Button from 'primevue/button';
@@ -43,13 +42,32 @@ import InlineMessage from 'primevue/inlinemessage';
 import Message from 'primevue/message';
 import ProgressBar from 'primevue/progressbar';
 import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
 import Image from 'primevue/image';
 import Chart from 'primevue/chart';
 import Skeleton from 'primevue/skeleton';
+import Inplace from 'primevue/inplace';
+import Popover from 'primevue/popover';
+import Aura from '@primevue/themes/aura';
+import Steps from 'primevue/steps';
+
+
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
+
 const app = createApp(App)
 app.use(PrimeVue, {
-  rippling: true,
+  theme: {
+    preset: Aura,
+    options: {
+      prefix: 'p',
+      darkModeSelector: 'light',
+      cssLayer: false
+    }
+  },
+  ripple: true
   // pt: {
   //     floatlabel: {
   //         root: {
@@ -94,6 +112,13 @@ app.component('TabPanel', TabPanel);
 app.component('Image', Image);
 app.component('Chart', Chart);
 app.component('Skeleton', Skeleton);
+app.component('Inplace', Inplace);
+app.component('Popover', Popover);
+app.component('Tabs', Tabs);
+app.component('TabList', TabList);
+app.component('Tab', Tab);
+app.component('TabPanels', TabPanels);
+app.component('Steps', Steps);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

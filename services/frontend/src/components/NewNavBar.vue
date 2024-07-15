@@ -48,7 +48,7 @@ export default defineComponent({
       ];
       if (usersStore.isAdmin) {
         baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });
-
+        baseItems.push({ label: 'My Team New', to: '/my-team-new', command: () => { router.push('/my-team-new'); } });
       }
       if (!usersStore.isAuthenticated) {
         baseItems.push({ label: 'Log In', to: '/login', command: () => { router.push('/login'); } });

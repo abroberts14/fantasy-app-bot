@@ -1,21 +1,6 @@
 <template>
 
- <LoadingSpinner v-if="isLoading" />
-
- <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
-      <h3>No Yahoo Account Detected</h3>
-      <p>
-        To register a new bot, you must connect and authorize a Yahoo account.
-      </p>
-      <p>
-        Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
-      </p>
-  </ModalOverlay> 
-<Stepper v-model:activeStep="active" orientation="vertical">
-    <StepperPanel header="Bot Information">
-
-      <template #content="{ nextCallback }">
-        <p v-if="!oauthTokens || oauthTokens.length == 0"  class="text-400" >Note: you must connect to Yahoo to access private leagues, visit your <router-link to="/profile">profile</router-link> to setup your yahoo integration</p>
+       <LoadingSpinner v-if="isLoading" />
 
             <div class="flex flex-column  justify-center  h-12rem">
               <div class="mb-3 ">
@@ -55,14 +40,8 @@
                 </div>
               </div>
           </div>
-            <div class="flex pt-8">
-                <Button label="Next"  icon="pi pi-arrow-down" iconPos="right" :disabled="!bot.name || !bot.league_id || (!bot.groupme_bot_id && !bot.discord_webhook_url) || !selectedTimezone" @click="nextCallback" />
-            </div>
+
             
-        </template>
-    </StepperPanel>
-    <StepperPanel header="Bot Features">
-      <template #content="{ prevCallback, nextCallback }">
       <div class="flex flex-column">
           <DataTable :value="filteredFeatures" stripedRows>
             <Column header="Name">
@@ -95,14 +74,10 @@
           </DataTable>
 
           <div class="flex justify-content-start py-4 gap-2">
-              <Button label="Back" icon="pi pi-arrow-up" iconPos="right" severity="secondary" @click="prevCallback" />
               <button type="submit" class="btn btn-primary"  :disabled="!oauthTokens || oauthTokens.length == 0" @click="submit">Submit</button>
           </div>
       </div>
-</template>
-    </StepperPanel>
    
-</Stepper>
 
 </template>
 
@@ -147,6 +122,17 @@ export default defineComponent({
     ]);
 
 
+    const items = ref([
+        {
+            label: 'Bot Information'
+        },
+        {
+            label: 'Bot Features'
+        },
+        {
+            label: 'Review'
+        }
+    ]);
     const isDialogVisible = ref(false);
 
     const isLoading = ref(false);

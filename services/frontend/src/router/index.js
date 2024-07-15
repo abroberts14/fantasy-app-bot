@@ -16,6 +16,7 @@ import TeamVideosView from '@/views/TeamVideosView.vue'
 import TeamPercentilesView from '@/views/TeamPercentilesView.vue'
 import TeamStatsView from '@/views/TeamStatsView.vue'
 import MyTeamView from '@/views/MyTeamView.vue'
+import MyTeamViewNew from '@/views/MyTeamViewNew.vue'
 const routes = [
   {
     path: '/',
@@ -33,7 +34,9 @@ const routes = [
   {
     path: '/register-bot',
     name: 'RegisterBot',
-    component: RegisterBotView
+    component: RegisterBotView,
+    meta: { checkToken: true },
+
   },
   {
     path: '/login',
@@ -112,6 +115,12 @@ const routes = [
     name: 'MyTeam',
     meta: { checkToken: true, development: true },
     component: MyTeamView,
+  },
+  {
+    path: '/my-team-new',
+    name: 'MyTeamNew',
+    meta: { checkToken: true, development: true },
+    component: MyTeamViewNew,
   },
 ]
 

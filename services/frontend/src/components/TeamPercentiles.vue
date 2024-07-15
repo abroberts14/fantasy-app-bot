@@ -20,7 +20,7 @@
           <template #body="slotProps">
             {{ slotProps.data.name }}
             <span v-if="slotProps.data.isLoading" class="loading-spinner">
-              <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Loading data" />
+              <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" fill="var(--color-background)" animationDuration=".5s" aria-label="Loading data" />
             </span>
           </template>
         </Column>

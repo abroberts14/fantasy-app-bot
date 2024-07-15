@@ -67,25 +67,25 @@ body {
   margin: auto; /* Centering content horizontally */
 
 }
+.p-datatable-scrollable .p-datatable-frozen-column {
+  position: sticky;
+  background: var(--color-background) !important;
+}
 
+.p-datatable-column-header-content {
+  white-space: nowrap; 
+  overflow: hidden;    
+  text-overflow: ellipsis; 
+}
 
 .compact-table .p-datatable-header,
 .compact-table .p-datatable-thead > tr > th,
 .compact-table .p-datatable-tbody > tr > td {
   padding: 0.2rem; /* Reduce padding */
   font-size: 0.875rem; /* Smaller font size */
-  text-align: right;
-  
-
 }
 
-.p-datatable  .right-aligned-header  .p-column-header-content   {
-  display: block; /* Makes span behave like a block element */
-  text-align: right; /* Ensures text within the span also aligns to the right */
-}
-
-
-.compact-table .p-datatable-tbody > tr > td.compact-column.p-frozen-column {
+ .p-datatable-frozen-column {
   padding: 0.1rem; /* Remove padding to reduce extra space */
   min-width: 0; /* Ensure there's no minimum width forcing extra space */
   width: 0;
@@ -96,11 +96,11 @@ body {
 }
 
 
-.compact-column {
-  padding: 0.2rem; /* Reduce padding */
-  font-size: 0.875rem; /* Smaller font size */
-  
+.compact-column.right-aligned {
+  text-align: right; /* Align text to the left */
 }
+
+
 
 
 .name-image-container {
@@ -122,6 +122,8 @@ body {
     font-size: 0.75rem; /* Smaller font size */
 
   }
+
+  
   .name-image-container span {
     white-space: nowrap; /* Prevents the text from wrapping */
     overflow: hidden;    /* Hides text that goes beyond the width */
@@ -196,6 +198,7 @@ body {
     width: 100%;
     
   }
+
 }
 
 @media (max-width: 768px) {
@@ -225,12 +228,18 @@ body {
     width: 95%; /* Keep 100% width on medium screens */
 
   }
+  .progress-panel {
+    width: 95%;
+  }
 }
 /* Medium screens (e.g., laptops) */
 @media (min-width: 1200px) and (max-width: 1600px) {
   body {
     width: 90%; /* Keep 100% width on medium screens */
 
+  }
+  .progress-panel {
+    width: 95%;
   }
 }
 
@@ -240,12 +249,18 @@ body {
     width: 75%; /* Reduce to 60% width on larger screens */
 
   }
+  .progress-panel {
+    width: 80%;
+  }
 }
 /* X Large screens */
 @media (min-width: 2100px) {
   body {
     width: 65%; /* Reduce to 60% width on larger screens */
 
+  }
+  .progress-panel {
+    width: 65%;
   }
 }
 
@@ -254,10 +269,12 @@ body {
 /* Mobile Styles */
 @media (max-width: 768px) {
   body {
-    padding-top: 5em; /* So content doesnt go behind nav bar  */
+    padding-top: 1em; /* So content doesnt go behind nav bar  */
 
   }
-
+  .progress-panel {
+    width: 95%;
+  }
   /* Shared base styles for all positions */
   .video-overlay-text {
     position: absolute;
@@ -442,7 +459,6 @@ body {
 }
 
 .progress-panel {
-  width: 95%; /* Adjust the width as needed for compactness */
   background-color: #f9f9f9; /* Light background for the panel */
   padding: 10px;
   border: 1px solid #ccc; /* Optional border */
