@@ -3,14 +3,31 @@
 <template>
   <LoadingSpinner v-if="loadingPlayers"/>
   <section>
-    <div >
-      <div class="flex justify-content-center mt-2 mb-4">
-        <Checkbox v-model="advanced" :binary="true" inputId="advanced" name="advanced" :disabled="loadingData"/>
-        <label for="advanced" class="ml-2"> Advanced Stats </label>
-
+    <div class="flex align-items-center justify-content-between mt-2 mb-4">
+      <div class="flex align-items-center justify-content-start flex-wrap  ">
+        <ToggleSwitch  v-model="advanced" :binary="true" inputId="advanced" name="advanced" :disabled="loadingData || rankings" />
+        <label for="advanced" class="flex  justify-content-start m-2" :class="{'disabled-label': loadingData || rankings}">Advanced Stats</label>
+        <div class="flex align-items-center justify-content-start ">
+          <ToggleSwitch v-model="rankings" :binary="true" inputId="rankings" name="rankings" :disabled="loadingData" />
+          <label for="rankings" class="flex  justify-content-start m-2 " :class="{'disabled-label': loadingData}">Percentile Rankings</label>
+        </div>
       </div>
-      
-      <DataTable v-show="filteredData.length > 0 && !advanced" :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
+
+      <div class="inline-flex">
+        <div class="hidden md:block">
+          <Select v-model="selectedDate" inputId="daterange" :options="dates" :disabled="loadingData" optionLabel="name" placeholder="Select Date Range"
+        checkmark />
+        </div>
+        <div class="block md:hidden">
+          <Select v-model="selectedDate" inputId="daterange" :options="dates" :disabled="loadingData" optionLabel="name" placeholder="Dates"
+        checkmark />
+        </div>
+      </div>
+    </div>
+
+
+    
+      <DataTable v-show="filteredData.length > 0 && (!advanced && !rankings)" :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
         <Column field="name" header="Name" class="compact-column" frozen>
           <template #body="slotProps">
             <div class="name-image-container">
@@ -20,14 +37,15 @@
           </template>
         </Column>
         <!-- Dynamic Stats Fields Access -->
+        
         <Column v-for="field in fields.basic" :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
           <template #body="slotProps">
             <Skeleton v-if="loadingData" animation="wave" width="2rem" class="mb-2"/>
-            <span v-else>{{ slotProps.data.stats[activeStatPeriod][field.key] }}</span>
+            <span v-else>{{ getStatModel(slotProps, field.key) }}</span>
           </template>
         </Column>
       </DataTable>
-      <DataTable v-show="filteredData.length > 0 && advanced" :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
+      <DataTable v-show="filteredData.length > 0 && (advanced && !rankings)" :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
         <Column field="name" header="Name" class="compact-column" frozen>
           <template #body="slotProps">
             <div class="name-image-container">
@@ -40,13 +58,39 @@
           <template #body="slotProps">
 
             <Skeleton v-if="loadingData" animation="wave" width="2rem" class="mb-2"/>
-            <span v-else>{{ slotProps.data.stats[activeStatPeriod][field.key] }}</span>
-
+            <div v-else>
+              <div v-if="getStatModel(slotProps, field.key) !== '' && getStatModel(slotProps, field.key) !== null && getStatModel(slotProps, field.key) !== undefined">                
+                <span>{{ getStatModel(slotProps, field.key) }}</span>
+              </div>
+            </div>
+           
           </template>
         </Column>
       </DataTable>
-        
-    </div>
+      <DataTable v-show="filteredData.length > 0 && rankings " :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
+        <Column field="name" header="Name" class="compact-column" frozen>
+          <template #body="slotProps">
+            <div class="name-image-container">
+              <img :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${slotProps.data.key_mlbam}/headshot/67/current`" :alt="slotProps.data.name" class="img-headshot" />
+              <span>{{ slotProps.data.name }}</span>
+            </div>
+          </template>
+        </Column>
+        <Column v-for="field in fields.percentiles"  :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
+          <template #body="slotProps">
+
+            <Skeleton v-if="loadingData" animation="wave" width="2rem" class="mb-2"/>
+            <div v-else>
+              <div v-if="getStatModel(slotProps, field.key) !== '' && getStatModel(slotProps, field.key) !== null && getStatModel(slotProps, field.key) !== undefined">                
+                <!-- <Knob v-if="rankings" v-model="slotProps.data.stats[activeStatPeriod][field.key]" readonly :min="0" :max="100" :size="100" ></Knob> -->
+                <ColorfulBadge v-if="rankings" :value="slotProps.data.stats[activeStatPeriod][field.key]"></ColorfulBadge>
+
+              </div>
+            </div>
+           
+          </template>
+        </Column>
+      </DataTable>
   </section>
 </template>
 
@@ -59,14 +103,15 @@ import axios from 'axios';
 import ModalOverlay from '@/components/ModalOverlay.vue';
 import { useRouter } from 'vue-router';
 import PercentileBars from '@/components/PercentileBars.vue';
-
+import ColorfulBadge from '@/components/ColorfulBadge.vue';
 export default defineComponent({
   name: 'TeamStatsView',
   components: {
     MediaPlayer,
     LoadingSpinner,
     ModalOverlay,
-    PercentileBars
+    PercentileBars,
+    ColorfulBadge
   },
   setup() {
     const usersStore = useUsersStore();
@@ -84,8 +129,24 @@ export default defineComponent({
     const selectedStatGroup = ref(null);
     const activeStatPeriod = ref('all');  // Default to all time stats
     const op = ref(null);
+    const activeFields = ref([]);
     const advanced = ref(false);
+    const rankings = ref(false);
+    const selectedDate = ref();
+    const dates = ref([
+        { name: 'Season', code: 'all' },
+        { name: '7 Day', code: 'days7' },
+        { name: '14 Day', code: 'days14' },
+        { name: '30 Day', code: 'days30' }
+    ]);
+    const getStatModel = (slotProps, key) => {
+      const periodStats = slotProps.data.stats[activeStatPeriod.value];
+      if (!periodStats) {
+        slotProps.data.stats[activeStatPeriod.value] = {};
+      }
+      return periodStats[key] !== undefined ? periodStats[key] : null;
 
+    };
     const toggle = (event) => {
       console.log('Cell clicked:', event);
 
@@ -99,6 +160,42 @@ export default defineComponent({
     const setStatPeriod = (period) => {
       activeStatPeriod.value = period;
     };
+
+    watch(advanced, (newAdvanced, oldAdvanced) => {
+      if (newAdvanced) {
+        activeFields.value = fields.value.custom;
+      } else {
+        activeFields.value = fields.value.basic;
+      }
+    });
+    // Watch for changes in selectedDate
+    watch(selectedDate, (newDate, oldDate) => {
+        if (newDate) {
+          if (rankings.value) {
+            setStatPeriod(`${newDate.code}_ranks`);
+          } else {
+            setStatPeriod(newDate.code);
+          }
+        }
+    });
+
+    watch(rankings, (newRankings, oldRankings) => {
+        if (newRankings) {
+          setStatPeriod(`${activeStatPeriod.value}_ranks`);
+          activeFields.value = fields.value.percentiles;
+        } else {
+          if (advanced.value) {
+            activeFields.value = fields.value.custom;
+          } else {
+            activeFields.value = fields.value.basic;
+          }
+          setStatPeriod('all');
+        }
+      
+        console.log(activeStatPeriod.value);
+        console.log(batters.value)
+    });
+
     const fields = ref({
       basic: [
 
@@ -141,9 +238,26 @@ export default defineComponent({
         { key: 'O-Contact%', label: 'O-Contact%' },
         { key: 'Z-Contact%', label: 'Z-Contact%' },
         { key: 'CSW%', label: 'CSW%' }
+      ], 
+      percentiles: [
+        { key: 'K%', label: 'K%' },
+        { key: 'BB%', label: 'BB%' },
+        { key: 'xBA', label: 'xBA' },
+        { key: 'xSLG', label: 'xSLG' },
+        { key: 'wOBA', label: 'wOBA' },
+        { key: 'xwOBA', label: 'xWOBA' },
+        { key: 'EV', label: 'EV' },
+        { key: 'Barrel%', label: 'Barrel%' },
+        { key: 'HardHit%', label: 'HardHit%' },
+        { key: 'O-Swing%', label: 'O-Swing%' },
+        { key: 'SwStr%', label: 'SwStr%' },
+        { key: 'CSW%', label: 'CSW%' },
+        { key: 'wRC+', label: 'wRC+' }
       ]
     });
-
+    // const activeFilter = computed(() => {
+    //   return batters.value.filter(player => player.stats[activeStatPeriod][activeStatTab]);
+    // });
     const filteredData = computed(() => {
       return batters.value.map(player => ({
         ...player,
@@ -160,6 +274,7 @@ export default defineComponent({
         top: 0, // Adjust this value to position the scroll appropriately
         behavior: 'smooth'
       });
+      activeFields.value = fields.value.basic;
     });
 
     onUnmounted(() => {
@@ -197,7 +312,19 @@ export default defineComponent({
               days30: {
                 ...processStats(stats[player.key_mlbam]['30'] || {}, fields.value.basic),
                 ...processStats(stats[player.key_mlbam]['30'] || {}, fields.value.custom)
-              }
+              },
+              all_ranks: {
+                ...stats[player.key_mlbam]['all_percentile_ranks'] || {}
+              }, 
+              days7_ranks: {
+                ...stats[player.key_mlbam]['7_percentile_ranks'] || {}
+              },
+              days14_ranks: {
+                ...stats[player.key_mlbam]['14_percentile_ranks'] || {}
+              },
+              days30_ranks: {
+                ...stats[player.key_mlbam]['30_percentile_ranks'] || {}
+              },
             };
             player.stats = processedStats;  
             player.isLoading = false; // Loading done
@@ -270,7 +397,12 @@ export default defineComponent({
       loadingData,
       setStatPeriod,
       toggle,
-      op
+      op,
+      selectedDate,
+      dates,
+      rankings,
+      getStatModel, 
+      activeFields
     };
   }
 });

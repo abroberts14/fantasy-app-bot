@@ -67,6 +67,22 @@ body {
   margin: auto; /* Centering content horizontally */
 
 }
+
+
+.disabled-label {
+  color: #a0a0a0; /* Grey out the label */
+  cursor: not-allowed; /* Show a not-allowed cursor to indicate non-interactivity */
+  opacity: 0.6; /* Lower the opacity */
+}
+.p-toggleswitch.p-component.p-disabled .p-toggleswitch-slider {
+  background-color: #4e4b4b; /* Darker grey for the slider */
+}
+
+.p-toggleswitch.p-component.p-disabled .p-toggleswitch-handle {
+  background-color: #cfcfcf; /* Medium grey for the handle */
+  border-color: #b1b1b1; /* Slightly darker border for the handle */
+}
+
 .p-datatable-scrollable .p-datatable-frozen-column {
   position: sticky;
   background: var(--color-background) !important;

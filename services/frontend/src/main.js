@@ -50,13 +50,16 @@ import Popover from 'primevue/popover';
 import Aura from '@primevue/themes/aura';
 import Steps from 'primevue/steps';
 
-
+import MultiSelect from 'primevue/multiselect';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-
+import ToggleSwitch from 'primevue/toggleswitch';
+import Select from 'primevue/select';
+import Knob from 'primevue/knob';
+import Badge from 'primevue/badge';
 const app = createApp(App)
 app.use(PrimeVue, {
   theme: {
@@ -119,6 +122,11 @@ app.component('TabList', TabList);
 app.component('Tab', Tab);
 app.component('TabPanels', TabPanels);
 app.component('Steps', Steps);
+app.component('ToggleSwitch', ToggleSwitch);
+app.component('MultiSelect', MultiSelect);
+app.component('Select', Select);
+app.component('Knob', Knob);
+app.component('Badge', Badge);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,

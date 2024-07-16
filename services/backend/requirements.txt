@@ -7,6 +7,7 @@ python-jose==3.3.0
 python-multipart==0.0.5
 tortoise-orm==0.19.2
 uvicorn==0.20.0
+scipy
 MLB-StatsAPI
 gunicorn
 requests

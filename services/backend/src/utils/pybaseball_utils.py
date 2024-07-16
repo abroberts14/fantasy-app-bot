@@ -20,6 +20,7 @@ from pybaseball.enums.fangraphs import (
     stat_list_from_str,
     stat_list_to_str,
 )
+from scipy.stats import percentileofscore
 
 _FG_LEADERS_URL = "/leaders-legacy.aspx"
 
@@ -283,3 +284,46 @@ def custom_statcast_batter(
         f"returning custom statcast batter for player {player_id} from {start_dt} to {end_dt}"
     )
     return df
+
+
+def statcast_get_leaderboard(year: int) -> pd.DataFrame:
+    """
+    Retrieves percentile ranks for each player in a given year, including batters with at least 2.1 PA per team
+    game and 1.25 for pitchers.
+
+    ARGUMENTS
+        year: The year for which you wish to retrieve percentile data. Format: YYYY.
+    """
+    url = f"https://baseballsavant.mlb.com/leaderboard/custom?year={year}&type=batter&filter=&min=q&selections=k_percent%2Cbb_percent%2Cxba%2Cxslg%2Cwoba%2Cxwoba%2Cavg_swing_speed%2Cexit_velocity_avg%2Csweet_spot_percent%2Cbarrel_batted_rate%2Chard_hit_percent%2Coz_swing_percent%2Cwhiff_percent%2Csprint_speed&chart=false&x=k_percent&y=k_percent&r=no&chartType=beeswarm&sort=xwoba&sortDir=desc&csv=true"
+
+    res = requests.get(url, timeout=None).content
+    data = pd.read_csv(io.StringIO(res.decode("utf-8")))
+    # remove any rows that have  nona values
+    data = data.dropna()
+    # URL returns a null player with player id 999999, which we want to drop
+    print(data.columns)
+    return data.reset_index(drop=True)
+
+
+def get_percentile_rank(year: int, stat: str, value: float) -> float:
+    """
+    Returns the percentile rank of a given value for a specific statistical category from Statcast data.
+
+    ARGUMENTS
+        year: The year for which to retrieve data. Format: YYYY.
+        stat: The statistic key (column name) for which the percentile is to be computed.
+        value: The specific value of the statistic to find its percentile ranking.
+
+    RETURNS
+        Percentile rank as a float.
+    """
+    # Fetch the data from the leaderboard function
+    data = statcast_get_leaderboard(year)
+
+    # Ensure the statistic is valid
+    if stat not in data.columns:
+        raise ValueError("Statistic not found in the data.")
+
+    # Calculate the percentile rank
+    percentile_rank = percentileofscore(data[stat], value, kind="rank")
+    return percentile_rank

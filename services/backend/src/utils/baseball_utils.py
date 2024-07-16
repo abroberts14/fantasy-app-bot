@@ -7,6 +7,7 @@ import statsapi
 from pybaseball import batting_stats, batting_stats_range
 from pybaseball.enums.fangraphs.month import FangraphsMonth
 from pytz import timezone
+from scipy.stats import percentileofscore
 from src.utils.pybaseball_utils import (
     custom_statcast_batter,
     fg_batting_data_extended,
@@ -241,43 +242,104 @@ def fetch_multiple_player_stats(player_ids: List[int]):
         str(today.year), month="LAST_THIRTY", ind=0, qual=5
     )
     print(f"Data for the last 30 days fetched: {len(data_30)} records")
-    # Fetch data for the last 14 days
-    # start_dt_14 = today - timedelta(days=14)
-    # print(
-    #     f"Fetching data from {start_dt_14.strftime('%Y-%m-%d')} to {today.strftime('%Y-%m-%d')}"
-    # )
-    # data_14 = batting_stats_range(
-    #     start_dt=start_dt_14.strftime("%Y-%m-%d"),
-    #     end_dt=today.strftime("%Y-%m-%d"),
-    # )
-    # print(f"Data for the last 14 days fetched: {len(data_14)} records")
-
-    # # Fetch data for the last 30 days
-    # start_dt_30 = today - timedelta(days=30)
-    # print(
-    #     f"Fetching data from {start_dt_30.strftime('%Y-%m-%d')} to {today.strftime('%Y-%m-%d')}"
-    # )
-    # data_30 = batting_stats_range(
-    #     start_dt=start_dt_30.strftime("%Y-%m-%d"),
-    #     end_dt=today.strftime("%Y-%m-%d"),
-    # )
-    # print(f"Data for the last 30 days fetched: {len(data_30)} records")
 
     for player_id in player_ids:
         results[player_id] = {}
         try:
             # print(f"Fetching stats for player ID: {player_id}")
             # Store stats for all time periods
-            results[player_id]["all"] = fetch_player_stats(player_id, data_all)
-            results[player_id]["7"] = fetch_player_stats(player_id, data_7)
-            results[player_id]["14"] = fetch_player_stats(player_id, data_14)
-            results[player_id]["30"] = fetch_player_stats(player_id, data_30)
+
+            player_stats_7 = fetch_player_stats(player_id, data_7)
+            player_stats_14 = fetch_player_stats(player_id, data_14)
+            player_stats_30 = fetch_player_stats(player_id, data_30)
+            player_stats_all = fetch_player_stats(player_id, data_all)
+            results[player_id]["all"] = player_stats_all
+            results[player_id]["7"] = player_stats_7
+            results[player_id]["14"] = player_stats_14
+            results[player_id]["30"] = player_stats_30
+
+            results[player_id]["all_percentile_ranks"] = get_percentile_rank(
+                data_all, 2024, player_stats_all
+            )
+            results[player_id]["7_percentile_ranks"] = get_percentile_rank(
+                data_7, 2024, player_stats_7
+            )
+            results[player_id]["14_percentile_ranks"] = get_percentile_rank(
+                data_14, 2024, player_stats_14
+            )
+            results[player_id]["30_percentile_ranks"] = get_percentile_rank(
+                data_30, 2024, player_stats_30
+            )
             # print(f"Stats stored for player ID: {player_id}")
         except Exception as e:
             results[player_id] = {"error": str(e)}
             print(f"Error fetching stats for player ID: {player_id}: {e}")
 
     return results
+
+
+def get_statistic_name_map():
+    """
+    Returns a list of common statistic names (or variations) in uppercase.
+    """
+    return [
+        "K%",
+        "BB%",
+        "xBA",
+        "xSLG",
+        "wOBA",
+        "xwOBA",
+        "EV",
+        "Barrel%",
+        "HardHit%",
+        "O-Swing%",
+        "SwStr%",
+        "CSW%",
+        "wRC+",
+    ]
+
+
+def get_lower_rates():
+    return ["K%", "O-Swing%", "SwStr%", "CSW%"]
+
+
+def get_percentile_rank(data: pd.DataFrame, year: int, stats: dict) -> float:
+    """
+    Returns the percentile rank of a given value for a specific statistical category from Statcast data.
+
+    ARGUMENTS
+        year: The year for which to retrieve data. Format: YYYY.
+        stat: The statistic key (column name) for which the percentile is to be computed.
+        value: The specific value of the statistic to find its percentile ranking.
+
+    RETURNS
+        Percentile rank as a float.
+    """
+    # Fetch the data from the leaderboard function
+
+    # Get the mapping of statistic names
+    stat_map = get_statistic_name_map()
+    res = {}
+    for stat, value in stats.items():
+        # Map the provided stat to the DataFrame column name
+        if stat in stat_map:
+            print(stat + " found in stat_map")
+            if stat == "HardHit%":
+                print(f"stat: {stat}, value: {value}")
+
+            try:
+                if stat in get_lower_rates():
+                    # Calculate the percentile rank
+                    res[stat] = 100 - percentileofscore(data[stat], value, kind="rank")
+                else:
+                    res[stat] = percentileofscore(data[stat], value, kind="rank")
+                res[stat] = round(res[stat], 0)
+            except Exception as e:
+                res[stat] = "error: " + str(e)
+        else:
+            continue
+
+    return res
 
 
 # https://www.fangraphs.com/leaders-legacy.aspx?pos=all&stats=bat&lg=all&qual=y&type=8&season=2023&month=1&season1=2023&ind=0&team=0&rost=0&age=0&filter=&players=0
