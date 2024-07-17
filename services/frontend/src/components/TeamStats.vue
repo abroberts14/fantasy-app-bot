@@ -283,6 +283,7 @@ export default defineComponent({
 
     async function fetchStatsAllPlayers() {
       loadingData.value = true;
+      console.log('batters:', batters.value);
       const playerIds = batters.value.map(player => player.key_mlbam);
       try {
         const response = await axios.post('/baseball/get-multiple-player-stats', playerIds);
@@ -356,6 +357,7 @@ export default defineComponent({
         batters.value = [];
       } finally {
         loadingPlayers.value = false;
+        console.log('batters after my player:', batters.value);
         fetchStatsAllPlayers();
       }
     }

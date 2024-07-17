@@ -37,9 +37,11 @@ export default defineComponent({
           ]
         },
         {
-          label: 'Video Replays', // Main menu item for replays
+          label: 'Players', // Main menu item for replays
           items: [
-            { label: 'Search', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
+            { label: 'Video Search', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
+            { label: 'Comparison', to: '/comparison', command: () => { router.push('/comparison'); } },
+
           ]
         },
         { label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } },

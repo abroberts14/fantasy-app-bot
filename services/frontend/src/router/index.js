@@ -17,6 +17,8 @@ import TeamPercentilesView from '@/views/TeamPercentilesView.vue'
 import TeamStatsView from '@/views/TeamStatsView.vue'
 import MyTeamView from '@/views/MyTeamView.vue'
 import MyTeamViewNew from '@/views/MyTeamViewNew.vue'
+import ComparisonView from '@/views/ComparisonView.vue'
+
 const routes = [
   {
     path: '/',
@@ -91,6 +93,11 @@ const routes = [
     path: '/pitch-replays',
     name: 'PitchReplays',
     component: PitchReplaysView,
+  },
+  {
+    path: '/comparison',
+    name: 'Comparison',
+    component: ComparisonView,
   },
   {
     path: '/team-videos',

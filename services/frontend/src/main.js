@@ -60,6 +60,11 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Select from 'primevue/select';
 import Knob from 'primevue/knob';
 import Badge from 'primevue/badge';
+import OrderList from 'primevue/orderlist';
+import Listbox from 'primevue/listbox';
+import VirtualScroller from 'primevue/virtualscroller';
+import Divider from 'primevue/divider';
+
 const app = createApp(App)
 app.use(PrimeVue, {
   theme: {
@@ -127,6 +132,10 @@ app.component('MultiSelect', MultiSelect);
 app.component('Select', Select);
 app.component('Knob', Knob);
 app.component('Badge', Badge);
+app.component('OrderList', OrderList);
+app.component('Listbox', Listbox);
+app.component('VirtualScroller', VirtualScroller);
+app.component('Divider', Divider);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
