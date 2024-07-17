@@ -24,7 +24,6 @@ const routes = [
     path: '/',
     name: 'Home',
     component: HomeView,
-    meta: { hideNavBar: true }
   },
   {
     path: '/register',
@@ -44,7 +43,6 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: HomeView,
-    meta: { hideNavBar: true }
 
   },
   {

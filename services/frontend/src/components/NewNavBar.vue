@@ -28,33 +28,35 @@ export default defineComponent({
     const items = computed(() => {
       const baseItems = [
         { label: 'Home', to: '/', command: () => { router.push('/'); } },
-        { label: 'My Profile', to: '/profile', command: () => { router.push('/profile'); } },
+       
         {
-          label: 'Chat Bots', // Main menu item for replays
+          label: 'Player Tools', // Main menu item for replays
           items: [
-             { label: 'My Bots', to: '/dashboard', command: () => { router.push('/dashboard'); } },
-            { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } },
-          ]
-        },
-        {
-          label: 'Players', // Main menu item for replays
-          items: [
-            { label: 'Video Search', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
-            { label: 'Comparison', to: '/comparison', command: () => { router.push('/comparison'); } },
+            { label: 'Video Pitch Finder', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
+            { label: 'Player Comparison', to: '/comparison', command: () => { router.push('/comparison'); } },
 
           ]
         },
-        { label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } },
 
      
       ];
       if (usersStore.isAdmin) {
-        baseItems.push({ label: 'Admin', to: '/admin', command: () => { router.push('/admin'); } });
-        baseItems.push({ label: 'My Team New', to: '/my-team-new', command: () => { router.push('/my-team-new'); } });
+        baseItems.push({
+          label: 'Admin', // Main menu item for replays
+          items: [
+             { label: 'My Bots', to: '/dashboard', command: () => { router.push('/dashboard'); } },
+            { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } },
+            { label: 'All Bots', to: '/all-bots', command: () => { router.push('/admin'); } }
+          ]
+        });
       }
       if (!usersStore.isAuthenticated) {
         baseItems.push({ label: 'Log In', to: '/login', command: () => { router.push('/login'); } });
         baseItems.push({ label: 'Register', to: '/register', className: 'btn btn-primary btn-sm', command: () => { router.push('/register'); } });
+      } else {
+        baseItems.push({ label: 'My Team', to: '/my-team', command: () => { router.push('/my-team'); } });
+        baseItems.push({ label: 'My Profile', to: '/profile', command: () => { router.push('/profile'); } });
+
       }
       return baseItems;
     });

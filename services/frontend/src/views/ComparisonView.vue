@@ -16,7 +16,7 @@
                   </div>
               </template>
           </OrderList> -->
-          <VirtualScroller :items="computedSelectedPlayersChips" :emit-update="true" :itemSize=60 class="w-full border-left-1 border-top-1 border-round-sm"  style="height: 10rem; border-color: rgba(0, 0, 0, 0.1);" >
+          <VirtualScroller :items="computedSelectedPlayersChips" :emit-update="true" :itemSize=60 class="w-full  border-top-1 border-round-sm"  style="height: 10rem; border-color: rgba(0, 0, 0, 0.1);" >
             <template v-slot:item="{ item, options }">
               <div :class="['flex items-center  p-1 gap-1 w-full', { 'bg-surface-100 dark:bg-surface-700': options.odd }]">
                 <!-- <div class="name-image-container">
@@ -57,7 +57,7 @@
     <Divider type="solid" class="mt-2"/>
 
 
-    <DataTable v-show="filteredData.length > 0 && !rankings" :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
+    <DataTable v-show="filteredData.length > 0 && !rankings" :value="filteredData" showGridlines removableSort class="compact-table" stripedRows scrollable>
         <Column field="name" header="Name" class="compact-column" frozen>
           <template #body="slotProps">
             <div class="name-image-container">
@@ -66,7 +66,7 @@
             </div>
           </template>
         </Column>
-        <Column v-for="field in fields.custom"  :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
+        <Column v-for="field in fields.custom" sortable  :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
           <template #body="slotProps">
 
             <Skeleton v-if="loadingData" animation="wave" width="2rem" class="mb-2"/>
@@ -79,7 +79,7 @@
           </template>
         </Column>
       </DataTable>
-      <DataTable v-show="filteredData.length > 0 && rankings " :value="filteredData" showGridlines class="compact-table" stripedRows scrollable>
+      <DataTable v-show="filteredData.length > 0 && rankings " :value="filteredData" showGridlines  removableSort  class="compact-table" stripedRows scrollable>
         <Column field="name" header="Name" class="compact-column" frozen>
           <template #body="slotProps">
             <div class="name-image-container">
@@ -88,7 +88,7 @@
             </div>
           </template>
         </Column>
-        <Column v-for="field in fields.percentiles"  :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
+        <Column v-for="field in fields.percentiles" sortable   :key="field.key" :field="`stats.${activeStatPeriod}.` + field.key" :header="field.label" class="compact-column right-aligned">
           <template #body="slotProps">
 
             <Skeleton v-if="loadingData" animation="wave" width="2rem" class="mb-2"/>
