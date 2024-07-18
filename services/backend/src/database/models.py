@@ -10,33 +10,39 @@ class Users(models.Model):
     modified_at = fields.DatetimeField(auto_now=True)
     bots = fields.ReverseRelation["bots"]  # Reverse relation for bots
     role = fields.CharField(max_length=20, default="user")
-    oauth_tokens = fields.ReverseRelation["OAuthTokens"]  # Reverse relation for oauth_tokens
+    oauth_tokens = fields.ReverseRelation[
+        "OAuthTokens"
+    ]  # Reverse relation for oauth_tokens
+    oauth_present = fields.BooleanField(default=False)
     players = fields.ReverseRelation["Player"]  # Reverse relation for Player
+
 
 class OAuthTokens(models.Model):
     id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField('models.Users', related_name='oauth_tokens')
+    user = fields.ForeignKeyField("models.Users", related_name="oauth_tokens")
     provider = fields.CharField(max_length=50)  # e.g., 'yahoo', 'google', etc.
-    access_token = fields.TextField()  #   
+    access_token = fields.TextField()  #
     refresh_token = fields.TextField(null=True)
     token_type = fields.CharField(max_length=50)
     expires_in = fields.IntField()
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
+
     class Meta:
         unique_together = ("provider", "user")
+
 
 class Bots(models.Model):
     name = fields.CharField(max_length=20, null=True)
     league_id = fields.CharField(max_length=6)
-    groupme_bot_id = fields.CharField(max_length=100,  null=True)
+    groupme_bot_id = fields.CharField(max_length=100, null=True)
     discord_webhook_url = fields.CharField(max_length=200, null=True)
     user = fields.ForeignKeyField("models.Users", related_name="bots")
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
     timezone = fields.CharField(max_length=50, default="America/New_York")
     app = fields.ForeignKeyField("models.Apps", related_name="bots", null=True)
-    features =  fields.ReverseRelation["features"]  # Reverse relation for bots
+    features = fields.ReverseRelation["features"]  # Reverse relation for bots
     private = fields.BooleanField(default=False)
 
     class Meta:
@@ -45,20 +51,23 @@ class Bots(models.Model):
     def __str__(self):
         return f"{self.name}, {self.groupme_bot_id} for league {self.league_id} - created on {self.created_at}"
 
-    
 
 class Features(models.Model):
     id = fields.IntField(pk=True)
     bot = fields.ForeignKeyField("models.Bots", related_name="features")
-    global_feature = fields.ForeignKeyField("models.GlobalFeatures", related_name="global_features")
+    global_feature = fields.ForeignKeyField(
+        "models.GlobalFeatures", related_name="global_features"
+    )
     # name = fields.CharField(max_length=50, unique=True)
     # hour = fields.IntField(min_value=0, max_value=23)
     # minute = fields.IntField(min_value=0, max_value=59)
     # description = fields.TextField(null=True, blank=True)  # Allow NULL and empty string
     enabled = fields.BooleanField(default=True)
+
     def __str__(self):
         return self.name
-    
+
+
 class GlobalFeatures(models.Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=50, unique=True)
@@ -66,11 +75,14 @@ class GlobalFeatures(models.Model):
     hour = fields.IntField(min_value=0, max_value=23)
     minute = fields.IntField(min_value=0, max_value=59)
     live = fields.BooleanField(default=False)
-    description = fields.TextField(null=True, blank=True)  # Allow NULL and empty strings
+    description = fields.TextField(
+        null=True, blank=True
+    )  # Allow NULL and empty strings
     private_feature = fields.BooleanField(default=False)
+
     def __str__(self):
         return self.name
-    
+
 
 class Apps(models.Model):
     name = fields.CharField(max_length=255, unique=True)
@@ -86,16 +98,20 @@ class Apps(models.Model):
     started_at = fields.DatetimeField(auto_now_add=True)
     finished_at = fields.DatetimeField(null=True)
     bot = fields.ReverseRelation["Bots"]
+
     def __str__(self):
         return f"{self.name} - {self.state_status}"
 
+
 class Player(models.Model):
     id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField('models.Users', related_name='players')
+    user = fields.ForeignKeyField("models.Users", related_name="players")
     full_name = fields.CharField(max_length=100)
     first_name = fields.CharField(max_length=50)
     last_name = fields.CharField(max_length=50)
-    mlb_id = fields.IntField() # MLB ID as a string if it's alphanumeric, otherwise use IntField
+    mlb_id = (
+        fields.IntField()
+    )  # MLB ID as a string if it's alphanumeric, otherwise use IntField
 
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)

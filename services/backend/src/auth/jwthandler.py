@@ -7,12 +7,10 @@ from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 from jose import JWTError, jwt
-from tortoise.exceptions import DoesNotExist
-
+from src.database.models import Users
 from src.schemas.token import TokenData
 from src.schemas.users import UserOutSchema
-from src.database.models import Users
-
+from tortoise.exceptions import DoesNotExist, NoValuesFetched
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 ALGORITHM = "HS256"
@@ -83,10 +81,38 @@ async def get_current_user(token: str = Depends(security)):
         raise credentials_exception
 
     try:
-        user = await UserOutSchema.from_queryset_single(
-            Users.get(username=token_data.username)
+        # user_query = Users.get(username=token_data.username)
+        # print(user_query)
+        # user_query.oauth_present = bool(
+        #     user_query.oauth_tokens
+        # )  # True if tokens list is not empty
+        # await user_query.save()
+
+        # user = await UserOutSchema.from_queryset_single(
+        #     Users.get(username=token_data.username)
+        # )
+        # Fetch user from the database
+        user_query = await Users.get(username=token_data.username).prefetch_related(
+            "oauth_tokens"
         )
+        # user_query = await Users.get(username=token_data.username)
+        print(f"User fetched: {user_query}")
+
+        # Update oauth_present based on oauth_tokens
+        user_query.oauth_present = bool(user_query.oauth_tokens)
+        await user_query.save()
+        print("User oauth_present status updated")
+
+        # Create a user output schema from the updated user query
+        user_output = await UserOutSchema.from_tortoise_orm(user_query)
+        print(f"User output schema generated: {user_output}")
+        # del user_output.oauth_tokens
+        user_output.oauth_tokens = []
+
+        return user_output
     except DoesNotExist:
         raise credentials_exception
-
-    return user
+    except NoValuesFetched as e:
+        raise ValueError(
+            f"Required data not fetched: {e}"
+        )  # To handle and identify missing prefetch.

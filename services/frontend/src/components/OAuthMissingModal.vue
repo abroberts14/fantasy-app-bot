@@ -1,79 +1,50 @@
 <template>
-    <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
-      <h3>No Yahoo Account Detected</h3>
-      <p>
-        To search for your players most recent plate appearances, you must connect and authorize a Yahoo account.
-      </p>
-      <p>
-        Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
-      </p>
-  </ModalOverlay> 
-  <Message v-if="!isDialogVisible" severity="info" :sticky="false" :life="5000">Resync your players on your <router-link to="/profile">profile</router-link> page</Message>
+  <ModalOverlay :isVisible="isDialogVisible" @update:isVisible="handleModalVisibilityChange">
+    <h3>No Yahoo Account Detected</h3>
+    <p>
+      To search for your players most recent plate appearances, you must connect and authorize a Yahoo account.
+    </p>
+    <p>
+      Visit your <router-link to="/profile">profile</router-link> for Yahoo integration setup.
+    </p>
+</ModalOverlay> 
+<Message v-if="!isDialogVisible" severity="info" :sticky="false" :life="5000">Resync your players on your <router-link to="/profile">profile</router-link> page</Message>
 
-  </template>
-  
-  <script>
-  import { ref } from 'vue';
-  import ModalOverlay from '@/components/ModalOverlay.vue';
-  import { onMounted, computed } from 'vue';
-  import axios from 'axios';
-  import useUsersStore from '@/store/users';
-  import { useRouter } from 'vue-router';
-  export default {
-    name: 'OauthMissingModal',
-    components: {
-      ModalOverlay,
-    },
-    emits: ['token-status'],
+</template>
 
-    setup(props, { emit }) {  // Include emit here
-      const isDialogVisible = ref(false);
-      const userTokenPresent = ref(null);
-      const usersStore = useUsersStore();
-      const user = computed(() => usersStore.user);
-      const router = useRouter();
+<script>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import ModalOverlay from '@/components/ModalOverlay.vue';
+import useUsersStore from '@/store/users'; 
 
-      const handleModalVisibilityChange = (newValue) => {
-        isDialogVisible.value = newValue;
-        if (!newValue) { // if newValue is false, indicating the modal is closed
-          router.push('/profile'); // navigate to /profile
-        }
+export default {
+  components: {
+    ModalOverlay
+  },
+  setup() {
+    const isDialogVisible = ref(false);
+    const router = useRouter();
+    const usersStore = useUsersStore(); 
 
-      };
-      onMounted(fetchUserTokens);
-      async function fetchUserTokens() {
-        try {
-          const response = await axios.get(`/oauth/yahoo/tokens`, {
-            params: {
-              user_id: user.value.id
-            }
-          });        
-          console.log('API Response:', response.data);
-          userTokenPresent.value = response.data;
-          isDialogVisible.value = !userTokenPresent.value 
-          emit('token-status', userTokenPresent.value); // Emit the token presence status
-
-        } catch (error) {
-          console.error('Failed to fetch Yahoo integration:', error);
-          isDialogVisible.value = true;
-          userTokenPresent.value = false;
-          emit('token-status', userTokenPresent.value); // Emit the token presence status
-
-        }
-        finally {
-
-          console.log("isDialogVisible: ", isDialogVisible.value);
-        }
+    // Function to handle modal visibility changes
+    const handleModalVisibilityChange = (isVisible) => {
+      isDialogVisible.value = isVisible;
+      if (!isVisible) { // if newValue is false, indicating the modal is closed
+        router.push('/profile'); // navigate to /profile
       }
-      return {
-        isDialogVisible,
-        handleModalVisibilityChange,
-        fetchUserTokens
-      };
-    }
+    };
+
+    onMounted(async () => {
+      await usersStore.viewMe();
+      console.log("usersStore.hasOAuthToken", usersStore.hasOAuthToken);
+      // Set the dialog visibility based on the presence of a user token
+      isDialogVisible.value = !usersStore.hasOAuthToken;
+    });
+
+    return { isDialogVisible, handleModalVisibilityChange };
   }
-  </script>
-  
-  <style scoped>
-  /* Your component-specific styles go here */
-  </style>
+}
+</script>
+
+

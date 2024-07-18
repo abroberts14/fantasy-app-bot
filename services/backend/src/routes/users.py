@@ -1,26 +1,23 @@
+import base64
+import os
+import time
 from datetime import timedelta
 
+import requests
+import src.crud.users as crud
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
-
-from tortoise.contrib.fastapi import HTTPNotFoundError
-
-import src.crud.users as crud
+from src.auth.jwthandler import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token,
+    get_current_user,
+)
 from src.auth.users import validate_user
 from src.schemas.token import Status
 from src.schemas.users import UserInSchema, UserOutSchema
-import os
-import base64
-import requests
-import time
-from src.auth.jwthandler import (
-    create_access_token,
-    get_current_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-)
-
+from tortoise.contrib.fastapi import HTTPNotFoundError
 
 router = APIRouter()
 
@@ -28,14 +25,13 @@ YAHOO_API_URL = "https://api.login.yahoo.com/oauth2/"
 YAHOO_AUTH_URI = "request_auth?redirect_uri=oob&response_type=code&client_id="
 
 
-
 async def exchange_code_for_token(code):
     keys = {
-        "consumer_key": os.getenv('YAHOO_CLIENT_ID'),
-        "consumer_secret": os.getenv('YAHOO_CLIENT_SECRET')
+        "consumer_key": os.getenv("YAHOO_CLIENT_ID"),
+        "consumer_secret": os.getenv("YAHOO_CLIENT_SECRET"),
     }
     encoded_creds = base64.b64encode(
-        ("{0}:{1}".format(keys['consumer_key'], keys['consumer_secret'])).encode(
+        ("{0}:{1}".format(keys["consumer_key"], keys["consumer_secret"])).encode(
             "utf-8"
         )
     )
@@ -55,13 +51,18 @@ async def exchange_code_for_token(code):
     details["token_time"] = time.time()
     return details
 
+
 @router.get("/callback")
 async def handle_oauth_callback(code: str = None, error: str = None):
     if error:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization failed"
+        )
 
     if not code:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing authorization code")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Missing authorization code"
+        )
 
     try:
         # Exchange the authorization code for an access token
@@ -75,9 +76,12 @@ async def handle_oauth_callback(code: str = None, error: str = None):
         # Return the JWT token and user details
         print(access_token)
         return access_token
-    
+
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
 
 @router.post("/register", response_model=UserOutSchema)
 async def create_user(user: UserInSchema) -> UserOutSchema:
@@ -86,7 +90,6 @@ async def create_user(user: UserInSchema) -> UserOutSchema:
 
 @router.post("/login")
 async def login(user: OAuth2PasswordRequestForm = Depends()):
-
     user = await validate_user(user)
 
     if not user:
@@ -103,8 +106,8 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
     token = jsonable_encoder(access_token)
     content = {"message": "You've successfully logged in. Welcome back!"}
     response = JSONResponse(content=content)
-    is_local = os.getenv('IS_LOCAL', 'false').lower() == 'true'
-    print('is local: ', is_local)
+    is_local = os.getenv("IS_LOCAL", "false").lower() == "true"
+    print("is local: ", is_local)
     response.set_cookie(
         "Authorization",
         value=f"Bearer {token}",
@@ -113,17 +116,17 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
         expires=1209600,
         samesite="Lax" if is_local else "None",
         secure=not is_local,
-        domain=".draftwarroom.com" if not is_local else "192.168.1.170"
-        #domain=".draftwarroom.com" if not is_local else "localhost"
-
+        domain=".draftwarroom.com" if not is_local else "192.168.1.170",
+        # domain=".draftwarroom.com" if not is_local else "localhost"
     )
 
     return response
 
+
 @router.post("/logout")
 async def logout():
-    print('logging out')
-    is_local = os.getenv('IS_LOCAL', 'false').lower() == 'true'
+    print("logging out")
+    is_local = os.getenv("IS_LOCAL", "false").lower() == "true"
     content = {"message": "You've successfully logged out."}
 
     response = JSONResponse(content=content)
@@ -135,12 +138,15 @@ async def logout():
         expires=0,
         samesite="Lax" if is_local else "None",
         secure=not is_local,
-        domain=".draftwarroom.com" if not is_local else "localhost"
+        domain=".draftwarroom.com" if not is_local else "localhost",
     )
     return response
 
+
 @router.get(
-    "/users/whoami", response_model=UserOutSchema, dependencies=[Depends(get_current_user)]
+    "/users/whoami",
+    response_model=UserOutSchema,
+    dependencies=[Depends(get_current_user)],
 )
 async def read_users_me(current_user: UserOutSchema = Depends(get_current_user)):
     return current_user

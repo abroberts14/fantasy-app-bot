@@ -18,6 +18,7 @@ import TeamStatsView from '@/views/TeamStatsView.vue'
 import MyTeamView from '@/views/MyTeamView.vue'
 import MyTeamViewNew from '@/views/MyTeamViewNew.vue'
 import ComparisonView from '@/views/ComparisonView.vue'
+import MyBotsView from '@/views/MyBotsView.vue'
 
 const routes = [
   {
@@ -29,7 +30,6 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterView,
-    meta: { hideNavBar: true }
 
   },
   {
@@ -61,6 +61,12 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: ProfileView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/my-bots',
+    name: 'MyBots',
+    component: MyBotsView,
     meta: { requiresAuth: true }
   },
   {
@@ -118,7 +124,7 @@ const routes = [
   {
     path: '/my-team',
     name: 'MyTeam',
-    meta: { checkToken: true, development: true },
+    meta: { checkToken: true },
     component: MyTeamView,
   },
   {

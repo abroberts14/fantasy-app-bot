@@ -195,7 +195,10 @@ axios.interceptors.response.use(
   error => {
     // handle the error
     let errorMessage = 'A system error has occurred. Please try again later.';
-
+   // check if the error ocntains the text Oauth
+    if (error.response?.data?.detail.includes("OAuth")) {
+      return Promise.reject({ ...error, formattedMessage: errorMessage });
+    }
     // Check if the error format matches FastAPI's validation errors
     if (error.response?.status === 422 && error.response?.data?.detail) {
       // Extract error messages and concatenate them

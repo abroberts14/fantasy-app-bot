@@ -44,9 +44,9 @@ export default defineComponent({
         baseItems.push({
           label: 'Admin', // Main menu item for replays
           items: [
-             { label: 'My Bots', to: '/dashboard', command: () => { router.push('/dashboard'); } },
+             { label: 'My Bots', to: '/my-bots', command: () => { router.push('/my-bots'); } },
             { label: 'Register New Bot', to: '/register-bot', command: () => { router.push('/register-bot'); } },
-            { label: 'All Bots', to: '/all-bots', command: () => { router.push('/admin'); } }
+            { label: 'All Bots', to: '/admin', command: () => { router.push('/admin'); } }
           ]
         });
       }

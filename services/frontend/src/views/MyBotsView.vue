@@ -11,10 +11,9 @@ import { defineComponent, ref, computed, onMounted } from 'vue';
 import useBotsStore from '@/store/bots'; 
 import useUsersStore from '@/store/users'; 
 import BotTable from '@/components/BotTable.vue'; 
-import { useRouter } from 'vue-router';
 
 export default defineComponent({
-  name: 'DashboardComponent',
+  name: 'MyBotsView',
   components: {
     BotTable,
   },
@@ -22,26 +21,21 @@ export default defineComponent({
     const loaded = ref(false);
     const botsStore = useBotsStore();
     const usersStore = useUsersStore(); 
-    const router = useRouter();
 
     const bots = computed(() => botsStore.stateBots);
     const user = computed(() => usersStore.stateUser);
 
-
-    onMounted(async () => {
-
-      if (usersStore.hasOAuthToken) {
-        router.push('/my-team');
-      } else {
-        await fetchUserData();
-      }
-    });
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       loaded.value = false;
       await usersStore.viewMe();
       await botsStore.getBots(user.value.id);
       loaded.value = true;
     };
+
+    onMounted(() => {
+      fetchData();
+    });
+
     return { bots, user, loaded };
   },
 });

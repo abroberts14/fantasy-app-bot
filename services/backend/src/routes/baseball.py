@@ -1,8 +1,6 @@
-import io
-import json
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import List, Optional
 
 import pandas as pd
@@ -11,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pybaseball import statcast_batter_percentile_ranks
 from src.auth.jwthandler import get_current_user
 from src.database.models import Player
-from src.routes import oauth
+from src.routes.oauth import require_oauth_token
 from src.schemas.users import UserOutSchema
 from src.utils.baseball_utils import (
     fetch_multiple_player_stats,
@@ -75,13 +73,13 @@ async def get_percentiles_by_player_id(player_id: int):
 
             return {}
     #  raise HTTPException(status_code=404, detail=f"No data found for player ID: {player_id}")
-    except ValueError as e:
+    except ValueError:
         # Handle the case where the conversion of player_id to int fails
         raise HTTPException(
             status_code=400,
             detail="Invalid player ID provided. Player ID must be an integer.",
         )
-    except Exception as e:
+    except Exception:
         return {}
 
 
@@ -100,7 +98,7 @@ async def get_player_stats_by_id(player_id: int):
         return fetch_player_stats(player_id)
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
         # General exception handling (e.g., data fetching issues, parsing issues)
     # raise HTTPException(status_code=500, detail=str(e))
@@ -170,14 +168,17 @@ async def get_players(name: Optional[str] = None):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/baseball/players/my-players", dependencies=[Depends(get_current_user)])
+@router.get("/baseball/players/my-players", dependencies=[Depends(require_oauth_token)])
 async def get_my_players(current_user: UserOutSchema = Depends(get_current_user)):
     try:
         print("looking for yahooo batters")
         # Get player IDs for each batter
         batters = []
+        print("current user id: ", current_user.id)
         players = await Player.filter(user_id=current_user.id).all()
+        print("length of players: ", len(players))
         if len(players) == 0:
+            print("no players found, syncing")
             return await sync_players(current_user)
             # players = await Player.filter(user_id=current_user.id).all()
         for player in players:
@@ -197,7 +198,9 @@ async def get_my_players(current_user: UserOutSchema = Depends(get_current_user)
     return {"players": {"batters": batters, "pitchers": []}}
 
 
-@router.get("/baseball/players/sync_players", dependencies=[Depends(get_current_user)])
+@router.get(
+    "/baseball/players/sync_players", dependencies=[Depends(require_oauth_token)]
+)
 async def sync_players(current_user: UserOutSchema = Depends(get_current_user)):
     try:
         print("Starting the synchronization process for yahoo batters.")

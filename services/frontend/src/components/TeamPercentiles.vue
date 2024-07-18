@@ -109,7 +109,7 @@
       
       
       async function fetchMyPlayers() {
-        if (!this.isLoggedIn) {
+        if (!isLoggedIn.value) {
           console.error('User is not logged in or token is not available');
           return;
         }
@@ -117,14 +117,14 @@
   
         try {
           const response = await axios.get('/baseball/players/my-players');
-          this.batters = response.data.players.batters || [];
+          batters.value = response.data.players.batters || [];
         } catch (error) {
           console.error('Failed to fetch players:', error);
-          this.batters = [];
+          batters.value = [];
         } finally {
           loadingPlayers.value = false;
   
-          this.fetchPercentilesAllPlayers()
+            fetchPercentilesAllPlayers()
         }
       }
   
@@ -179,6 +179,7 @@
                   top: 0, // Adjust this value to position the scroll appropriately
                   behavior: 'smooth'
               });
+         fetchMyPlayers();
       });
   
       onUnmounted(() => {
@@ -200,10 +201,7 @@
         loadingPlayers,
         };
     },
-    mounted() {
-      this.fetchMyPlayers();
-    },
-    
+
     
     
   });

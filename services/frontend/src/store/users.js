@@ -5,11 +5,13 @@ const useUsersStore = defineStore('users', {
   id: 'users',
   state: () => ({
     user: null,
+    oauthToken: null, // Assuming you store the token in the state
   }),
   getters: {
     isAuthenticated: state => !!state.user,
     stateUser: state => state.user,
     isAdmin: state => state.user && state.user.role === 'admin',
+    hasOAuthToken: state => state.user && state.user.oauth_present, // Updated getter to check for non-empty OAuth token list
   },
   actions: {
     async register(form) {
