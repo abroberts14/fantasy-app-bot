@@ -37,6 +37,10 @@
 
   --section-gap: 160px;
 }
+@media (max-width: 768px) {
+  :root {
+  }
+}
 
 /* @media (prefers-color-scheme: dark) {
   :root {
@@ -134,17 +138,25 @@ body {
 
 /* Mobile Styles */
 @media (max-width: 768px) {
+  
   .p-datatable   .p-column-header-content   {
     font-size: 0.75rem; /* Smaller font size */
+    
+  }
+
+
+  .compact-table .p-datatable-header,
+  .compact-table .p-datatable-thead > tr > th,
+  .compact-table .p-datatable-tbody > tr > td {
+    width: 50%;
 
   }
 
-  
   .name-image-container span {
     white-space: nowrap; /* Prevents the text from wrapping */
     overflow: hidden;    /* Hides text that goes beyond the width */
     text-overflow: ellipsis; /* Adds ellipsis to the hidden overflow text */
-    max-width: 7em;    /* Adjust the width as needed */
+    max-width: 5em;    /* Adjust the width as needed */
     display: inline-block; /* Ensures the overflow properties work */
   }
   .img-headshot {

@@ -65,6 +65,11 @@ import Listbox from 'primevue/listbox';
 import VirtualScroller from 'primevue/virtualscroller';
 import Divider from 'primevue/divider';
 
+import Splitter from 'primevue/splitter';
+import SplitterPanel from 'primevue/splitterpanel';
+import ConfirmPopup from 'primevue/confirmpopup';
+
+
 const app = createApp(App)
 app.use(PrimeVue, {
   theme: {
@@ -111,7 +116,6 @@ app.component('Calendar', Calendar);
 app.component('FloatLabel', FloatLabel);
 app.component('Menubar', Menubar);
 app.directive('tooltip', Tooltip);
-app.directive('animateonscroll', AnimateOnScroll);
 app.component('InlineMessage', InlineMessage);
 app.component('Message', Message);
 app.component('ProgressBar', ProgressBar);
@@ -136,6 +140,10 @@ app.component('OrderList', OrderList);
 app.component('Listbox', Listbox);
 app.component('VirtualScroller', VirtualScroller);
 app.component('Divider', Divider);
+app.component('Splitter', Splitter);
+app.component('SplitterPanel', SplitterPanel);
+app.component('ConfirmPopup', ConfirmPopup);
+app.directive('animateonscroll', AnimateOnScroll);
 app.use(Toast, {
   position: "top-right",
   timeout: 3000,
