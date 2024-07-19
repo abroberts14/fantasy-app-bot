@@ -7,9 +7,9 @@
         <div class="flex align-items-center justify-content-start flex-wrap  w-6 mr-1">
           <div class="flex justify-center w-full relative">
 
-            <VirtualScroller :items="computedSelectedPlayersChips"   @scroll-index-change="handleScrollIndexChange"   :emit-update="true" :itemSize=60 class="w-full  border-top-1 border-round-sm h-9rem sm:h-10rem md:h-15rem lg:h-15rem xl:h-15rem"  style=" border-color: rgba(0, 0, 0, 0.1);" >
+            <VirtualScroller ref="virtualScroller" :items="computedSelectedPlayersChips" :key="virtualKey"  @scroll="handleScrollIndexChange"   :emit-update="true" :itemSize=60 class="w-full  border-top-1 border-round-sm h-9rem sm:h-10rem md:h-15rem lg:h-15rem xl:h-15rem"  style=" border-color: rgba(0, 0, 0, 0.1);" >
               <template v-slot:item="{ item, options }">
-                <div :class="['flex items-center  p-1 gap-1 w-full', { 'bg-surface-100 dark:bg-surface-700': options.odd }]">
+                <div :class="['flex items-center  p-1 gap-1 w-full h', { 'bg-surface-100 dark:bg-surface-700': options.odd }]" style="height: 60px">
                   <!-- <div class="name-image-container">
                     <img class="img-headshot" :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${item.key_mlbam}/headshot/67/current`" :alt="item.name" />
                   </div> -->
@@ -17,6 +17,7 @@
                     <Chip :removable="!loadingData" class="font-medium text-sm w-full sm:w-10rem md:w-10rem lg:w-10rem xl:w-10rem"   @remove="removePlayerChip(item)">
                       <span >
                         <img class=" border-circle w-2rem h-3rem flex align-items-center justify-content-center" :src="`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${item.key_mlbam}/headshot/67/current`" :alt="item.name" />
+                        
                       </span>
                       <span class="ml-2 font-medium">{{ item.name }}</span>
 
@@ -27,15 +28,28 @@
 
               </template>
             </VirtualScroller>
-
+<!-- 
             <div 
             v-if="computedSelectedPlayersChips.length > 2" 
-            class="fadeoutdown animation-duration-2000 animation-delay-500 animation-iteration-infinite flex align-items-end justify-content-end  absolute  transform -translate-x-1/2 " 
-            style="z-index: 10; bottom:20%; right:8%"
+              class="fadeoutdown animation-duration-2000 animation-delay-500 animation-iteration-infinite flex align-items-end justify-content-end  absolute  transform -translate-x-1/2 " 
+              style="z-index: 10; bottom:20%; right:8%"
+            >
+              <i class="pi pi-arrow-down">{{currentScrollIndex}}</i>
+          </div> -->
+          <div 
+            v-if="computedSelectedPlayersChips.length > 2 && atBottom" 
+            class="fadeoutup animation-duration-2000 animation-delay-500 animation-iteration-infinite flex align-items-start justify-content-end absolute transform -translate-x-1/2"
+            style="z-index: 10; top: 20%; right: 8%"
           >
-              <i class="pi pi-arrow-down"></i>
+            <i class="pi pi-arrow-up"></i>
           </div>
-
+          <div 
+            v-if="computedSelectedPlayersChips.length > 2 && atTop" 
+            class="fadeoutdown animation-duration-2000 animation-delay-500 animation-iteration-infinite flex align-items-end justify-content-end absolute transform -translate-x-1/2"
+            style="z-index: 10; bottom: 20%; right: 8%"
+          >
+            <i class="pi pi-arrow-down"></i>
+          </div>
 
 
           </div>
@@ -161,7 +175,7 @@
 
 <script>
 import useUsersStore from '@/store/users'
-import { defineComponent, ref, computed, watch, onMounted } from 'vue'
+import { defineComponent, ref, computed, watch, onMounted, nextTick } from 'vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import axios from 'axios'
 import SearchPlayers from '@/components/SearchPlayers.vue'
@@ -254,12 +268,25 @@ export default defineComponent({
         { key: 'wRC+', label: 'wRC+' }
       ]
     });
+    const virtualScroller = ref(null);
     const confirm = useConfirm();
     const toast = useToast()
+    const atTop = ref(true);
+    const atBottom = ref(false);
+
+    const virtualKey = ref(0);
     // Event handler for the scroll index change
     const handleScrollIndexChange = (newIndex) => {
-      console.log('Scroll index changed to:', newIndex);
+      // console.log('Scroll index changed to:', newIndex);
       currentScrollIndex.value = newIndex;  // Update the current scroll index
+      if (virtualScroller.value) {
+        const range = virtualScroller.value.getRenderedRange();
+        //console.log('Rendered range:', range);
+           // Calculate 'atTop' and 'atBottom'
+       //console.log('computedSelectedPlayersChips.value.length:', computedSelectedPlayersChips.value.length);
+        atTop.value = range.viewport.first === 0 && computedSelectedPlayersChips.value.length > range.viewport.last;
+        atBottom.value = range.viewport.last === computedSelectedPlayersChips.value.length && range.viewport.first > 0;
+      }
     };
     const confirm2 = (event) => {
       confirm.require({
@@ -480,7 +507,7 @@ export default defineComponent({
       const playerExists = selectedPlayersChips.value.some(player => player.key_mlbam === player_added.key_mlbam)
         
         if (!playerExists) {
-            selectedPlayersChips.value.unshift(player_added)  // Add to the top of the list
+            selectedPlayersChips.value.push(player_added)  // Add to the top of the list
             console.log('Selected player been added to selectedPlayersChips:', player_added)
         } else {
             console.log('Player already selected:', player_added)
@@ -497,6 +524,7 @@ export default defineComponent({
           console.log(`Checking player ID: ${p.key_mlbam}, Remove: ${!isMatch}`);
           return isMatch;
         });
+        console.log('batters:', batters.value);
         console.log('selectedPlayersChips length after:', selectedPlayersChips.value.length);
         console.log('batters length:', batters.value.length);
         batters.value = batters.value.filter(p => {
@@ -505,6 +533,8 @@ export default defineComponent({
           return isMatch;
         });
         console.log('batters length after:', batters.value.length);
+        virtualKey.value = virtualKey.value + 1;
+
       }
       
       function saveToLocalStorage() {
@@ -554,7 +584,11 @@ export default defineComponent({
       drawerIsVisible,
       tableScrollHeight,
       currentScrollIndex,
-      handleScrollIndexChange
+      virtualScroller,
+      handleScrollIndexChange,
+      atTop,
+      atBottom,
+      virtualKey
     }
   
   }
