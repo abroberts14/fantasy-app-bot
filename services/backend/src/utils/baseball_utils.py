@@ -4,15 +4,13 @@ from typing import List
 import bs4
 import pandas as pd
 import statsapi
-from pybaseball import batting_stats, batting_stats_range
-from pybaseball.enums.fangraphs.month import FangraphsMonth
+from pybaseball import batting_stats
 from pytz import timezone
 from scipy.stats import percentileofscore
 from src.utils.pybaseball_utils import (
     custom_statcast_batter,
     fg_batting_data_extended,
     find_player_fangraphs_id,
-    split_request,
 )
 from src.utils.utils import fetch_url
 
@@ -209,9 +207,9 @@ def fetch_player_stats(player_id: int, batting_data: pd.DataFrame):
             print(f"No data found for player ID: {player_id}")
 
             return {}
-    except ValueError as e:
+    except ValueError:
         raise ValueError("Invalid player ID provided. Player ID must be an integer.")
-    except Exception as e:
+    except Exception:
         return {}
 
 
@@ -275,7 +273,19 @@ def fetch_multiple_player_stats(player_ids: List[int]):
             results[player_id] = {"error": str(e)}
             print(f"Error fetching stats for player ID: {player_id}: {e}")
 
-    return results
+    # Handle NaN values before returning results
+    def handle_nan(obj):
+        if isinstance(obj, dict):
+            return {k: handle_nan(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [handle_nan(i) for i in obj]
+        elif isinstance(obj, float) and (
+            pd.isna(obj) or obj == float("inf") or obj == float("-inf")
+        ):
+            return None
+        return obj
+
+    return handle_nan(results)
 
 
 def get_statistic_name_map():
@@ -293,9 +303,15 @@ def get_statistic_name_map():
         "Barrel%",
         "HardHit%",
         "O-Swing%",
+        "Z-Contact%",
+        "maxEV",
         "SwStr%",
+        "Hard%",
         "CSW%",
         "wRC+",
+        "ISO",
+        "HR/FB",
+        "OPS",
     ]
 
 
