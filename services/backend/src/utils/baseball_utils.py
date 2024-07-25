@@ -95,6 +95,16 @@ def get_mp4s(player_id, date):
     return at_bat_pitches[batter]
 
 
+def get_player_name(player_id: int):
+    try:
+        player = statsapi.lookup_player(player_id)
+        print(f"player: {player}")
+        return player[0]["fullName"]
+    except Exception as e:
+        print("error getting player name ", e)
+        return None
+
+
 def get_player_dates(
     player_id: int,
     start_date: str = None,

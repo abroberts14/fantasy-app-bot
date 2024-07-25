@@ -34,7 +34,7 @@ export default defineComponent({
           items: [
             { label: 'Video Pitch Finder', to: '/pitch-replays', command: () => { router.push('/pitch-replays'); } },
             { label: 'Player Comparison', to: '/comparison', command: () => { router.push('/comparison'); } },
-
+            { label: 'Player Stats', to: '/player-stats', command: () => { router.push('/player/592518'); } },
           ]
         },
 

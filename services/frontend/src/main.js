@@ -69,7 +69,7 @@ import Splitter from 'primevue/splitter';
 import SplitterPanel from 'primevue/splitterpanel';
 import ConfirmPopup from 'primevue/confirmpopup';
 
-
+import DataView from 'primevue/dataview';
 const app = createApp(App)
 app.use(PrimeVue, {
   theme: {
@@ -143,6 +143,7 @@ app.component('Divider', Divider);
 app.component('Splitter', Splitter);
 app.component('SplitterPanel', SplitterPanel);
 app.component('ConfirmPopup', ConfirmPopup);
+app.component('DataView', DataView);
 app.directive('animateonscroll', AnimateOnScroll);
 app.use(Toast, {
   position: "top-right",

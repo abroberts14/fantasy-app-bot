@@ -16,6 +16,7 @@ from src.utils.baseball_utils import (
     fetch_player_stats,
     get_mp4s,
     get_player_dates,
+    get_player_name,
 )
 from src.utils.yahoo_utils import get_user_batters
 
@@ -90,6 +91,18 @@ async def get_multiple_player_stats(player_ids: List[int]):
         return player_stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/baseball/get-player-name/{player_id}")
+async def get_player_name_by_id(player_id: int):
+    try:
+        return get_player_name(player_id)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+        # General exception handling (e.g., data fetching issues, parsing issues)
+    # raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/baseball/get-player-stats/{player_id}")

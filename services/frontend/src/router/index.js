@@ -19,6 +19,7 @@ import MyTeamView from '@/views/MyTeamView.vue'
 import MyTeamViewNew from '@/views/MyTeamViewNew.vue'
 import ComparisonView from '@/views/ComparisonView.vue'
 import MyBotsView from '@/views/MyBotsView.vue'
+import PlayerStats from '@/components/PlayerStats.vue'
 
 const routes = [
   {
@@ -114,6 +115,12 @@ const routes = [
     name: 'TeamPercentiles',
     meta: { checkToken: true },
     component: TeamPercentilesView,
+  },
+  {
+    path: '/player/:id',
+    name: 'PlayerStats',
+    meta: {},
+    component: PlayerStats,
   },
   {
     path: '/team-stats',
