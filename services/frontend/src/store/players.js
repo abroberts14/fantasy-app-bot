@@ -256,9 +256,15 @@ export const usePlayersStore = defineStore('players',  {
     }
   },
   
-//   persist: {
-//     storage: localStorage,
-//   },
+  persist: {
+    enabled: true, // Enable persistence
+    strategies: [
+        {
+          storage: localStorage, // Using localStorage to persist the data
+          paths: ['players', 'player'] // Specify parts of the state to persist
+        }
+      ]
+  },
   
   
 });

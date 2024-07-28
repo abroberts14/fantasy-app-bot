@@ -397,27 +397,20 @@ export default defineComponent({
           activeStatPeriod: activeStatPeriod.value,
           selectedDate: selectedDate.value,
           drawerIsVisible: drawerIsVisible.value,
-          batters: playersStore.getPlayers()
         };
         console.log('data:', data)
         localStorage.setItem('comparisonViewData', JSON.stringify(data));
       }
 
       function loadFromLocalStorage() {
-        const data = JSON.parse(localStorage.getItem('comparisonViewData'));
+       const data = JSON.parse(localStorage.getItem('comparisonViewData'));
         if (data) {
           console.log('data on load :', data)
           setStatPeriod(data.activeStatPeriod || 'all');
           selectedDate.value = data.selectedDate || null;
           drawerIsVisible.value = data.drawerIsVisible !== undefined ? data.drawerIsVisible : true;
-          console.log("selectedPlayersChips.value:", data.selectedPlayersChips)
-          playersStore.setPlayers(data.batters || []);
           selectedPlayersChips.value = data.selectedPlayersChips || [];
-          console.log('playersStore players:', playersStore.players)
-          console.log('batters end:', batters.value)
-          console.log("selectedPlayersChips.value:", selectedPlayersChips.value)
-          console.log("computedSelectedPlayersChips.value:", computedSelectedPlayersChips.value)
-          console.log("playersLoading:", playersLoading.value)
+
 
           lastUpdated.value = Date.now(); // Update the timestamp to force reactivity
           virtualKey.value = virtualKey.value + 1;
